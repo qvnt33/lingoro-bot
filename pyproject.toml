@@ -1,0 +1,79 @@
+[project]
+# Підтримка Python 3.10+.
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 120  # Максимальна довжина рядка
+# Ігноровані директорії
+exclude = [
+    ".gitignore", ".env", "env", ".venv", "venv", ".vscode", ".idea", ".ruff_cache"
+]
+indent-width = 4  # Пробілів у табуляції
+output-format = "full"  # Формат виведення в терміналі
+fix = false  # Автоматичні виправлення
+preview = true  # Режим попереднього перегляду
+respect-gitignore = true  # Поважати правила з .gitignore
+src = [".", "src", "tests"]  # Шляхи до джерел
+
+[tool.ruff.lint]
+# Правила для лінтингу
+select = [
+    "A",  # Перевірка, чи вбудовані компоненти використовуються як змінні або параметри
+    "E",  # Помилки стилю
+    "F",  # Помилки з імпортами
+    "W",  # Помилки з пробілами та відступами
+    "N",  # Іменування змінних та функцій
+    "B",  # Помилки у дизайні програми
+    "Q",  # Помилки з лапками
+    "R",  # Рефакторинг коду
+    "COM",  # Помилки з комами
+    "ISC",  # Правильні рядкові літерали
+    "RET",  # Проблеми з поверненням (return)
+    "ARG",  # Невикористанні аргументи
+    "SIM",  # Допомагає спростити код
+    "UP003",  # Зайве використання type()
+    "UP034", "UP039", # Заяві дужки
+
+    # Правила для docstring
+    "D200", "D201", "D202", "D204", "D206", "D207", "D208",
+    "D209", "D210", "D211", "D212", "D300", "D419",
+
+    # Модернізація коду
+    "FURB105", "FURB110", "FURB113", "FURB131",
+    "FURB136", "FURB132", "FURB142", "FURB145",
+    "FURB148", "FURB152", "FURB187", "FURB192",
+
+    # Правила з набору RUF
+    "RUF005", "RUF015", "RUF016", "RUF029", "RUF030"
+]
+# Ігноровані правила
+ignore = [
+    "A004", "A005", "A006",
+    "SIM105", "SIM112", "SIM220", "SIM222", "SIM223"
+]
+
+[tool.ruff.lint.flake8-quotes]
+avoid-escape = false  # Уникання одинарних лапок, якщо рядок їх містить
+docstring-quotes = "double"  # Стиль лапок для docstring
+inline-quotes = "single"  # Стиль лапок для вбудованих рядків
+multiline-quotes = "double"  # Стиль лапок для багаторядкових рядків
+
+[tool.ruff.lint.isort]
+section-order = ["future", "standard-library", "third-party", "first-party"]  # Порядок секцій імпортів
+
+[tool.ruff.format]
+docstring-code-format = false  # Форматування коду всередині docstring
+docstring-code-line-length = 120  # Максимальна довжина рядка для коду в docstring
+skip-magic-trailing-comma = true  # Пропускати магічну завершаючу кому
+indent-style = "space"  # Використання пробілів для відступу
+line-ending = "lf"  # Використання LF як завершення рядка
+quote-style = "single"  # Використання одинарних лапок для рядків
+
+[tool.mypy]
+# Ігноровані директорії
+exclude = [
+    ".gitignore", ".env", "env", ".venv", "venv", ".vscode", ".idea", ".ruff_cache"
+]
+strict = true  # Максимальний рівень перевірки типів
+ignore_missing_imports = true  # Ігнорування відсутніх імпортів для сторонніх бібліотек
+show_error_codes = true  # Відображення кодів помилок для легшого пошуку рішень
