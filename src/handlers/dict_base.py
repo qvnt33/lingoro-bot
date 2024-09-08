@@ -29,13 +29,15 @@ async def process_btn_dict_base(callback: CallbackQuery) -> None:
 
         db.commit()
 
+    # Якщо база словників порожня
     if is_dict_base_empty:
         msg_dict_base = ('Ваша база словників порожня!\n'
                          'Для додавання словника, натисніть на кнопку "Додати словник"')
     else:
         msg_dict_base = ('Оберіть словник для його редагування та перегляду вмісту.')
 
-    await callback.message.edit_text(text=msg_dict_base, reply_markup=kb)
+    await callback.message.edit_text(text=msg_dict_base,
+                                     reply_markup=kb)
 
 
 """
