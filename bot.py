@@ -6,7 +6,7 @@ from config import TOKEN
 from src.handlers import register_handlers
 
 
-async def main():
+async def main() -> None:
     bot = Bot(token=TOKEN)
 
     dp = Dispatcher()

@@ -5,37 +5,41 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from sqlalchemy.orm.query import Query
 
 from db.database import Session
-from db.models import Dictionary, User
+from db.models import User, Vocabulary
 
-from src.keyboards.dict_base_kb import get_inline_kb_dict
+from src.keyboards.vocab_base_kb import get_inline_kb_user_vocabs
+
+from tools.read_data import app_data
 
 router = Router()
 
 
-@router.callback_query(F.data == 'dict_base')
-async def process_btn_dict_base(callback: CallbackQuery) -> None:
+@router.callback_query(F.data == 'vocab_base')
+async def process_btn_vocab_base(callback: CallbackQuery) -> None:
     """Відстежує натискання на кнопку "База словників".
     Відправляє користувачу список його словників.
     """
     with Session as db:
         # Отримання усіх словників, фільтруючи їх по user_id користувача
-        user_dicts: Query[Dictionary] = db.query(Dictionary).filter(User.id == Dictionary.user_id)
+        user_vocabs: Query[Vocabulary] = db.query(Vocabulary).filter(User.id == Vocabulary.user_id)
 
         # Прапорець, чи порожня база словників користувача
-        is_dict_base_empty: bool = len(user_dicts.all()) == 0
+        is_vocab_base_empty: bool = len(user_vocabs.all()) == 0
 
-        kb: InlineKeyboardMarkup = get_inline_kb_dict(user_dicts=user_dicts,
-                                                      is_with_add_btn=is_dict_base_empty)
+        kb: InlineKeyboardMarkup = get_inline_kb_user_vocabs(user_vocabs=user_vocabs,
+                                                             is_with_add_btn=is_vocab_base_empty)
 
         db.commit()
 
-    if is_dict_base_empty:
-        msg_dict_base = ('Ваша база словників порожня!\n'
+    # Якщо база словників порожня
+    if is_vocab_base_empty:
+        msg_vocab_base = ('Ваша база словників порожня!\n'
                          'Для додавання словника, натисніть на кнопку "Додати словник"')
     else:
-        msg_dict_base = ('Оберіть словник для його редагування та перегляду вмісту.')
+        msg_vocab_base = ('Оберіть словник для його редагування та перегляду вмісту.')
 
-    await callback.message.edit_text(text=msg_dict_base, reply_markup=kb)
+    await callback.message.edit_text(text=msg_vocab_base,
+                                     reply_markup=kb)
 
 
 """

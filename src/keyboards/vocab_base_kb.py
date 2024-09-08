@@ -5,8 +5,8 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.types import InlineKeyboardButton
 
 
-def get_inline_kb_dict(user_dicts: sqlalchemy.orm.query.Query,
-                       is_with_add_btn: bool = True) -> InlineKeyboardMarkup:
+def get_inline_kb_user_vocabs(user_vocabs: sqlalchemy.orm.query.Query,
+                             is_with_add_btn: bool = True) -> InlineKeyboardMarkup:
     """Повертає клавіатуру зі словниками користувача.
     З кнопкою "Додати новий словник" чи без неї.
     """
@@ -15,17 +15,17 @@ def get_inline_kb_dict(user_dicts: sqlalchemy.orm.query.Query,
     btn_menu = InlineKeyboardButton(text='Головне меню',
                                     callback_data='menu')
     btn_dict_add = InlineKeyboardButton(text='Додати новий словник',
-                                        callback_data='dict_add')
+                                        callback_data='vocab_add')
 
-    for num, item in enumerate(iterable=user_dicts,
+    for num, item in enumerate(iterable=user_vocabs,
                                start=1):
-        dict_name = item.dictionary_name  # Назва словника
-        wordpair_count = item.wordpair_count  # К-сть словникових пар в словнику
-        dict_note = item.note  # Примітка до словника
-        btn_text = f'{dict_name} [{wordpair_count}]: {dict_note}'  # Текст кнопки
+        vocab_name = item.dictionary_name  # Назва словника
+        wordpair_count = item.wordpair_count  # Кількість словникових пар в словнику
+        vocab_note = item.note  # Примітка до словника
+        btn_text = f'{vocab_name} [{wordpair_count}]: {vocab_note}'  # Текст кнопки
 
         inline_builder.button(text=btn_text,
-                              callback_data=f'calldict_{num}')
+                              callback_data=f'vocab_id_{num}')
 
     if is_with_add_btn:
         # Додає кнопку додавання словника в залежності від переданого прапорця
