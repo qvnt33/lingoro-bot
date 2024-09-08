@@ -11,38 +11,41 @@ router = Router()
 
 @router.callback_query(F.data == 'word_trainer')
 async def process_btn_word_trainer(callback: types.CallbackQuery):
-    """Отлавливаем нажатие на кнопку тренировки.
-    Отправляем клавиатуру с словарями пользователя"""
+    """Відловлює натискання на кнопку 'word_trainer'.
+    Відправляє клавіатуру із словниками користувача
+    """
     with Session as db:
-        # Получаем все словари, фильтруя по user_id пользователя
+        # Отримання всіх словників, фільтруючи по user_id користувача
         user_dicts = db.query(Dictionary).filter(User.id == Dictionary.user_id)
 
-        # База словарей пользователя пустая
+        # Прапорець, чи порожня база словників користувача
         dict_base_is_empty = len(user_dicts.all()) == 0
 
         kb = get_inline_kb_dict(user_dicts, is_with_add_btn=False)
         db.commit()
 
     if dict_base_is_empty:
-        msg_word_trainer = '\n'.join(['База словарей пуста!',
-                                      'Чтобы начать тренировку, нужно добавить словарь во вкладке "База словарей".'])
+        msg_word_trainer = '\n'.join(['База словників порожня!',
+                                      'Щоб почати тренування, потрібно додати словник у вкладці "База словників".'])
     else:
-        msg_word_trainer = 'Выберите словарь для тренировки'
+        msg_word_trainer = 'Оберіть словник для тренування'
 
     await callback.message.edit_text(text=msg_word_trainer, reply_markup=kb)
 
 
 @router.callback_query(F.data.split('_')[0] == 'calldict')
 async def process_btn_dict(callback: types.CallbackQuery):
-    """Отлавливаем нажатие на кнопку словаря.
-    Отправляем клавиатуру с тренировками"""
-    dict_id = int(callback.data.split('_')[1])  # id выбранного словаря
+    """Відловлює натискання на кнопку словника.
+    Відправляє клавіатуру із типами тренування
+    """
+    dict_id = int(callback.data.split('_')[1])  # ID обраного словника
 
     with Session as db:
-        # Получаем имя выбранного словаря из БД, исходя из его id
+        # Отримання назви обраного словника із БД, виходячи з його ID
         dict_name = (db.query(Dictionary.dictionary_name).filter(Dictionary.id == dict_id))[0][0]
-        msg_dict = f'<b>{dict_name}</b>\nВыберите тип тренировки'
-        # Все словарные пары выбранного словаря
+        msg_dict = f'<b>{dict_name}</b>\nОберіть тип тренування'
+
+        # Отримання всіх словникових пар обраного словника із БД
         dict_wordpairs = db.query(WordPair).filter(
             WordPair.dictionary_id == dict_id)
 
@@ -60,9 +63,8 @@ async def process_btn_dict(callback: types.CallbackQuery):
 
 @router.callback_query(F.data == 'direct_translation')
 async def process_btn_direct_translation(callback: types.CallbackQuery):
-    """Отлавливаем нажатие на кнопку тренировки 'Прямой перевод'"""
-
-    msg_train_direct = 'Вы выбрали тренировку "Прямой перевод"'
+    """Відловлює натискання на кнопку типу тренування 'direct_translation'"""
+    msg_train_direct = 'Ви обрали тип тренування "Прямий переклад"'
     # kb = get_inline_kb_dict()
 
     # await callback.message.edit_text(text=msg_train_direct, reply_markup=kb)
@@ -70,8 +72,8 @@ async def process_btn_direct_translation(callback: types.CallbackQuery):
 
 @router.callback_query(F.data == 'revers_translation')
 async def process_btn_revers_translation(callback: types.CallbackQuery):
-    """Отлавливаем нажатие на кнопку тренировки 'Обратный перевод'"""
-    msg_train_direct = 'Вы выбрали тренировку "Обратный перевод"'
+    """Відловлює натискання на кнопку типу тренування 'revers_translation'"""
+    msg_train_direct = 'Ви обрали тип тренування "Зворотній переклад"'
     # kb = get_inline_kb_dict()
 
     # await callback.message.edit_text(text=msg_train_direct, reply_markup=kb)

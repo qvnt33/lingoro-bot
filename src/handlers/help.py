@@ -11,9 +11,9 @@ router = Router()
 
 
 @router.callback_query(F.data == 'help')
-async def process_btn_help(callback: CallbackQuery):
+async def process_btn_help(callback: CallbackQuery) -> None:
     with Session as db:
-        text_help = 'Помощь'
+        text_help = 'Допомога'
         # db.add_all([
         #     User(user_id=5950587277, username='pyquent',
         #          first_name='ads', last_name='gg'),

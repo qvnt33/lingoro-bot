@@ -1,8 +1,8 @@
 from aiogram import Dispatcher
 
 
-def register_handlers(dp: Dispatcher):
-    """Регистрируем все хэндлеры"""
+def register_handlers(dp: Dispatcher) -> None:
+    """Реєструємо усі хендлери"""
     from . import (menu,
                    help,
                    dict_base,

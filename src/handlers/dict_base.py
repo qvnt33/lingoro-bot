@@ -18,10 +18,10 @@ async def process_btn_dict_base(callback: CallbackQuery) -> None:
     Відправляє користувачу список його словників.
     """
     with Session as db:
-        # Отримує всі словники, фільтруючи їх по user_id користувача
+        # Отримання усіх словників, фільтруючи їх по user_id користувача
         user_dicts: Query[Dictionary] = db.query(Dictionary).filter(User.id == Dictionary.user_id)
 
-        # Отримує прапорець, чи порожня база словників користувача
+        # Прапорець, чи порожня база словників користувача
         is_dict_base_empty: bool = len(user_dicts.all()) == 0
 
         kb: InlineKeyboardMarkup = get_inline_kb_dict(user_dicts=user_dicts,
@@ -33,9 +33,7 @@ async def process_btn_dict_base(callback: CallbackQuery) -> None:
         msg_dict_base = ('Ваша база словників порожня!\n'
                          'Для додавання словника, натисніть на кнопку "Додати словник"')
     else:
-        msg_dict_base = 'Оберіть словник для його редагування та перегляду вмісту.'(
-            "Выберите словарь для его редактирования и просмотра содержимого."
-        )
+        msg_dict_base = ('Оберіть словник для його редагування та перегляду вмісту.')
 
     await callback.message.edit_text(text=msg_dict_base, reply_markup=kb)
 

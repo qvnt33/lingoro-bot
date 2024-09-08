@@ -3,7 +3,7 @@ from .database import Base, engine
 
 
 class User(Base):
-    """Пользователи"""
+    """Користувачі"""
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
@@ -12,54 +12,53 @@ class User(Base):
     first_name = Column(String(50))
     last_name = Column(String(50))
 
-
 class Dictionary(Base):
-    """Словари пользователей"""
+    """Словники користувачів"""
     __tablename__ = 'dictionaries'
 
     id = Column(Integer, primary_key=True)
-    dictionary_name = Column(String(50))  # Название словаря
+    dictionary_name = Column(String(50))  # Назва словника
 
-    wordpair_count = Column(Integer, default=0)  # Кол-во словарных пар в словаре
-    created_date = Column(Date)  # Дата создания словаря
-    note = Column(String(100))  # Заметка к словарю
-    user_id = Column(String(50), ForeignKey('users.id'))  # user_id пользователя
+    wordpair_count = Column(Integer, default=0)  # Кількість словникових пар у словнику
+    created_date = Column(Date)  # Дата створення словника
+    note = Column(String(100))  # Нотатка до словника
+    user_id = Column(String(50), ForeignKey('users.id'))  # user_id користувача
 
 
 class Training(Base):
-    """Вся информация о тренировках"""
+    """Уся інформація та статистика про тренування"""
     __tablename__ = 'training'
 
     id = Column(Integer, primary_key=True)
-    training_mode = Column(String(50))  # Режим тренировки
-    training_date = Column(Date)  # Дата тренировки
+    training_mode = Column(String(50))  # Тип тренування
+    training_date = Column(Date)  # Дата тренування
 
-    error_count = Column(Integer)  # Кол-во ошибок за тренировку
-    total_score = Column(Float)  # Общий балл за тренировку
-    success_rate = Column(Float)  # Успешность тренировки (в процентах)
+    error_count = Column(Integer)  # Кількість помилок за тренування
+    total_score = Column(Float)  # Загальна оцінка тренування
+    success_rate = Column(Float)  # Успішність тренування у відсотках
 
-    # ID словаря, который тренировали
+    # ID словника, котрий використовували для тренування
     dictionary_id = Column(Integer, ForeignKey('dictionaries.id'))
 
 
 class WordPair(Base):
-    """Словарные пары"""
+    """Словникові пари"""
     __tablename__ = 'wordpairs'
 
     id = Column(Integer, primary_key=True)
-    word_1 = Column(String(100))  # Первое слово словаря
-    word_2 = Column(String(100))  # Второе слово словаря
+    word_1 = Column(String(100))  # Перше слово словника
+    word_2 = Column(String(100))  # Друге слово словника
 
-    # Аннотация к первому слову
+    # Анотація до першого слова
     annotation_1 = Column(String(100), default=None)
-    # Аннотация к второму слову
+    # Анотація до другого слова
     annotation_2 = Column(String(100), default=None)
 
-    # Кол-во всех ошибок словарной пары
+    # Кількість помилок словникової пари за весь час
     error_count = Column(Integer, default=0)
 
-    # ID словаря, который тренировали
+    # ID словника, котрий використовували для тренування
     dictionary_id = Column(Integer, ForeignKey('dictionaries.id'))
 
 
-Base.metadata.create_all(bind=engine)  # Создание всех таблиц
+Base.metadata.create_all(bind=engine)  # Створення усіх таблиць
