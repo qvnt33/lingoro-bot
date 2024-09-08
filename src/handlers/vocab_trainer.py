@@ -6,6 +6,8 @@ from src.keyboards.vocab_trainer_kb import get_inline_kb_all_training
 from db.models import User, Vocabulary, WordPair
 from db.database import Session
 
+from tools.read_data import app_data
+
 router = Router()
 
 

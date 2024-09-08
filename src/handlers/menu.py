@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.enums import ParseMode
 
 from src.keyboards.menu_kb import get_inline_kb_menu
-from tools.read_data import data
+from tools.read_data import app_data
 
 router = Router()
 
@@ -16,7 +16,7 @@ async def cmd_menu(message: Message) -> None:
     kb: InlineKeyboardMarkup = get_inline_kb_menu()
 
     await message.answer(
-        text=data['prompt']['text_menu'],
+        text=app_data['prompt']['text_menu'],
         reply_markup=kb,
         parse_mode=ParseMode.HTML)
 
@@ -27,6 +27,6 @@ async def process_back_to_menu(callback: CallbackQuery) -> None:
     kb: InlineKeyboardMarkup = get_inline_kb_menu()
 
     await callback.message.edit_text(
-        text=data['prompt']['text_menu'],
+        text=app_data['prompt']['text_menu'],
         reply_markup=kb,
         parse_mode=ParseMode.HTML)

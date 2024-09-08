@@ -9,6 +9,8 @@ from db.models import User, Vocabulary
 
 from src.keyboards.vocab_base_kb import get_inline_kb_user_vocabs
 
+from tools.read_data import app_data
+
 router = Router()
 
 
