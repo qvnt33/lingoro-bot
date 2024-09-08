@@ -12,16 +12,17 @@ class User(Base):
     first_name = Column(String(50))
     last_name = Column(String(50))
 
-class Dictionary(Base):
+class Vocabulary(Base):
     """Словники користувачів"""
-    __tablename__ = 'dictionaries'
+    __tablename__ = 'vocabularies'
 
     id = Column(Integer, primary_key=True)
-    dictionary_name = Column(String(50))  # Назва словника
+    vocab_name = Column(String(50))  # Назва словника
 
     wordpair_count = Column(Integer, default=0)  # Кількість словникових пар у словнику
     created_date = Column(Date)  # Дата створення словника
-    note = Column(String(100))  # Нотатка до словника
+    vocab_note = Column(String(100))  # Нотатка до словника
+
     user_id = Column(String(50), ForeignKey('users.id'))  # user_id користувача
 
 
@@ -38,7 +39,7 @@ class Training(Base):
     success_rate = Column(Float)  # Успішність тренування у відсотках
 
     # ID словника, котрий використовували для тренування
-    dictionary_id = Column(Integer, ForeignKey('dictionaries.id'))
+    vocab_id = Column(Integer, ForeignKey('vocabularies.id'))
 
 
 class WordPair(Base):
@@ -58,7 +59,7 @@ class WordPair(Base):
     error_count = Column(Integer, default=0)
 
     # ID словника, котрий використовували для тренування
-    dictionary_id = Column(Integer, ForeignKey('dictionaries.id'))
+    vocab_id = Column(Integer, ForeignKey('vocabularies.id'))
 
 
 Base.metadata.create_all(bind=engine)  # Створення усіх таблиць
