@@ -10,8 +10,8 @@ router = Router()
 
 
 @router.message(Command(commands=['start', 'menu']))
-async def cmd_menu(message: Message):
-    """Переходим в главное меню после ввода команд"""
+async def cmd_menu(message: Message) -> None:
+    """Переходить у головне меню після введення команд"""
     await message.answer(
         text=data['prompt']['text_menu'],
         reply_markup=get_inline_kb_menu(),
@@ -21,7 +21,7 @@ async def cmd_menu(message: Message):
 
 @router.callback_query(F.data == 'menu')
 async def process_back_to_menu(callback: CallbackQuery):
-    """Переходим в главное меню после нажатия кнопки"""
+    """Переходить у головне меню після натискання на кнопку"""
     await callback.message.edit_text(
         text=data['prompt']['text_menu'],
         reply_markup=get_inline_kb_menu(),
