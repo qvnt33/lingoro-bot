@@ -33,10 +33,9 @@ async def process_btn_vocab_base(callback: CallbackQuery) -> None:
 
     # Якщо база словників порожня
     if is_vocab_base_empty:
-        msg_vocab_base = ('Ваша база словників порожня!\n'
-                         'Для додавання словника, натисніть на кнопку "Додати словник"')
+        msg_vocab_base = app_data['handlers']['vocab_base']['vocab_base_is_empty']
     else:
-        msg_vocab_base = ('Оберіть словник для його редагування та перегляду вмісту.')
+        msg_vocab_base = app_data['handlers']['vocab_base']['msg_select_vocab']
 
     await callback.message.edit_text(text=msg_vocab_base,
                                      reply_markup=kb)

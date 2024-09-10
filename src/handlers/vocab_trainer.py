@@ -27,10 +27,9 @@ async def process_btn_vocab_trainer(callback: types.CallbackQuery):
         db.commit()
 
     if is_vocab_base_empty:
-        msg_vocab_trainer = '\n'.join(['База словників порожня!',
-                                      'Щоб почати тренування, потрібно додати словник у вкладці "База словників".'])
+        msg_vocab_trainer = app_data['handlers']['vocab_trainer']['vocab_base_is_empty']
     else:
-        msg_vocab_trainer = 'Оберіть словник для тренування'
+        msg_vocab_trainer = app_data['handlers']['vocab_trainer']['msg_select_vocab']
 
     await callback.message.edit_text(text=msg_vocab_trainer, reply_markup=kb)
 
@@ -45,7 +44,8 @@ async def process_btn_vocab_press(callback: types.CallbackQuery):
     with Session as db:
         # Отримання назви обраного словника із БД, виходячи з його ID
         vocab_name = (db.query(Vocabulary.dictionary_name).filter(Vocabulary.id == vocab_id))[0][0]
-        msg_training_type = f'<b>{vocab_name}</b>\nОберіть тип тренування'
+        msg_training_type = app_data['handlers']['vocab_trainer']['msg_select_training_type'].format(
+            vocab_name=vocab_name)
 
         # Отримання всіх словникових пар обраного словника із БД
         vocab_wordpairs = db.query(WordPair).filter(
@@ -66,7 +66,7 @@ async def process_btn_vocab_press(callback: types.CallbackQuery):
 @router.callback_query(F.data == 'direct_translation')
 async def process_btn_direct_translation(callback: types.CallbackQuery):
     """Відловлює натискання на кнопку типу тренування 'direct_translation'"""
-    msg_train_direct = 'Ви обрали тип тренування "Прямий переклад"'
+    msg_train_direct = app_data['handlers']['vocab_trainer']['msg_selected_direct_translation']
     # kb = get_inline_kb_dict()
 
     # await callback.message.edit_text(text=msg_train_direct, reply_markup=kb)
@@ -75,7 +75,7 @@ async def process_btn_direct_translation(callback: types.CallbackQuery):
 @router.callback_query(F.data == 'revers_translation')
 async def process_btn_revers_translation(callback: types.CallbackQuery):
     """Відловлює натискання на кнопку типу тренування 'revers_translation'"""
-    msg_train_direct = 'Ви обрали тип тренування "Зворотній переклад"'
+    msg_train_direct = app_data['handlers']['vocab_trainer']['msg_selected_revers_translation']
     # kb = get_inline_kb_dict()
 
     # await callback.message.edit_text(text=msg_train_direct, reply_markup=kb)

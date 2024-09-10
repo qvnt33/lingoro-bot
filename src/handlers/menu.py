@@ -16,7 +16,7 @@ async def cmd_menu(message: Message) -> None:
     kb: InlineKeyboardMarkup = get_inline_kb_menu()
 
     await message.answer(
-        text=app_data['menu']['title_menu'],
+        text=app_data['handlers']['menu']['title_menu'],
         reply_markup=kb,
         parse_mode=ParseMode.HTML)
 
@@ -27,6 +27,6 @@ async def process_back_to_menu(callback: CallbackQuery) -> None:
     kb: InlineKeyboardMarkup = get_inline_kb_menu()
 
     await callback.message.edit_text(
-        text=app_data['menu']['title_menu'],
+        text=app_data['handlers']['menu']['title_menu'],
         reply_markup=kb,
         parse_mode=ParseMode.HTML)

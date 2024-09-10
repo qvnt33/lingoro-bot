@@ -11,7 +11,7 @@ router = Router()
 
 @router.callback_query(F.data == 'help')
 async def process_btn_help(callback: CallbackQuery) -> None:
-    text_help: str = app_data['help']['title_help']
+    text_help: str = app_data['handlers']['help']['title_help']
     kb: InlineKeyboardMarkup = get_inline_kb_help()
 
     await callback.message.edit_text(text=text_help,
