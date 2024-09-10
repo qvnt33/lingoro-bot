@@ -3,10 +3,7 @@ from aiogram import Dispatcher
 
 def register_handlers(dp: Dispatcher) -> None:
     """Реєструємо усі хендлери"""
-    from . import (menu,
-                   help,
-                   vocab_base,
-                   vocab_trainer)
+    from . import help, menu, vocab_base, vocab_trainer
 
     dp.include_router(menu.router)
     dp.include_router(help.router)
