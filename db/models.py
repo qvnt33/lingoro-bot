@@ -1,10 +1,11 @@
-from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey
 from .database import Base, engine
+from sqlalchemy import Column, Date, Float, ForeignKey, Integer, String
 
 
 class User(Base):
     """Користувачі"""
-    __tablename__ = 'users'
+
+    __tablename__: str = 'users'
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
@@ -12,9 +13,11 @@ class User(Base):
     first_name = Column(String(50))
     last_name = Column(String(50))
 
+
 class Vocabulary(Base):
     """Словники користувачів"""
-    __tablename__ = 'vocabularies'
+
+    __tablename__: str = 'vocabularies'
 
     id = Column(Integer, primary_key=True)
     vocab_name = Column(String(50))  # Назва словника
@@ -28,7 +31,8 @@ class Vocabulary(Base):
 
 class Training(Base):
     """Уся інформація та статистика про тренування"""
-    __tablename__ = 'training'
+
+    __tablename__: str = 'training'
 
     id = Column(Integer, primary_key=True)
     training_mode = Column(String(50))  # Тип тренування
@@ -44,7 +48,8 @@ class Training(Base):
 
 class WordPair(Base):
     """Словникові пари"""
-    __tablename__ = 'wordpairs'
+
+    __tablename__: str = 'wordpairs'
 
     id = Column(Integer, primary_key=True)
     word_1 = Column(String(100))  # Перше слово словника
