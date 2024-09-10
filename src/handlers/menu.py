@@ -12,7 +12,9 @@ router = Router()
 
 @router.message(Command(commands=['start', 'menu']))
 async def cmd_menu(message: Message) -> None:
-    """Переходить у головне меню після введення команд"""
+    """Відстежує введення команди "start, menu".
+    Відправляє користувачу повідомлення головного меню.
+    """
     title_menu: str = app_data['handlers']['menu']['title_menu']
     kb: InlineKeyboardMarkup = get_inline_kb_menu()
 
@@ -24,7 +26,9 @@ async def cmd_menu(message: Message) -> None:
 
 @router.callback_query(F.data == 'menu')
 async def process_btn_back_to_menu(callback: CallbackQuery) -> None:
-    """Переходить у головне меню після натискання на кнопку"""
+    """Відстежує натискання на кнопку меню".
+    Відправляє користувачу повідомлення головного меню.
+    """
     title_menu: str = app_data['handlers']['menu']['title_menu']
     kb: InlineKeyboardMarkup = get_inline_kb_menu()
 
