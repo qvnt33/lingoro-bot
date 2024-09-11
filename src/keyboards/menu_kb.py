@@ -11,7 +11,7 @@ def get_inline_kb_menu() -> InlineKeyboardMarkup:
                                              callback_data='vocab_trainer')
     btn_vocab_base = InlineKeyboardButton(text='📊 База словників',
                                           callback_data='vocab_base')
-    btn_help = InlineKeyboardButton(text='⁉️ Справка',
+    btn_help = InlineKeyboardButton(text='⁉️ Довідка',
                                     callback_data='help')
 
     inline_builder.row(btn_vocab_trainer,
