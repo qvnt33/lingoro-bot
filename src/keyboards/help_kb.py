@@ -1,12 +1,10 @@
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.types import InlineKeyboardButton
+from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 def get_inline_kb_help() -> InlineKeyboardMarkup:
-    """Повертає клавіатуру зі словниками користувача.
-    З кнопкою додавання словника чи без неї.
-    """
+    """Повертає клавіатуру з кнопкою головного меню"""
     inline_builder = InlineKeyboardBuilder()
 
     btn_menu = InlineKeyboardButton(text='Главное меню',
