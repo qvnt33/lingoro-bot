@@ -36,7 +36,7 @@ async def process_btn_vocab_base(callback: CallbackQuery) -> None:
 
     await callback.message.edit_text(text=msg_vocab_base,
                                      reply_markup=kb,
-                                     parse_mode=ParseMode.HTML)
+                                     parse_mode=ParseMode.MARKDOWN)
 
 
 """
