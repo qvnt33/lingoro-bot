@@ -26,7 +26,6 @@ async def process_btn_vocab_base(callback: CallbackQuery) -> None:
 
         kb: InlineKeyboardMarkup = get_inline_kb_user_vocabs(user_vocabs=user_vocabs,
                                                              is_with_add_btn=is_vocab_base_empty)
-
         db.commit()
 
     # Якщо база словників порожня

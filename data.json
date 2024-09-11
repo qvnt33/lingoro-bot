@@ -15,7 +15,7 @@
       "msg_select_vocab": "Оберіть словник для тренування",
       "msg_select_training_type": "*{vocab_name}*\nОберіть тип тренування",
       "msg_selected_direct_translation": "Ви обрали тип тренування *\"Прямий переклад\"*",
-      "msg_selected_revers_translation": "Ви обрали тип тренування *\"Зворотній переклад\"*"
+      "msg_selected_reverse_translation": "Ви обрали тип тренування *\"Зворотній переклад\"*"
     }
   }
 }

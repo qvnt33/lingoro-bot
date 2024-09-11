@@ -74,9 +74,9 @@ async def process_btn_direct_translation(callback: CallbackQuery) -> None:
     # await callback.message.edit_text(text=msg_train_direct, reply_markup=kb)
 
 
-@router.callback_query(F.data == 'revers_translation')
+@router.callback_query(F.data == 'reverse_translation')
 async def process_btn_reverse_translation(callback: CallbackQuery):
-    msg_train_direct = app_data['handlers']['vocab_trainer']['msg_selected_revers_translation']
+    msg_train_direct = app_data['handlers']['vocab_trainer']['msg_selected_reverse_translation']
     # kb = get_inline_kb_dict()
 
     # await callback.message.edit_text(text=msg_train_direct, reply_markup=kb)
