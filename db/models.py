@@ -1,5 +1,6 @@
 from .database import Base, engine
-from sqlalchemy import Column, Date, Float, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy.sql import func
 
 
 class User(Base):
@@ -9,9 +10,13 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
+
     username = Column(String(50))
     first_name = Column(String(50))
     last_name = Column(String(50))
+
+    created_at = Column(DateTime(timezone=True),
+                        server_default=func.now())
 
 
 class Vocabulary(Base):
@@ -20,30 +25,13 @@ class Vocabulary(Base):
     __tablename__: str = 'vocabularies'
 
     id = Column(Integer, primary_key=True)
-    vocab_name = Column(String(50))  # Назва словника
+    name = Column(String(50))  # Назва словника
+    note = Column(String(100))  # Нотатка до словника
 
-    wordpair_count = Column(Integer, default=0)  # Кількість словникових пар у словнику
-    created_date = Column(Date)  # Дата створення словника
-    vocab_note = Column(String(100))  # Нотатка до словника
+    created_at = Column(DateTime(timezone=True),
+                        server_default=func.now())  # Дата створення словника
 
-    user_id = Column(String(50), ForeignKey('users.id'))  # user_id користувача
-
-
-class Training(Base):
-    """Уся інформація та статистика про тренування"""
-
-    __tablename__: str = 'training'
-
-    id = Column(Integer, primary_key=True)
-    training_mode = Column(String(50))  # Тип тренування
-    training_date = Column(Date)  # Дата тренування
-
-    error_count = Column(Integer)  # Кількість помилок за тренування
-    total_score = Column(Float)  # Загальна оцінка тренування
-    success_rate = Column(Float)  # Успішність тренування у відсотках
-
-    # ID словника, котрий використовували для тренування
-    vocab_id = Column(Integer, ForeignKey('vocabularies.id'))
+    user_id = Column(Integer, ForeignKey('users.id'))  # user_id користувача
 
 
 class WordPair(Base):
@@ -52,16 +40,35 @@ class WordPair(Base):
     __tablename__: str = 'wordpairs'
 
     id = Column(Integer, primary_key=True)
-    word_1 = Column(String(100))  # Перше слово словника
-    word_2 = Column(String(100))  # Друге слово словника
+    word_a = Column(String(100), nullable=False)  # Перше слово словникової пари
+    word_b = Column(String(100), nullable=False)  # Друге слово словникової пари
 
-    # Анотація до першого слова
-    annotation_1 = Column(String(100), default=None)
-    # Анотація до другого слова
-    annotation_2 = Column(String(100), default=None)
+    annotation_a = Column(String(100), default=None)  # Анотація до першого слова
+    annotation_b = Column(String(100), default=None)  # Анотація до другого слова
+
+    hint_a = Column(String(100))  # Підказка до першого слова
+    hint_b = Column(String(100))  # Підказка до другого слова
 
     # Кількість помилок словникової пари за весь час
     error_count = Column(Integer, default=0)
+
+    # ID словника, котрий використовували для тренування
+    vocab_id = Column(Integer, ForeignKey('vocabularies.id'))
+
+
+class VocabTraining(Base):
+    """Уся інформація та статистика тренувань"""
+
+    __tablename__: str = 'vocab_training'
+
+    id = Column(Integer, primary_key=True)
+    training_mode = Column(String(50))  # Тип тренування
+    training_date = Column(DateTime(timezone=True),
+                           server_default=func.now())  # Дата тренування
+
+    error_count = Column(Integer)  # Кількість помилок за тренування
+    total_score = Column(Float)  # Загальна оцінка тренування
+    success_rate = Column(Float)  # Успішність тренування у відсотках
 
     # ID словника, котрий використовували для тренування
     vocab_id = Column(Integer, ForeignKey('vocabularies.id'))
