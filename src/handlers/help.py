@@ -19,4 +19,4 @@ async def process_btn_help(callback: CallbackQuery) -> None:
 
     await callback.message.edit_text(text=title_help,
                                      reply_markup=kb,
-                                     parse_mode=ParseMode.HTML)
+                                     parse_mode=ParseMode.MARKDOWN)
