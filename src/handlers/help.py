@@ -1,5 +1,4 @@
 from aiogram import F, Router
-from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
@@ -18,5 +17,4 @@ async def process_btn_help(callback: CallbackQuery) -> None:
     kb: InlineKeyboardMarkup = get_inline_kb_help()
 
     await callback.message.edit_text(text=title_help,
-                                     reply_markup=kb,
-                                     parse_mode=ParseMode.MARKDOWN)
+                                     reply_markup=kb)

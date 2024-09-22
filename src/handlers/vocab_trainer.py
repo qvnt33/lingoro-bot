@@ -1,5 +1,4 @@
 from aiogram import F, Router
-from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from sqlalchemy.orm.query import Query
@@ -36,8 +35,7 @@ async def process_btn_vocab_trainer(callback: CallbackQuery) -> None:
         msg_vocab_trainer: str = app_data['handlers']['vocab_trainer']['msg_select_vocab']
 
     await callback.message.edit_text(text=msg_vocab_trainer,
-                                     reply_markup=kb,
-                                     parse_mode=ParseMode.MARKDOWN)
+                                     reply_markup=kb)
 
 
 @router.callback_query(F.data.split('_')[0] == 'vocab_id')
@@ -61,8 +59,7 @@ async def process_btn_user_vocab(callback: CallbackQuery) -> None:
         db.commit()
 
     await callback.message.edit_text(text=msg_training_type,
-                                     reply_markup=kb,
-                                     parse_mode=ParseMode.MARKDOWN)
+                                     reply_markup=kb)
 
 
 """

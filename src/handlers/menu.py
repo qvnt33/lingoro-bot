@@ -1,5 +1,4 @@
 from aiogram import F, Router
-from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
@@ -20,8 +19,7 @@ async def cmd_menu(message: Message) -> None:
 
     await message.answer(
         text=title_menu,
-        reply_markup=kb,
-        parse_mode=ParseMode.MARKDOWN)
+        reply_markup=kb)
 
 
 @router.callback_query(F.data == 'menu')
@@ -34,5 +32,4 @@ async def process_btn_back_to_menu(callback: CallbackQuery) -> None:
 
     await callback.message.edit_text(
         text=title_menu,
-        reply_markup=kb,
-        parse_mode=ParseMode.MARKDOWN)
+        reply_markup=kb)

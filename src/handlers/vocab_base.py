@@ -1,5 +1,4 @@
 from aiogram import F, Router
-from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from sqlalchemy.orm.query import Query
@@ -35,8 +34,7 @@ async def process_btn_vocab_base(callback: CallbackQuery) -> None:
         msg_vocab_base: str = app_data['handlers']['vocab_base']['msg_select_vocab']
 
     await callback.message.edit_text(text=msg_vocab_base,
-                                     reply_markup=kb,
-                                     parse_mode=ParseMode.MARKDOWN)
+                                     reply_markup=kb)
 
 
 """

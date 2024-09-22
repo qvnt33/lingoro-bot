@@ -1,13 +1,16 @@
 import asyncio
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.bot import DefaultBotProperties
+from aiogram.enums import ParseMode
 
 from config import TOKEN
 from src.handlers import register_handlers
 
 
 async def main() -> None:
-    bot = Bot(token=TOKEN)
+    bot = Bot(token=TOKEN,
+              default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
 
     dp = Dispatcher()
     register_handlers(dp)  # Підключення роутерів
