@@ -5,6 +5,7 @@ from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from config import TOKEN
+from db.models import create_tables
 from src.handlers import register_handlers
 
 
@@ -20,4 +21,5 @@ async def main() -> None:
 
 
 if __name__ == '__main__':
+    create_tables()  # Створення всіх таблиць
     asyncio.run(main())
