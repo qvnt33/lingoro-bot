@@ -120,3 +120,4 @@ cython_debug/
 
 # Other
 tasks.txt
+database.db
