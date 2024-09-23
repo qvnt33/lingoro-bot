@@ -4,7 +4,7 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from sqlalchemy.orm.query import Query
 
 from db.database import Session
-from db.models import User, Vocabulary
+from db.models import Vocabulary
 from src.keyboards.vocab_base_kb import get_inline_kb_user_vocabs
 from tools.read_data import app_data
 
@@ -16,15 +16,15 @@ async def process_btn_vocab_base(callback: CallbackQuery) -> None:
     """Відстежує натискання на кнопку бази словників.
     Відправляє користувачу список його словників.
     """
-    with Session as db:
+    with Session() as db:
+        user_id: int = callback.from_user.id
         # Отримання усіх словників, фільтруючи їх по user_id користувача
-        user_vocabs: Query[Vocabulary] = db.query(Vocabulary).filter(User.id == Vocabulary.user_id)
+        user_vocabs: Query[Vocabulary] = db.query(Vocabulary).filter(user_id == Vocabulary.user_id)
 
         # Флаг, чи порожня база словників користувача
         is_vocab_base_empty: bool = len(user_vocabs.all()) == 0
 
-        kb: InlineKeyboardMarkup = get_inline_kb_user_vocabs(user_vocabs=user_vocabs,
-                                                             is_with_add_btn=is_vocab_base_empty)
+        kb: InlineKeyboardMarkup = get_inline_kb_user_vocabs(user_vocabs)
         db.commit()
 
     # Якщо база словників порожня
