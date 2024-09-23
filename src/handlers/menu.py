@@ -4,8 +4,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.types.user import User
 
-from db.database import Session, engine
-from db.models import User
+from db.database import Session
 from src.keyboards.menu_kb import get_inline_kb_menu
 from tools.read_data import app_data
 
