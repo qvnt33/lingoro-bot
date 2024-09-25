@@ -1,40 +1,50 @@
-import sqlalchemy
 from aiogram.types import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from db.database import Session
-from db.models import WordPair
+from src.handlers.callback_data import PaginationCallback, VocabCallback
 
 
-def get_inline_kb_user_vocabs(user_vocabs: sqlalchemy.orm.query.Query) -> InlineKeyboardMarkup:
-    """Повертає клавіатуру з словниками користувача"""
-    inline_builder = InlineKeyboardBuilder()
+def get_inline_kb_vocab_base(vocab_lst: list,
+                             start_offset: int,
+                             end_offset: int,
+                             current_page: int,
+                             total_pages_pagination: int,
+                             limit: int,
+                             is_vocab_base_empty: bool) -> InlineKeyboardMarkup:
+    """Генерує клавіатуру з кнопками для вибору словників та пагінації"""
+    kb = InlineKeyboardBuilder()
 
-    btn_menu = InlineKeyboardButton(text='Головне меню',
-                                    callback_data='menu')
-    btn_vocab_add = InlineKeyboardButton(text='Додати словник',
-                                        callback_data='vocab_add')
-
-    # Флаг, чи порожня база словників користувача
-    is_vocab_base_empty: bool = len(user_vocabs.all()) == 0
-
+    # Якщо у словнику є словникові пари
     if not is_vocab_base_empty:
-        with Session() as db:
-            wordpair_count: str = len(user_vocabs.all())  # Кількість словникових пар в словнику
+        # Додавання кнопок словників для поточної сторінки
+        for vocab in vocab_lst[start_offset:end_offset]:
+            total_wordpairs: int = len(vocab['wordpairs'])  # Кількість словникових пар у словнику
+            vocab_button_text: str = f'{vocab['name']} [{total_wordpairs}]'
+            kb.button(text=vocab_button_text, callback_data=VocabCallback(vocab_id=vocab['id']).pack())
 
-            for num, item in enumerate(iterable=user_vocabs,
-                                       start=1):
-                vocab_name: str = item.name  # Назва словника
-                # Кількість словникових пар у словнику
-                wordpair_count = db.query(WordPair).filter(WordPair.vocabulary_id == item.id).count()
+        kb.adjust(1)
 
-                btn_text: str = f'{vocab_name} [{wordpair_count}]'  # Текст кнопки
+        btn_prev_page = InlineKeyboardButton(
+            text='⬅️',
+            callback_data=PaginationCallback(name='vocab_base', page=current_page - 1, limit=limit).pack())
+        btn_page_info = InlineKeyboardButton(
+            text=f'{current_page}/{total_pages_pagination}',
+            callback_data='neutral_call')
+        btn_next_page = InlineKeyboardButton(
+            text='➡️',
+            callback_data=PaginationCallback(name='vocab_base', page=current_page + 1, limit=limit).pack())
 
-                inline_builder.button(text=btn_text,
-                                      callback_data=f'vocab_id_{num}')
+        kb.row(btn_prev_page, btn_page_info, btn_next_page, width=3)
 
-    inline_builder.adjust(1)  # Кількість кнопок у рядку
-    inline_builder.row(btn_vocab_add, btn_menu, width=2)
+    btn_add_vocab = InlineKeyboardButton(
+        text='➕ Додати новий словник',
+        callback_data='add_vocab')
 
-    return inline_builder.as_markup()
+    btn_menu = InlineKeyboardButton(
+        text='🏠 Головне меню',
+        callback_data='menu')
+
+    kb.row(btn_add_vocab, btn_menu, width=1)
+
+    return kb.as_markup()
