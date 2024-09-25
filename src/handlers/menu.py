@@ -8,12 +8,19 @@ from db.models import User
 from src.keyboards.menu_kb import get_inline_kb_menu
 from tools.read_data import app_data
 
-router = Router()
+router = Router(name='menu')
+
+
+@router.callback_query(F.data == 'neutral_call')
+async def process_neutral_call(callback: CallbackQuery) -> None:
+    """Заглушка для callback"""
+    # Відповідаємо на callback-запит без відправлення повідомлення
+    await callback.answer()
 
 
 @router.message(Command(commands=['start', 'menu']))
 async def cmd_menu(message: Message) -> None:
-    """Відстежує введення команди "start, menu".
+    """Відстежує введення команд "start, menu".
     Відправляє користувачу повідомлення головного меню.
     """
     kb: InlineKeyboardMarkup = get_inline_kb_menu()
@@ -43,7 +50,7 @@ async def cmd_menu(message: Message) -> None:
 
 @router.callback_query(F.data == 'menu')
 async def process_btn_back_to_menu(callback: CallbackQuery) -> None:
-    """Відстежує натискання на кнопку меню".
+    """Відстежує натискання на кнопку "меню".
     Відправляє користувачу повідомлення головного меню.
     """
     title_menu: str = app_data['handlers']['menu']['title_menu']
