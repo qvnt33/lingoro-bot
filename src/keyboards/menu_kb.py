@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from src.handlers.vocab_base import PaginationCallback
 
 
 def get_inline_kb_menu() -> InlineKeyboardMarkup:
@@ -10,7 +11,7 @@ def get_inline_kb_menu() -> InlineKeyboardMarkup:
     btn_vocab_trainer = InlineKeyboardButton(text='📚 Словниковий тренажер',
                                              callback_data='vocab_trainer')
     btn_vocab_base = InlineKeyboardButton(text='📊 База словників',
-                                          callback_data='vocab_base')
+                                          callback_data=PaginationCallback(name='vocab_base', page=1, limit=10).pack())
     btn_help = InlineKeyboardButton(text='⁉️ Довідка',
                                     callback_data='help')
 
