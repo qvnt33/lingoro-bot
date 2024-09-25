@@ -110,5 +110,5 @@ class TrainingSession(Base):
 
 
 def create_tables() -> None:
-    """Функція для створення всіх таблиць у базі даних"""
+    """Створює всі таблиці у БД"""
     Base.metadata.create_all(bind=engine)
