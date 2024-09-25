@@ -51,7 +51,7 @@ class WordPair(Base):
     vocabulary_id = Column(Integer, ForeignKey('vocabularies.id'), nullable=False)  # Зв'язок зі словником
 
 
-class WordPairWords(Base):
+class WordPairWord(Base):
     """Таблиця зв'язків між словниковими парами та словами"""
 
     __tablename__: str = 'wordpair_words'
