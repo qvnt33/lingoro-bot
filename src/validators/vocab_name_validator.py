@@ -39,7 +39,7 @@ class VocabNameValidator:
         return True
 
     def correct_length(self) -> bool:
-        """Перевіряє, що довжина назви від 3 до 50 символів."""
+        """Перевіряє, що довжина коректна назви"""
         if not (self.min_length_vocab_name <= len(self.name) <= self.max_length_vocab_name):
             self._add_error(app_data['create_vocab']['name']['errors']['incorrect_length']
                             .format(self.min_length_vocab_name,
