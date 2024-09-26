@@ -25,17 +25,19 @@ def get_inline_kb_vocab_base(vocab_lst: list,
 
         kb.adjust(1)
 
-        btn_prev_page = InlineKeyboardButton(
-            text='⬅️',
-            callback_data=PaginationCallback(name='vocab_base', page=current_page - 1, limit=limit).pack())
-        btn_page_info = InlineKeyboardButton(
-            text=f'{current_page}/{total_pages_pagination}',
-            callback_data='neutral_call')
-        btn_next_page = InlineKeyboardButton(
-            text='➡️',
-            callback_data=PaginationCallback(name='vocab_base', page=current_page + 1, limit=limit).pack())
+        # Додавання пагінації, якщо сторінок більше 1
+        if total_pages_pagination > 1:
+            btn_prev_page = InlineKeyboardButton(
+                text='⬅️',
+                callback_data=PaginationCallback(name='vocab_base', page=current_page - 1, limit=limit).pack())
+            btn_page_info = InlineKeyboardButton(
+                text=f'{current_page}/{total_pages_pagination}',
+                callback_data='neutral_call')
+            btn_next_page = InlineKeyboardButton(
+                text='➡️',
+                callback_data=PaginationCallback(name='vocab_base', page=current_page + 1, limit=limit).pack())
 
-        kb.row(btn_prev_page, btn_page_info, btn_next_page, width=3)
+            kb.row(btn_prev_page, btn_page_info, btn_next_page, width=3)
 
     btn_add_vocab = InlineKeyboardButton(
         text='➕ Додати новий словник',
