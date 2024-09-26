@@ -13,7 +13,7 @@ async def process_btn_help(callback: CallbackQuery) -> None:
     """Відстежує натискання на кнопку допомоги".
     Відправляє користувачу повідомлення з допомогою.
     """
-    title_help: str = app_data['handlers']['help']['title_help']
+    title_help: str = app_data['help']['help']
     kb: InlineKeyboardMarkup = get_inline_kb_help()
 
     await callback.message.edit_text(text=title_help,

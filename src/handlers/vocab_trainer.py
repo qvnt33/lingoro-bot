@@ -31,9 +31,9 @@ async def process_btn_vocab_trainer(callback: CallbackQuery) -> None:
 
     # Якщо база словників порожня
     if is_vocab_base_empty:
-        msg_vocab_trainer: str = app_data['handlers']['vocab_trainer']['vocab_base_is_empty']
+        msg_vocab_trainer: str = app_data['vocab_trainer']['vocab_base_is_empty']
     else:
-        msg_vocab_trainer: str = app_data['handlers']['vocab_trainer']['msg_select_vocab']
+        msg_vocab_trainer: str = app_data['vocab_trainer']['msg_select_vocab']
 
     await callback.message.edit_text(text=msg_vocab_trainer,
                                      reply_markup=kb)

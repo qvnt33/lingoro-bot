@@ -5,10 +5,11 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
+from config import MAX_LENGTH_VOCAB_NAME, MIN_LENGTH_VOCAB_NAME
 from db.database import Session
 from src.keyboards.create_vocab_kb import get_inline_kb_confirm_cancel, get_inline_kb_create_vocab
 from src.validators.vocab_name_validator import VocabNameValidator
-from config import MIN_LENGTH_VOCAB_NAME, MAX_LENGTH_VOCAB_NAME
+from tools.read_data import app_data
 
 router = Router(name='create_vocab')
 
@@ -45,16 +46,14 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
 
     if validator.is_valid(user_id=user_id):
         # Якщо назва валідна, завершуємо процес і зберігаємо в БД
-        msg_create_vocab: str = '✅ *Назва словника валідна та успішно збережена!*'
+        msg_create_vocab: str = app_data['create_vocab']['name']['correct']
 
         # Повертаємо користувача у стан очікування нової назви
         await state.set_state(VocabCreation.waiting_for_vocab_name)
     else:
         # Якщо є помилки, форматуємо їх і просимо ввести іншу назву
         formatted_errors: str = '\n'.join([f'{num}. {error}' for num, error in enumerate(validator.errors, start=1)])
-        msg_create_vocab = ('❌ *Є помилки у назві словника:*\n'
-                            f'{formatted_errors}\n\n'
-                            'Будь ласка, введіть іншу назву:')
+        msg_create_vocab: str = app_data['create_vocab']['name']['incorrect'].format(formatted_errors=formatted_errors)
 
         # Повертаємо користувача у стан очікування нової назви
         await state.set_state(VocabCreation.waiting_for_vocab_name)
