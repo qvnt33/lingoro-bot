@@ -113,11 +113,3 @@ def get_vocabulary_dict(vocab_id: int, db: sqlalchemy.orm.session.Session) -> di
         vocab_dict['wordpairs'].append(wordpair_dict)
 
     return vocab_dict
-
-
-@router.callback_query(F.data == 'no_call')
-async def process_btn_no_call(callback: CallbackQuery) -> None:
-    """Відстежує натискання на кнопку з callback "no_call" (не потрібен функціонал).
-    Відправляє користувачу повідомлення головного меню.
-    """
-    return
