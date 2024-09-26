@@ -1,11 +1,10 @@
 import sqlalchemy
 from sqlalchemy.orm.query import Query
-
-from db.models import Vocabulary
 from tools.read_data import app_data
+from db.models import Vocabulary
 
 
-class VocabNameValidator:
+class VocabNoteValidator:
     def __init__(self, name: str,
                  min_length_vocab_name: int,
                  max_length_vocab_name: int,
@@ -27,23 +26,22 @@ class VocabNameValidator:
             Vocabulary.user_id == user_id).first()
 
         if existing_vocab:
-            self._add_error(app_data['create_vocab']['name']['errors']['existing_vocab'])
+            self._add_error(app_data['create_vocab']['errors']['existing_vocab'])
             return False
         return True
 
     def valid_all_characters(self) -> bool:
         """Перевіряє, що назва містить лише дозволені символи: літери, цифри, пробіли, тире та підкреслення"""
         if not all(char.isalnum() or char in '-_ ' for char in self.name):
-            self._add_error(app_data['create_vocab']['name']['errors']['invalid_characters'])
+            self._add_error(app_data['create_vocab']['errors']['invalid_character'])
             return False
         return True
 
     def correct_length(self) -> bool:
         """Перевіряє, що довжина назви від 3 до 50 символів."""
         if not (self.min_length_vocab_name <= len(self.name) <= self.max_length_vocab_name):
-            self._add_error(app_data['create_vocab']['name']['errors']['incorrect_length']
-                            .format(self.min_length_vocab_name,
-                                    self.max_length_vocab_name))
+            self._add_error(app_data['create_vocab']['errors']['incorrect_length'].format(self.min_length_vocab_name,
+                                                                                          self.max_length_vocab_name))
             return False
         return True
 
