@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from config import VOCAB_PAGINATION_LIMIT
 from src.handlers.callback_data import PaginationCallback, VocabCallback
 
 
@@ -12,7 +13,7 @@ def get_inline_kb_vocab_base(vocab_lst: list,
                              total_pages_pagination: int,
                              limit: int,
                              is_vocab_base_empty: bool) -> InlineKeyboardMarkup:
-    """Генерує клавіатуру з кнопками для вибору словників та пагінації"""
+    """Клавіатура з кнопками для вибору словників та пагінації"""
     kb = InlineKeyboardBuilder()
 
     # Якщо у словнику є словникові пари
@@ -41,7 +42,7 @@ def get_inline_kb_vocab_base(vocab_lst: list,
 
     btn_add_vocab = InlineKeyboardButton(
         text='➕ Додати новий словник',
-        callback_data='add_vocab')
+        callback_data='create_vocab')
 
     btn_menu = InlineKeyboardButton(
         text='🏠 Головне меню',
@@ -49,4 +50,15 @@ def get_inline_kb_vocab_base(vocab_lst: list,
 
     kb.row(btn_add_vocab, btn_menu, width=1)
 
+    return kb.as_markup()
+
+
+def get_inline_kb_add_vocab() -> InlineKeyboardMarkup:
+    """Клавіатура з кнопкою скасування при створенні словника"""
+    kb = InlineKeyboardBuilder()
+    btn_cancel_add = InlineKeyboardButton(text='Скасувати',
+                                          callback_data=PaginationCallback(name='vocab_base',
+                                                                           page=1,
+                                                                           limit=VOCAB_PAGINATION_LIMIT).pack())
+    kb.row(btn_cancel_add)
     return kb.as_markup()

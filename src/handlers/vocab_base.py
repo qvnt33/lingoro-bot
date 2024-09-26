@@ -10,7 +10,7 @@ from sqlalchemy.orm.query import Query
 
 from db.database import Session
 from db.models import Translation, Vocabulary, Word, WordPair, WordPairTranslation, WordPairWord
-from src.keyboards.vocab_base_kb import get_inline_kb_vocab_base
+from src.keyboards.vocab_base_kb import get_inline_kb_vocab_base, get_inline_kb_add_vocab
 from tools.read_data import app_data
 
 router = Router(name='vocab_base')

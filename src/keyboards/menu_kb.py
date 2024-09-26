@@ -7,7 +7,7 @@ from src.handlers.callback_data import PaginationCallback
 
 
 def get_inline_kb_menu() -> InlineKeyboardMarkup:
-    """Повертає клавіатуру з кнопками головного меню"""
+    """Клавіатура з кнопками головного меню"""
     inline_builder = InlineKeyboardBuilder()
 
     btn_vocab_trainer = InlineKeyboardButton(text='📚 Словниковий тренажер',

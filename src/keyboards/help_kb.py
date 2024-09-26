@@ -4,7 +4,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 def get_inline_kb_help() -> InlineKeyboardMarkup:
-    """Повертає клавіатуру з кнопкою головного меню"""
+    """Клавіатура з кнопкою головного меню"""
     inline_builder = InlineKeyboardBuilder()
 
     btn_menu = InlineKeyboardButton(text='Главное меню',

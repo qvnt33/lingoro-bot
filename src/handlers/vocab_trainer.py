@@ -5,9 +5,10 @@ from sqlalchemy.orm.query import Query
 
 from db.database import Session
 from db.models import User, Vocabulary, WordPair
-from src.keyboards.vocab_base_kb import get_inline_kb_user_vocabs
+from src.keyboards.vocab_base_kb import get_inline_kb_vocab_base
 from src.keyboards.vocab_trainer_kb import get_inline_kb_all_training
 from tools.read_data import app_data
+
 
 router = Router()
 
@@ -22,9 +23,9 @@ async def process_btn_vocab_trainer(callback: CallbackQuery) -> None:
         user_vocabs: Query[Vocabulary] = db.query(Vocabulary).filter(User.id == Vocabulary.user_id)
 
         # Флаг, чи порожня база словників користувача
-        is_vocab_base_empty: bool = len(user_vocabs.all()) == 0
+        is_vocab_base_empty: bool = user_vocabs.count() == 0
 
-        kb: InlineKeyboardMarkup = get_inline_kb_user_vocabs(user_vocabs,
+        kb: InlineKeyboardMarkup = get_inline_kb_vocab_base(user_vocabs,
                                                              is_with_add_btn=False)
         db.commit()
 

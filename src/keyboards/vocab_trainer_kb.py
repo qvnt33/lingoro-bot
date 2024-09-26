@@ -4,7 +4,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 def get_inline_kb_all_training() -> InlineKeyboardMarkup:
-    """Повертає клавіатуру з списком словникових тренувань"""
+    """Клавіатура з списком словникових тренувань"""
     inline_builder = InlineKeyboardBuilder()
 
     btn_direct_translation = InlineKeyboardButton(text='Прямий переклад (Word A → Word B)',
