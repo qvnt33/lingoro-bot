@@ -7,13 +7,13 @@ from tools.read_data import app_data
 
 class VocabNameValidator:
     def __init__(self, name: str,
-                 min_length_vocab_name: int,
-                 max_length_vocab_name: int,
+                 min_length: int,
+                 max_length: int,
                  db: sqlalchemy.orm.session.Session) -> None:
         self.name: str = name
         self.errors: list = []
-        self.min_length_vocab_name: int = min_length_vocab_name
-        self.max_length_vocab_name: int = max_length_vocab_name
+        self.min_length_vocab_name: int = min_length
+        self.max_length_vocab_name: int = max_length
         self.db: sqlalchemy.orm.session.Session = db
 
     def _add_error(self, error_text: str) -> None:
@@ -54,3 +54,7 @@ class VocabNameValidator:
                               self.valid_all_characters(),
                               self.unique_vocab_name_per_user(user_id)]
         return all(checks)
+
+    def format_errors(self) -> str:
+        """Форматує список помилок у нумерований рядок"""
+        return '\n'.join([f'{num}. {error}' for num, error in enumerate(self.errors, start=1)])

@@ -3,12 +3,12 @@ from tools.read_data import app_data
 
 class VocabNoteValidator:
     def __init__(self, note: str,
-                 min_length_vocab_note: int,
-                 max_length_vocab_note: int) -> None:
+                 min_length: int,
+                 max_length: int) -> None:
         self.note: str = note
         self.errors: list = []
-        self.min_length_vocab_note: int = min_length_vocab_note
-        self.max_length_vocab_note: int = max_length_vocab_note
+        self.min_length_vocab_note: int = min_length
+        self.max_length_vocab_note: int = max_length
 
     def _add_error(self, error_text: str) -> None:
         """Додає помилку до списку"""
