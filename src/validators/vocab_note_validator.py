@@ -28,3 +28,7 @@ class VocabNoteValidator:
         self.errors = []  # Очищуємо помилки перед перевіркою
         checks: list[bool] = [self.correct_length()]
         return all(checks)
+
+    def format_errors(self) -> str:
+        """Форматує список помилок у нумерований рядок"""
+        return '\n'.join([f'{num}. {error}' for num, error in enumerate(self.errors, start=1)])
