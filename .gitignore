@@ -118,6 +118,10 @@ cython_debug/
 # VSCode settings
 .vscode/
 
+#Logger
+*.log
+logs/
+
 # Other
 tasks.txt
 database.db
