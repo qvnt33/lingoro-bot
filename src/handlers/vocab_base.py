@@ -3,7 +3,8 @@ from typing import Any
 import sqlalchemy
 from .callback_data import PaginationCallback
 from aiogram import F, Router
-from aiogram.types import CallbackQuery
+from aiogram.filters import Command
+from aiogram.types import CallbackQuery, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from sqlalchemy import Column
 from sqlalchemy.orm.query import Query
