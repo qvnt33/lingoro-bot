@@ -2,10 +2,8 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from config import VOCAB_PAGINATION_LIMIT
 
-
-def get_inline_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyboardMarkup:
+def get_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyboardMarkup:
     """Клавіатура з кнопкою скасування та залишенням поточної назви при створенні словника"""
     kb = InlineKeyboardBuilder()
     btn_keep_old_vocab_name = InlineKeyboardButton(text='Залишити поточну назву',
@@ -19,7 +17,7 @@ def get_inline_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> Inl
     return kb.as_markup()
 
 
-def get_inline_kb_create_vocab_note() -> InlineKeyboardMarkup:
+def get_kb_create_vocab_note() -> InlineKeyboardMarkup:
     """Клавіатура з кнопкою скасування при створенні словника"""
     kb = InlineKeyboardBuilder()
     btn_skip_creation_note = InlineKeyboardButton(text='Пропустити',
@@ -37,7 +35,7 @@ def get_inline_kb_create_vocab_note() -> InlineKeyboardMarkup:
     return kb.as_markup()
 
 
-def get_inline_kb_create_wordpairs() -> InlineKeyboardMarkup:
+def get_kb_create_wordpairs() -> InlineKeyboardMarkup:
     """Клавіатура з кнопкою скасування при створенні словника"""
     kb = InlineKeyboardBuilder()
     btn_status = InlineKeyboardButton(text='Статус',
