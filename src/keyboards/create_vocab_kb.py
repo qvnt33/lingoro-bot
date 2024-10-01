@@ -1,13 +1,16 @@
 from aiogram.types import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from src.handlers.callback_data import PaginationCallback
 
 from config import VOCAB_PAGINATION_LIMIT
+from src.handlers.callback_data import PaginationCallback
 
 
 def get_kb_confirm_cancel(previous_stage: StopIteration) -> InlineKeyboardMarkup:
-    """Генерує клавіатуру з підтвердженням або відміною для будь-якого етапу."""
+    """Повертає клавіатуру з підтвердженням або відміною скасування створення словника.
+    Якщо користувач скасовує операцію, повертається до попереднього етапу, з якого був викликаний хендлер.
+    При підтвердженні користувач переходить до етапу бази словників.
+    """
     kb = InlineKeyboardBuilder()
 
     btn_agree = InlineKeyboardButton(text='✅ Так',
@@ -15,14 +18,19 @@ def get_kb_confirm_cancel(previous_stage: StopIteration) -> InlineKeyboardMarkup
                                                                       page=1,
                                                                       limit=VOCAB_PAGINATION_LIMIT).pack())
 
-    btn_cancel = InlineKeyboardButton(text='❌ Ні', callback_data=f'back_to_{previous_stage}')
+    btn_cancel = InlineKeyboardButton(text='❌ Ні',
+                                      callback_data=f'back_to_{previous_stage}')
 
-    kb.row(btn_agree, btn_cancel, width=1)
+    kb.row(btn_agree,
+           btn_cancel,
+           width=1)
     return kb.as_markup()
 
 
-def get_kb_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyboardMarkup:
-    """Клавіатура з кнопкою скасування та залишенням поточної назви при створенні словника"""
+def get_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyboardMarkup:
+    """Повертає клавіатуру з кнопкою скасування процесу створення словника та, за потреби, кнопкою
+    залишення поточної назви словника.
+    """
     kb = InlineKeyboardBuilder()
     btn_keep_old_vocab_name = InlineKeyboardButton(text='Залишити поточну назву',
                                                    callback_data='keep_old_vocab_name')
@@ -36,7 +44,9 @@ def get_kb_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyboardMar
 
 
 def get_kb_create_vocab_note() -> InlineKeyboardMarkup:
-    """Клавіатура з кнопкою скасування при створенні словника"""
+    """Повертає клавіатуру з кнопкою скасування процесу створення словника, кнопкою зміни назви словника
+    та пропуску додавання примітки.
+    """
     kb = InlineKeyboardBuilder()
     btn_skip_creation_note = InlineKeyboardButton(text='Пропустити',
                                                   callback_data='skip_creation_note')
@@ -54,15 +64,20 @@ def get_kb_create_vocab_note() -> InlineKeyboardMarkup:
 
 
 def get_kb_create_wordpairs() -> InlineKeyboardMarkup:
-    """Клавіатура з кнопкою скасування при створенні словника"""
+    """Повертає клавіатуру з кнопкою скасування процесу створення словника,
+    кнопкою збереження готового словника у БД та перевіркою поточного статусу.
+    """
     kb = InlineKeyboardBuilder()
+    btn_back_to_name = InlineKeyboardButton(text='Зберегти',
+                                            callback_data='back_to_vocab_name')
     btn_status = InlineKeyboardButton(text='Статус',
                                          callback_data='create_wordpairs_status')
     btn_cancel_add = InlineKeyboardButton(text='Скасувати',
                                           callback_data='cancel_create_from_wordpairs')
-    btn_back_to_name = InlineKeyboardButton(text='Зберегти',
-                                            callback_data='back_to_vocab_name')
 
-    kb.row(btn_status, btn_cancel_add, btn_back_to_name, width=1)
+    kb.row(btn_back_to_name,
+           btn_status,
+           btn_cancel_add,
+           width=1)
 
     return kb.as_markup()
