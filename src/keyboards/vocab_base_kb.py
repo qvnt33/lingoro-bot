@@ -41,7 +41,7 @@ def get_inline_kb_vocab_base(vocab_lst: list,
             kb.row(btn_prev_page, btn_page_info, btn_next_page, width=3)
 
     btn_add_vocab = InlineKeyboardButton(
-        text='➕ Додати новий словник',
+        text='➕ Створити словник',
         callback_data='create_vocab')
 
     btn_menu = InlineKeyboardButton(

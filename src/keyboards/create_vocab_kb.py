@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from .callback_data import PaginationCallback
+from src.handlers.callback_data import PaginationCallback
 
 from config import VOCAB_PAGINATION_LIMIT
 
