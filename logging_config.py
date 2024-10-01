@@ -24,7 +24,9 @@ def setup_logging() -> None:
 
     # Формат для виведення у консоль (логер, рівень, файл, рядок, повідомлення)
     console_format = logging.Formatter(
-        fmt='[%(levelname)s: %(name)s] [%(filename)s:%(lineno)d] => %(message)s <=')
+        fmt='%(asctime)s [%(levelname)-s] [%(filename)s:%(lineno)d] >> %(message)s <<',
+        datefmt='%H:%M:%S',  # Формат дати
+    )
     console_handler.setFormatter(console_format)
 
     # Отримання кореневого логера
