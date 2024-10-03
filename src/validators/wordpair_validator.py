@@ -85,6 +85,18 @@ class WordPairValidator:
                 return False
         return True
 
+    def extract_data(self) -> dict:
+        """Повертає слова, переклади та анотацію з валідної пари"""
+        parts_wordpair = self.wordpair.split(':')
+        words = [word.strip() for word in parts_wordpair[0].split(',')]
+        translations = [translation.strip() for translation in parts_wordpair[1].split(',')]
+        annotation = parts_wordpair[2].strip() if len(parts_wordpair) == 3 else None
+        return {
+            'words': words,
+            'translations': translations,
+            'annotation': annotation
+        }
+
     def is_valid(self) -> bool:
         """Перевіряє словникову пару на коректність"""
         self.errors_lst = []  # Очищення списку помилок

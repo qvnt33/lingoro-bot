@@ -28,7 +28,7 @@ class VocabNoteValidator:
         if not (self.min_length_vocab_note <= length_note <= self.max_length_vocab_note):
             self._add_error(f'Примітка до словника має містити від "{self.min_length_vocab_note}" до "{self.max_length_vocab_note}" символів.')
 
-            logging.warning(f'Помилка! Примітка до словника "{escape_markdown(self.note)}", містить некоректну кількість символів "{length_note}". Має містити від "{self.min_length_vocab_note}" до "{self.max_length_vocab_note}".')
+            logging.warning(f'Помилка! Примітка до словника, містить некоректну кількість символів "{length_note}". Має містити від "{self.min_length_vocab_note}" до "{self.max_length_vocab_note}".')
             return False
         return True
 

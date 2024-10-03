@@ -10,12 +10,12 @@ from tools.read_data import app_data
 
 class VocabNameValidator:
     def __init__(self,
-                 name: str,
+                 vocab_name: str,
                  user_id: int,
                  min_length_name: int,
                  max_length_name: int,
                  db: sqlalchemy.orm.session.Session) -> None:
-        self.name: str = name  # Назва словника
+        self.name: str = vocab_name  # Назва словника
         self.user_id: int = user_id  # ID користувача
         self.min_length_name: int = min_length_name  # Мінімальна кількість символів для назви словника
         self.max_length_name: int = max_length_name  # Максимальна кількість символів для назви словника
@@ -29,14 +29,14 @@ class VocabNameValidator:
     def unique_vocab_name_per_user(self) -> bool:
         """Перевіряє, що назва словника унікальна серед словників користувача (незалежно від регістру)"""
         is_existing_vocab: Query[Vocabulary] | None = self.db.query(Vocabulary).filter(
-            Vocabulary.name.ilike(self.name),
+            Vocabulary.name.ilike(self.vocab_name),
             Vocabulary.user_id == self.user_id).first()
 
         # Якщо у базі вже є словник з такою назвою
         if is_existing_vocab:
-            self._add_error(f'У базі словників вже є словник з назвою "{escape_markdown(self.name)}".')
+            self._add_error(f'У базі словників вже є словник з назвою "{escape_markdown(self.vocab_name)}".')
 
-            logging.warning(f'Помилка! У базі словників користувача, словник з назвою "{escape_markdown(self.name)}" вже присутній')
+            logging.warning(f'Помилка! У базі словників користувача, вже є словник введеною назвою')
             return False
         return True
 
@@ -46,7 +46,7 @@ class VocabNameValidator:
         if not all(char.isalnum() or char in '-_ ' for char in self.name):
             self._add_error(f'Назва словника має містити лише *літери*, *цифри*, *пробіли*, *тире* та *підкреслення*.')
 
-            logging.warning(f'Помилка! Назва словника "{escape_markdown(self.name)}" містить некоректні символи.')
+            logging.warning(f'Помилка! Назва словника містить некоректні символи.')
             return False
         return True
 
@@ -56,7 +56,7 @@ class VocabNameValidator:
         if not (self.min_length_name <= length_name <= self.max_length_name):
             self._add_error(f'Назва словника має містити від "{self.min_length_name}" до "{self.max_length_name}" символів.')
 
-            logging.warning(f'Помилка! Назва словника "{escape_markdown(self.name)}", містить некоректну кількість символів "{length_name}". Має містити  від "{self.min_length_name}"  до "{self.max_length_name}".')
+            logging.warning(f'Помилка! Введена назва словника, містить некоректну кількість символів "{length_name}". Має містити  від "{self.min_length_name}"  до "{self.max_length_name}".')
             return False
         return True
 
