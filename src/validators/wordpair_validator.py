@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import sqlalchemy
 from sqlalchemy.orm.query import Query
@@ -87,15 +88,22 @@ class WordPairValidator:
 
     def extract_data(self) -> dict:
         """Повертає слова, переклади та анотацію з валідної пари"""
-        parts_wordpair = self.wordpair.split(':')
-        words = [word.strip() for word in parts_wordpair[0].split(',')]
-        translations = [translation.strip() for translation in parts_wordpair[1].split(',')]
-        annotation = parts_wordpair[2].strip() if len(parts_wordpair) == 3 else None
-        return {
-            'words': words,
-            'translations': translations,
-            'annotation': annotation
-        }
+        parts_wordpair: list[str] = self.wordpair.split(':')  # Розбита словникова пара
+
+        # Слова словникової пари
+        words: list[str] = [word.strip() for word in parts_wordpair[0].split(',')]
+
+        # Переклади словникової пари
+        translations: list[str] = [translation.strip() for translation in parts_wordpair[1].split(',')]
+
+        # Анотація словникової пари
+        annotation: str | None = parts_wordpair[2].strip() if len(parts_wordpair) == 3 else None
+
+        # Словник словникової пари
+        wordpair_data: dict[str, Any] = {'words': words,
+                                         'translations': translations,
+                                         'annotation': annotation}
+        return wordpair_data
 
     def is_valid(self) -> bool:
         """Перевіряє словникову пару на коректність"""

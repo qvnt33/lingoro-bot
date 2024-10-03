@@ -153,30 +153,52 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
     """Обробляє словникові пари, введені користувачем"""
     wordpairs: str = message.text  # Введені користувачем словникові пари
 
-    data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
-    vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
+    logging.info(f'Користувач ввів словникові пари "{escape_markdown(wordpairs)}"')
 
-    logging.info(f'Користувач ввів словникові пари "{escape_markdown(wordpairs)}" до словника "{escape_markdown(vocab_name)}".')
+    # Клавіатура для створення назви словника з кнопкою "Залишити поточну назву"
+    kb: InlineKeyboardMarkup = get_kb_create_wordpairs()
 
-    for wordpair in wordpairs:
+    wordpairs_lst: list[str] = wordpairs.split('\n')  # Список словникових паh
+
+    valid_wordpairs: list = []  # Валідні словникові пари
+    invalid_wordpairs: list = []  # Невалідні словникові пари
+
+    for wordpair in wordpairs_lst:
         validator = WordPairValidator(wordpair=wordpair,
                                       max_count_words=MAX_COUNT_WORDS_WORDPAIR,
                                       max_count_translations=MAX_COUNT_TRANSLATIONS_WORDPAIR,
                                       max_len_word=MAX_LENGTH_WORD_WORDPAIR,
                                       max_len_translation=MAX_LENGTH_TRANSLATION_WORDPAIR)
+
+        # Якщо словникова пара валідна, витягуємо дані
         if validator.is_valid():
             logging.info(f'Словникова пара "{escape_markdown(wordpair)}" пройшла всі перевірки.')
 
-            words = validator.words
-            translations = validator.translations
-            annotation = validator.annotation
+            wordpair_data: dict = validator.extract_data()  # Розділена словникова пара
+            valid_wordpairs.append(wordpair_data)  # Додавання до списку словникових пар
+        else:
+            # Якщо є помилки, додаємо в список невалідну словникову пару та її помилку
+            invalid_wordpairs.append({
+                'wordpair': wordpair,
+                'errors': validator.format_errors()})
 
-        # Тут можна зберегти розділені дані в базу або кеш FSM
-        await state.update_data(words=words, translations=translations, annotation=annotation)
-        await message.answer('✅ Словникова пара додана успішно!')
+    # Якщо є невалідні словникові пари
+    if invalid_wordpairs:
+        formatted_errors = '\n\n'.join([f'❌ Словникова пара: {pair["wordpair"]}\nПомилки:\n{pair["errors"]}'
+                                        for pair in invalid_wordpairs])
+        msg_wordpairs = 'Є помилки у наступних парах:\n\n{formatted_errors}'
     else:
-        formatted_errors = validator.format_errors()
-        await message.answer(f'❌ Є помилки у словниковій парі:\n{escape_markdown(formatted_errors)}\nСпробуйте ще раз.')
+        # Обробка валідних пар
+        msg_wordpairs = 'Всі словникові пари валідні!'
+
+        # Можна тут додати логіку для збереження чи іншої обробки валідних пар
+        for pair in valid_wordpairs:
+            words = ', '.join(pair['words'])
+            translations = ', '.join(pair['translations'])
+            annotation = pair['annotation'] or 'Без анотації'
+            msg_wordpairs = 'Слова: {words}\nПереклади: {translations}\nАнотація: {annotation}'
+
+    await message.answer(text=msg_wordpairs, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'change_vocab_name')
