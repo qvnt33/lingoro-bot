@@ -44,7 +44,7 @@ async def process_create_vocab(callback: CallbackQuery, state: FSMContext) -> No
     """Відстежує натискання на кнопку "Додати новий словник".
     Виконується процес створення словника.
     """
-    user_id: int = callback.message.id
+    user_id: int = callback.message.from_user.id
 
     logging.info(f'Користувач "{user_id}" почав "процес створення словника".')
 
@@ -59,12 +59,30 @@ async def process_create_vocab(callback: CallbackQuery, state: FSMContext) -> No
 
 @router.message(VocabCreation.waiting_for_vocab_name)
 async def process_vocab_name(message: Message, state: FSMContext) -> None:
-    """Обробляє назву словника, яку ввів користувач.
-    Проводиться перевірка введеної назви.
-    """
-    user_id: int = message.from_user.id  # ID користувача
-    vocab_name: str = message.text  # Назва словника, введена користувачем
+    """Обробляє назву словника, яку ввів користувач. Проводиться перевірка введеної назви."""
 
+    user_id: int = message.from_user.id  # ID користувача
+    vocab_name: str = message.text.strip()  # Назва словника, введена користувачем
+
+    data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
+    old_vocab_name: Any | None = data_fsm.get('vocab_name')  # Стара назва словника
+
+    # Якщо користувач намагається змінити стару назву
+    if old_vocab_name is not None:
+        logging.info(f'Користувач намагається змінити назву словника з "{old_vocab_name}" на "{vocab_name}".')
+
+        # Якщо нова назва словника збігається з поточною
+        if old_vocab_name.lower() == vocab_name.lower():
+            msg_error: str = f'❌ *Помилка!* Нова назва не може бути такою ж, як і попередня.'
+
+            logging.warning(f'Нова назва словника "{escape_markdown(vocab_name)}" збігається з попередньою назвою "{escape_markdown(old_vocab_name)}".')
+
+            kb: InlineKeyboardMarkup = get_kb_create_vocab_name(is_keep_old_vocab_name=True)  # Клавіатура для зміни назви
+
+            await message.answer(msg_error, reply_markup=kb)
+            return  # Припиняємо подальшу обробку, щоб користувач повторив введення
+
+    # Якщо назва нова, проводимо її валідацію
     logging.info(f'Користувач ввів назву словника: "{escape_markdown(vocab_name)}".')
 
     with Session() as db:
@@ -81,25 +99,26 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
         logging.info(f'Назва словника "{escape_markdown(vocab_name)}" пройшла всі перевірки.')
 
         kb: InlineKeyboardMarkup = get_kb_create_vocab_note()  # Клавіатура для створення примітки
-        msg_vocab_name: str = f'*Назва словника:* {escape_markdown(vocab_name)}\n\n'
-        'Введіть *примітку* до словника.\n'
-        'Якщо примітка до словника не потрібна - натисніть на кнопку "Пропустити".'
+        msg_vocab_name: str = f'*Назва словника:* {escape_markdown(vocab_name)}\n\n' \
+                              'Введіть *примітку* до словника.\n' \
+                              'Якщо примітка до словника не потрібна - натисніть на кнопку "Пропустити".'
 
         await state.update_data(vocab_name=vocab_name)  # Збереження назви в кеш FSM
-
-        logging.debug('"Назва словника" збережена у кеш FSM.')
+        logging.debug('Назва словника збережена у кеш FSM.')
 
         await state.set_state(VocabCreation.waiting_for_vocab_note)  # Переведення FSM у стан очікування примітки
+        logging.debug(f'FSM стан змінено на "{VocabCreation.waiting_for_vocab_note}".')
 
-        logging.debug(f'FSM стан змінено на "{escape_markdown(VocabCreation.waiting_for_vocab_note)}".')
     else:
-        kb: InlineKeyboardMarkup = get_kb_create_vocab_name()  # Клавіатура для введення назви
-
+        # Якщо назва словника не пройшла перевірку
         formatted_errors: str = validator.format_errors()  # Відформатований список помилок
         msg_vocab_name: str = f'❌ *Є помилки у назві словника "{escape_markdown(vocab_name)}"*\n{formatted_errors}\n\n'
 
-    await message.answer(text=msg_vocab_name,
-                         reply_markup=kb)
+        kb: InlineKeyboardMarkup = get_kb_create_vocab_name()  # Клавіатура для повторного введення назви
+        logging.warning(f'Назва словника "{vocab_name}" не пройшла перевірку: {formatted_errors}')
+
+    await message.answer(text=msg_vocab_name, reply_markup=kb)
+
 
 
 @router.message(VocabCreation.waiting_for_vocab_note)
@@ -199,6 +218,7 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
             msg_wordpairs = 'Слова: {words}\nПереклади: {translations}\nАнотація: {annotation}'
 
     await message.answer(text=msg_wordpairs, reply_markup=kb)
+
 
 
 @router.callback_query(F.data == 'change_vocab_name')

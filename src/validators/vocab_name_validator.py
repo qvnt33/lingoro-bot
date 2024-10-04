@@ -15,7 +15,7 @@ class VocabNameValidator:
                  min_length_name: int,
                  max_length_name: int,
                  db: sqlalchemy.orm.session.Session) -> None:
-        self.name: str = vocab_name  # Назва словника
+        self.vocab_name: str = vocab_name  # Назва словника
         self.user_id: int = user_id  # ID користувача
         self.min_length_name: int = min_length_name  # Мінімальна кількість символів для назви словника
         self.max_length_name: int = max_length_name  # Максимальна кількість символів для назви словника
@@ -43,7 +43,7 @@ class VocabNameValidator:
     def valid_all_characters(self) -> bool:
         """Перевіряє, що назва містить лише дозволені символи: літери, цифри, пробіли, тире та підкреслення"""
         # Якщо у назві словника є заборонені символи
-        if not all(char.isalnum() or char in '-_ ' for char in self.name):
+        if not all(char.isalnum() or char in '-_ ' for char in self.vocab_name):
             self._add_error(f'Назва словника має містити лише *літери*, *цифри*, *пробіли*, *тире* та *підкреслення*.')
 
             logging.warning(f'Помилка! Назва словника містить некоректні символи.')
@@ -52,7 +52,7 @@ class VocabNameValidator:
 
     def correct_name_length(self) -> bool:
         """Перевіряє, що довжина назви коректна"""
-        length_name: int = len(self.name)
+        length_name: int = len(self.vocab_name)
         if not (self.min_length_name <= length_name <= self.max_length_name):
             self._add_error(f'Назва словника має містити від "{self.min_length_name}" до "{self.max_length_name}" символів.')
 
@@ -65,7 +65,7 @@ class VocabNameValidator:
         self.errors_lst = []  # Очищуємо помилки перед перевіркою
         checks: list[bool] = [self.correct_name_length(),
                               self.valid_all_characters(),
-                              self.unique_vocab_name_per_user(self.user_id)]
+                              self.unique_vocab_name_per_user()]
         return all(checks)
 
     def format_errors(self) -> str:

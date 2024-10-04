@@ -22,7 +22,7 @@ class VocabNoteValidator:
         """Додає помилку до списку помилок"""
         self.errors_lst.append(error_text)
 
-    def correct_note_length(self) -> bool:
+    def correct_length(self) -> bool:
         """Перевіряє, що коректна довжина примітки"""
         length_note: int = len(self.note)
         if not (self.min_length_vocab_note <= length_note <= self.max_length_vocab_note):
@@ -35,7 +35,7 @@ class VocabNoteValidator:
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
         self.errors_lst = []  # Очищуємо помилки перед перевіркою
-        checks: list[bool] = [self.correct_len()]
+        checks: list[bool] = [self.correct_length()]
         return all(checks)
 
     def format_errors(self) -> str:
