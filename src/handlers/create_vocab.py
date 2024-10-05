@@ -33,7 +33,7 @@ from src.validators.vocab_name_validator import VocabNameValidator
 from src.validators.vocab_note_validator import VocabNoteValidator
 from src.validators.wordpair_validator import WordPairValidator
 
-from tools.escape_markdown import escape_markdown
+# from tools.escape_markdown import escape_markdown
 from tools.read_data import app_data
 
 router = Router(name='create_vocab')
@@ -73,9 +73,9 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
 
         # Якщо нова назва словника збігається з поточною
         if old_vocab_name.lower() == vocab_name.lower():
-            msg_error: str = f'❌ *Помилка!* Нова назва не може бути такою ж, як і попередня.'
+            msg_error: str = f'Назва: {vocab_name}\n\n❌ Помилка! Нова назва не може бути такою ж, як і попередня.'
 
-            logging.warning(f'Нова назва словника "{escape_markdown(vocab_name)}" збігається з попередньою назвою "{escape_markdown(old_vocab_name)}".')
+            logging.warning(f'Нова назва словника "{vocab_name}" збігається з попередньою назвою "{old_vocab_name}".')
 
             kb: InlineKeyboardMarkup = get_kb_create_vocab_name(is_keep_old_vocab_name=True)  # Клавіатура для зміни назви
 
@@ -83,7 +83,7 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
             return  # Припиняємо подальшу обробку, щоб користувач повторив введення
 
     # Якщо назва нова, проводимо її валідацію
-    logging.info(f'Користувач ввів назву словника: "{escape_markdown(vocab_name)}".')
+    logging.info(f'Користувач ввів назву словника: "{vocab_name}".')
 
     with Session() as db:
         # Валідатор для перевірки коректності назви
@@ -96,11 +96,11 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
 
     # Якщо назва словника коректна
     if validator.is_valid():
-        logging.info(f'Назва словника "{escape_markdown(vocab_name)}" пройшла всі перевірки.')
+        logging.info(f'Назва словника "{vocab_name}" пройшла всі перевірки.')
 
         kb: InlineKeyboardMarkup = get_kb_create_vocab_note()  # Клавіатура для створення примітки
-        msg_vocab_name: str = f'*Назва словника:* {escape_markdown(vocab_name)}\n\n' \
-                              'Введіть *примітку* до словника.\n' \
+        msg_vocab_name: str = f'Назва словника: {vocab_name}\n\n' \
+                              'Введіть примітку до словника.\n' \
                               'Якщо примітка до словника не потрібна - натисніть на кнопку "Пропустити".'
 
         await state.update_data(vocab_name=vocab_name)  # Збереження назви в кеш FSM
@@ -112,13 +112,12 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
     else:
         # Якщо назва словника не пройшла перевірку
         formatted_errors: str = validator.format_errors()  # Відформатований список помилок
-        msg_vocab_name: str = f'❌ *Є помилки у назві словника "{escape_markdown(vocab_name)}"*\n{formatted_errors}\n\n'
+        msg_vocab_name: str = f'❌ Є помилки у назві словника "{vocab_name}"\n{formatted_errors}\n\n'
 
         kb: InlineKeyboardMarkup = get_kb_create_vocab_name()  # Клавіатура для повторного введення назви
         logging.warning(f'Назва словника "{vocab_name}" не пройшла перевірку: {formatted_errors}')
 
     await message.answer(text=msg_vocab_name, reply_markup=kb)
-
 
 
 @router.message(VocabCreation.waiting_for_vocab_note)
@@ -133,7 +132,7 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
 
     vocab_note: str = message.text  # Примітка, введена користувачем
 
-    logging.info(f'Користувач ввів примітку "{escape_markdown(vocab_note)}" до словника "{escape_markdown(vocab_name)}".')
+    logging.info(f'Користувач ввів примітку "{vocab_note}" до словника "{vocab_name}".')
 
     # Валідатор для перевірки примітки до словника
     validator = VocabNoteValidator(note=vocab_note,
@@ -142,37 +141,30 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
 
     # Якщо примітка коректна
     if validator.is_valid():
-        logging.info(f'Примітка "{escape_markdown(vocab_note)}" до словника "{escape_markdown(vocab_name)}" пройшла всі перевірки.')
+        logging.info(f'Примітка "{vocab_note}" до словника "{vocab_name}" пройшла всі перевірки.')
 
         kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для введення назви словника
 
-        msg_vocab_note: str = f'Назва словника: "{escape_markdown(vocab_name)}"\n"'
-        f'Примітка до словника:" {escape_markdown(vocab_note)}\n\n'
-        'Відправте "словникові пари" для цього словника у форматі:\n'
-        '_word1, word2 : translation1, translation2 : annotation_\n'
-        '- "word2", "translation2" та "annotation" — необов\'язкові поля.'
+        msg_vocab_note: str = f'Назва словника: "{vocab_name}"\n"Примітка до словника:" {vocab_note}\n\nВідправте "словникові пари" для цього словника у форматі:\n_word1, word2 : translation1, translation2 : annotation_\n- "word2", "translation2" та "annotation" — необов\'язкові поля.'
 
         await state.update_data(vocab_note=vocab_note)  # Збереження примітки в кеш FSM
-
         logging.debug('"Примітка до словника" збережена у кеш FSM.')
 
         await state.set_state(VocabCreation.waiting_for_wordpairs)  # Переведення FSM у стан очікування словникових пар
-
         logging.debug(f'FSM стан змінено на "{VocabCreation.waiting_for_wordpairs}".')
     else:
         formatted_errors: str = validator.format_errors()  # Відформатований список помилок
-        msg_vocab_note: str = f'❌ *Є помилки у примітці до словника:*\n{escape_markdown(formatted_errors)}\n\n'
-        'Будь ласка, введіть іншу *примітку*.'
-        '\nЯкщо примітка до словника не потрібна - натисніть на кнопку "*Пропустити*".'
+        msg_vocab_note: str = f'❌ Є помилки у примітці до словника:\n{formatted_errors}\n\nБудь ласка, введіть іншу\nЯкщо примітка до словника не потрібна - натисніть на кнопку "Пропустити".'
     await message.answer(text=msg_vocab_note, reply_markup=kb)
 
 
 @router.message(VocabCreation.waiting_for_wordpairs)
 async def process_wordpairs(message: Message, state: FSMContext) -> None:
     """Обробляє словникові пари, введені користувачем"""
+    user_id = message.from_user.id
     wordpairs: str = message.text  # Введені користувачем словникові пари
 
-    logging.info(f'Користувач ввів словникові пари "{escape_markdown(wordpairs)}"')
+    logging.info(f'Користувач ввів словникові пари "{wordpairs}"')
 
     # Клавіатура для створення назви словника з кнопкою "Залишити поточну назву"
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs()
@@ -184,14 +176,16 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
 
     for wordpair in wordpairs_lst:
         validator = WordPairValidator(wordpair=wordpair,
+                                      user_id=user_id,
                                       max_count_words=MAX_COUNT_WORDS_WORDPAIR,
                                       max_count_translations=MAX_COUNT_TRANSLATIONS_WORDPAIR,
-                                      max_len_word=MAX_LENGTH_WORD_WORDPAIR,
-                                      max_len_translation=MAX_LENGTH_TRANSLATION_WORDPAIR)
+                                      max_length_word=MAX_LENGTH_WORD_WORDPAIR,
+                                      max_length_translation=MAX_LENGTH_TRANSLATION_WORDPAIR)
 
         # Якщо словникова пара валідна, витягуємо дані
+        print(validator.is_valid())
         if validator.is_valid():
-            logging.info(f'Словникова пара "{escape_markdown(wordpair)}" пройшла всі перевірки.')
+            logging.info(f'Словникова пара "{wordpair}" пройшла всі перевірки.')
 
             wordpair_data: dict = validator.extract_data()  # Розділена словникова пара
             valid_wordpairs.append(wordpair_data)  # Додавання до списку словникових пар
@@ -202,7 +196,7 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
                 'errors': validator.format_errors()})
 
     # Якщо є невалідні словникові пари
-    if invalid_wordpairs:
+    if len(invalid_wordpairs) != 0:
         formatted_errors = '\n\n'.join([f'❌ Словникова пара: {pair["wordpair"]}\nПомилки:\n{pair["errors"]}'
                                         for pair in invalid_wordpairs])
         msg_wordpairs = 'Є помилки у наступних парах:\n\n{formatted_errors}'
@@ -234,7 +228,7 @@ async def process_change_vocab_name(callback: CallbackQuery, state: FSMContext) 
     # Клавіатура для створення назви словника з кнопкою "Залишити поточну назву"
     kb: InlineKeyboardMarkup = get_kb_create_vocab_name(is_keep_old_vocab_name=True)
 
-    await callback.message.edit_text(text=f'*Поточна назва:* {vocab_name}\n\nВведіть іншу *назву* словника:', reply_markup=kb)
+    await callback.message.edit_text(text=f'Поточна назва: {vocab_name}\n\nВведіть іншу назву словника:', reply_markup=kb)
     await state.set_state(VocabCreation.waiting_for_vocab_name)  # Стан очікування назви словника
 
     logging.debug(f'FSM стан змінено на {VocabCreation.waiting_for_vocab_name}.')
@@ -253,8 +247,8 @@ async def process_keep_old_vocab_name(callback: CallbackQuery, state: FSMContext
     data_fsm: Dict[str, Any] = await state.get_data()  # Отримання дані з FSM
     vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
 
-    msg_vocab_note: str = f'*Назва словника:* {vocab_name}\n\nВведіть *примітку* до словника\n'
-    'Якщо примітка до словника не потрібна - натисніть на кнопку "*Пропустити*".'
+    msg_vocab_note: str = f'Назва словника: {vocab_name}\n\nВведіть примітку до словника\n'
+    'Якщо примітка до словника не потрібна - натисніть на кнопку "Пропустити".'
 
     await callback.message.edit_text(text=msg_vocab_note, reply_markup=kb)
     await state.set_state(VocabCreation.waiting_for_vocab_note)  # Стан очікування примітки до словника
@@ -273,7 +267,7 @@ async def process_cancel_create(callback: CallbackQuery, state: FSMContext) -> N
     # Процес, з якого було натиснута кнопка "Скасувати"
     stage: str = callback.data.split('cancel_create_from_')[1]
     logging.info(f'Користувач {callback.from_user.id} натиснув на кнопку "Скасувати" на етапі створення словника "{stage}".')
-    msg_cancel_create = 'Ви дійсно хочете *скасувати* створення словника?'
+    msg_cancel_create = 'Ви дійсно хочете скасувати створення словника?'
     await state.set_state()  # FSM у очікування
 
     logging.debug('FSM стан переведено у очікування.')
@@ -297,7 +291,7 @@ async def process_skip_creation_note(callback: CallbackQuery, state: FSMContext)
     vocab_note = DEFAULT_VOCAB_NOTE
     await state.update_data(vocab_note=vocab_note)  # Збереження примітки до словника в кеш FSM
 
-    msg_vocab_note: str = f'*Назва словника:* {escape_markdown(vocab_name)}\n*Примітка до словника:* {escape_markdown(vocab_note)}\n\nВідправте *словникові пари* для цього словника у форматі:\n_word1, word2 : translation1, translation2 : annotation_\n- *word2*, *translation2* та *annotation* — необов\'язкові поля.'
+    msg_vocab_note: str = f'Назва словника: {vocab_name}\nПримітка до словника: {vocab_note}\n\nВідправте словникові пари для цього словника у форматі:\n_word1, word2 : translation1, translation2 : annotation_\n- word2, translation2 та annotation — необов\'язкові поля.'
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для введення назви
     await state.set_state(VocabCreation.waiting_for_wordpairs)
 
@@ -320,7 +314,7 @@ async def process_back_to(callback: CallbackQuery, state: FSMContext) -> None:
     if stage == 'vocab_name':
         # Процес введення назви словника
         kb: InlineKeyboardMarkup = get_kb_create_vocab_name()
-        msg_vocab_name: str = 'Введіть *назву* словника:'
+        msg_vocab_name: str = 'Введіть назву словника:'
 
         await callback.message.edit_text(text=msg_vocab_name, reply_markup=kb)
         await state.set_state(VocabCreation.waiting_for_vocab_name)
@@ -329,7 +323,7 @@ async def process_back_to(callback: CallbackQuery, state: FSMContext) -> None:
     elif stage == 'vocab_note':
         # Процес введення примітки до словника
         kb: InlineKeyboardMarkup = get_kb_create_vocab_note()
-        msg_vocab_note: str = f'*Назва словника:* {vocab_name}\n\nВведіть *примітку* до словника\nЯкщо примітка до словника не потрібна - натисніть на кнопку "*Пропустити*".'
+        msg_vocab_note: str = f'Назва словника: {vocab_name}\n\nВведіть примітку до словника\nЯкщо примітка до словника не потрібна - натисніть на кнопку "Пропустити".'
 
         await callback.message.edit_text(text=msg_vocab_note, reply_markup=kb)
         await state.set_state(VocabCreation.waiting_for_vocab_note)
@@ -338,7 +332,7 @@ async def process_back_to(callback: CallbackQuery, state: FSMContext) -> None:
     elif stage == 'wordpairs':
         # Процес введення примітки до словника
         kb: InlineKeyboardMarkup = get_kb_create_wordpairs()
-        msg_wordpairs: str = f'*Назва словника:* {escape_markdown(vocab_name)}\n*Примітка до словника:* {escape_markdown(vocab_note)}\n\nВідправте *словникові пари* для цього словника у форматі:\n_word1, word2 : translation1, translation2 : annotation_\n- *word2*, *translation2* та *annotation* — необов\'язкові поля.'
+        msg_wordpairs: str = f'Назва словника: {vocab_name}\nПримітка до словника: {vocab_note}\n\nВідправте словникові пари для цього словника у форматі:\n_word1, word2 : translation1, translation2 : annotation_\n- word2, translation2 та annotation — необов\'язкові поля.'
 
         await callback.message.edit_text(text=msg_wordpairs, reply_markup=kb)
         await state.set_state(VocabCreation.waiting_for_wordpairs)

@@ -5,7 +5,7 @@ import sqlalchemy
 from sqlalchemy.orm.query import Query
 
 from db.models import Vocabulary
-from tools.escape_markdown import escape_markdown
+# from tools.escape_markdown import escape_markdown
 from tools.read_data import app_data
 
 
@@ -33,12 +33,12 @@ class WordPairValidator:
         """Перевіряє, що словникова пара має правильну структуру (мінімум слово та переклад)"""
         parts_wordpair: list[str] = self.wordpair.split(':')  # Розділяємо на частини за двокрапкою
         if len(parts_wordpair) < 2:
-            self._add_error('Словникова пара повинна містити щонайменше одне слово та один переклад, розділені символом ":".')
-            logging.warning(f'Помилка! Словникова пара "{escape_markdown(self.wordpair)}" має неправильну структуру.')
+            self._add_error('Помилка формату словникової пари! Словникова пара повинна містити щонайменше одне слово та один переклад, розділені символом ":".')
+            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" має неправильний формат.')
             return False
-        elif len(parts_wordpair) > 3:
-            self._add_error('Максимальна кількість частин у словниковій парі - три (слова, переклади, анотація).')
-            logging.warning(f'Помилка! Словникова пара "{escape_markdown(self.wordpair)}" містить більше трьох частин.')
+        if len(parts_wordpair) > 3:
+            self._add_error('Помилка формату словникової пари! Максимальна кількість частин у словниковій парі - три (слова, переклади, анотація).')
+            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" містить більше трьох частин.')
             return False
         return True
 
@@ -50,17 +50,18 @@ class WordPairValidator:
 
         if not (1 <= count_words <= self.max_count_words):
             self._add_error(f'Словникова пара повинна містити від 1 до {self.max_count_words} слів.')
-            logging.warning(f'Помилка! Словникова пара "{escape_markdown(self.wordpair)}" містить некоректну кількість слів: {count_words}.')
+            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" містить некоректну кількість слів: {count_words}.')
             return False
 
         for word in words_lst_cleared:
             if not (1 <= len(word) <= self.max_length_word):
-                self._add_error(f'Слово "{escape_markdown(word)}" повинно містити від 1 до {self.max_length_word} символів.')
-                logging.warning(f'Помилка! Слово "{escape_markdown(word)}" містить некоректну кількість символів.')
+                self._add_error(f'Слово "{word}" повинно містити від 1 до {self.max_length_word} символів.')
+                logging.warning(f'Помилка! Слово "{word}" містить некоректну кількість символів.')
                 return False
             if not all(char.isalnum() or char in '-_ ' for char in word):
-                self._add_error(f'Слово "{escape_markdown(word)}" має містити лише літери, цифри, пробіли, тире та підкреслення.')
-                logging.warning(f'Помилка! Слово "{escape_markdown(word)}" містить некоректні символи.')
+
+                self._add_error(f'Слово "{word}" має містити лише літери, цифри, пробіли, тире та підкреслення.')
+                logging.warning(f'Помилка! Слово "{word}" містить некоректні символи.')
                 return False
         return True
 
@@ -72,17 +73,17 @@ class WordPairValidator:
 
         if not (1 <= count_translations <= self.max_count_translation):
             self._add_error(f'Словникова пара повинна містити від 1 до {self.max_count_translation} перекладів.')
-            logging.warning(f'Помилка! Словникова пара "{escape_markdown(self.wordpair)}" містить некоректну кількість перекладів: {count_translations}.')
+            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" містить некоректну кількість перекладів: {count_translations}.')
             return False
 
         for translation in translations_lst_cleared:
             if not (1 <= len(translation) <= self.max_length_translation):
-                self._add_error(f'Переклад "{escape_markdown(translation)}" повинен містити від 1 до {self.max_length_translation} символів.')
-                logging.warning(f'Помилка! Переклад "{escape_markdown(translation)}" містить некоректну кількість символів.')
+                self._add_error(f'Переклад "{translation}" повинен містити від "1" до "{self.max_length_translation}" символів.')
+                logging.warning(f'Помилка! Переклад "{translation}" містить некоректну кількість символів.')
                 return False
             if not all(char.isalnum() or char in '-_ ' for char in translation):
-                self._add_error(f'Переклад "{escape_markdown(translation)}" має містити лише літери, цифри, пробіли, тире та підкреслення.')
-                logging.warning(f'Помилка! Переклад "{escape_markdown(translation)}" містить некоректні символи.')
+                self._add_error(f'Переклад "{translation}" має містити лише літери, цифри, пробіли, тире та підкреслення.')
+                logging.warning(f'Помилка! Переклад "{translation}" містить некоректні символи.')
                 return False
         return True
 
@@ -115,5 +116,7 @@ class WordPairValidator:
 
     def format_errors(self) -> str:
         """Форматує список помилок у зручний для виведення формат"""
-        formatted_errors_lst: list = [f'*{num}*. {escape_markdown(error)}' for num, error in enumerate(self.errors_lst, start=1)]
+        formatted_errors_lst: list = [f'{num}. {error}' for num, error in enumerate(self.errors_lst, start=1)]
+        logging.info(f'Всі помилки словникової пари "{self.wordpair}" відформатовані у рядок.')
+
         return '\n'.join(formatted_errors_lst)
