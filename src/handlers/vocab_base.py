@@ -38,9 +38,9 @@ async def process_vocab_base(callback: CallbackQuery, callback_data: PaginationC
 
         # Якщо база порожня, повідомлення для порожньої бази
         if is_vocab_base_empty:
-            msg_vocab_base: str = app_data['vocab_base']['vocab_base_is_empty']
+            msg_vocab_base: str = "app_data['vocab_base']['vocab_base_is_empty']"
         else:
-            msg_vocab_base: str = app_data['vocab_base']['msg_select_vocab']
+            msg_vocab_base: str = "app_data['vocab_base']['msg_select_vocab']"
 
         for vocab in user_vocabs:
             vocab_id: Column[int] = vocab.id

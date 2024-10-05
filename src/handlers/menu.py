@@ -32,9 +32,9 @@ async def cmd_menu(message: Message) -> None:
         is_user_exists: bool = db.query(User).filter(User.user_id == tg_user.id).first() is not None
 
         if is_user_exists:
-            title_menu: str = app_data['menu']['title']
+            title_menu: str = "app_data['menu']['title']"
         else:
-            title_menu: str = app_data['menu']['title_for_new_user']
+            title_menu: str = "app_data['menu']['title_for_new_user']"
             # Додавання користувача до БД
             user = User(user_id=tg_user.id,
                         username=tg_user.username,
@@ -53,7 +53,7 @@ async def process_btn_back_to_menu(callback: CallbackQuery) -> None:
     """Відстежує натискання на кнопку "меню".
     Відправляє користувачу повідомлення головного меню.
     """
-    title_menu: str = app_data['menu']['title']
+    title_menu: str = "app_data['menu']['title']"
     kb: InlineKeyboardMarkup = get_inline_kb_menu()
 
     await callback.message.edit_text(
