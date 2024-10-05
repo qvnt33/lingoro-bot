@@ -16,8 +16,8 @@ async def main() -> None:
 
     create_tables()  # Створення всіх таблиць
 
-    bot = Bot(token=TOKEN,
-              default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
+    bot = Bot(token=TOKEN)
+    # default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN)
     dp = Dispatcher()
 
     register_handlers(dp)  # Підключення роутерів
