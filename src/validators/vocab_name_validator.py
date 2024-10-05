@@ -4,6 +4,7 @@ import sqlalchemy
 from sqlalchemy.orm.query import Query
 
 from db.models import Vocabulary
+from tools.read_data import app_data
 
 
 class VocabNameValidator:
@@ -31,7 +32,7 @@ class VocabNameValidator:
         if is_existing_vocab:
             logging.warning(f'Помилка! У базі словників користувача, вже є назва "{self.name}".')
 
-            error_text: str = f'У Вашій базі вже є словник з назвою "{self.name}".'
+            error_text: str = app_data['errors']['vocab']['name_exists'].format(name=self.name)
             self._add_error(error_text)  # Додавання помилки
             return False
         return True
@@ -42,7 +43,7 @@ class VocabNameValidator:
         if not all(char.isalnum() or char in self.correct_symbols for char in self.name):
             logging.warning(f'Помилка! Назва словника "{self.name}" містить некоректні символи.')
 
-            error_text: str = 'Назва словника може містити лише літери, цифри, пробіли, тире (-) та підкреслення (_).'
+            error_text: str = app_data['errors']['vocab']['invalid_characters']
             self._add_error(error_text)  # Додавання помилки
             return False
         return True
@@ -51,9 +52,12 @@ class VocabNameValidator:
         """Перевіряє, що довжина назви коректна"""
         current_len: int = len(self.name)  # Кількість символів у назві словника
         if not (self.min_len <= current_len <= self.max_len):
-            logging.warning(f'Помилка! Назва словника "{self.name}" має містити від {self.min_len} до {self.max_len} символів.')
+            logging.warning(f'Помилка! Назва словника "{self.name}" має містити від \
+                {self.min_len} до {self.max_len} символів.')
 
-            self._add_error(f'Назва словника має містити від "{self.min_len}" до "{self.max_len}" символів.')
+            error_text: str = app_data['errors']['vocab']['invalid_length'].format(min_len=self.min_len,
+                                                                                   max_len=self.max_len)
+            self._add_error(error_text)  # Додавання помилки
             return False
         return True
 
