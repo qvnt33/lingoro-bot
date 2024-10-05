@@ -37,7 +37,7 @@ class VocabNameValidator:
             return False
         return True
 
-    def valid_all_characters(self) -> bool:
+    def validate_characters(self) -> bool:
         """Перевіряє, що назва містить лише дозволені символи: літери, цифри, пробіли, тире та підкреслення"""
         # Якщо у назві словника є заборонені символи
         if not all(char.isalnum() or char in self.correct_symbols for char in self.name):
@@ -70,7 +70,7 @@ class VocabNameValidator:
         self.errors_lst = []  # Очищення списку помилок перед перевіркою
 
         checks: list[bool] = [self.correct_name_length(),
-                              self.valid_all_characters(),
+                              self.validate_characters(),
                               self.unique_name_per_user()]
         return all(checks)
 
@@ -78,7 +78,7 @@ class VocabNameValidator:
         """Форматує список помилок у нумерований рядок"""
         formatted_errors_lst: list = []  # Список всіх відформатованих помилок
 
-        for num, error in enumerate(self.errors_lst, start=1):
+        for num, error in enumerate(iterable=self.errors_lst, start=1):
             # Форматування кожного рядка з номером і помилкою
             formatted_error: str = f'{num}. {error}'
             formatted_errors_lst.append(formatted_error)
