@@ -6,9 +6,11 @@ from tools.read_data import app_data
 class VocabNoteValidator:
     def __init__(self,
                  note: str,
+                 vocab_name: str,
                  min_len: int,
                  max_len: int) -> None:
         self.note: str = note  # Примітка до словника
+        self.vocab_name: str = vocab_name  # Назва словника
         self.min_len: int = min_len  # Мінімальна к-сть символів у примітки до словника
         self.max_len: int = max_len  # Максимальна к-сть символів у примітки до словника
         self.errors_lst: list = []  # Список усіх помилок
@@ -26,7 +28,7 @@ class VocabNoteValidator:
 
         # Якщо к-сть некоректна
         if not is_valid_length:
-            logging.warning(f'Некоректна кількість символів у примітці до словника: "{self.name}."'
+            logging.warning(f'Некоректна кількість символів у примітці до словника: "{self.vocab_name}."'
                 f'Очікується від {self.min_len} до {self.max_len} символів.')
 
             error_text: str = app_data['errors']['vocab']['note']['invalid_length'].format(min_len=self.min_len,

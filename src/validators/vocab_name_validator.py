@@ -32,7 +32,7 @@ class VocabNameValidator:
         if is_existing_vocab:
             logging.warning(f'У базі словників користувача, вже є назва "{self.name}".')
 
-            error_text: str = app_data['errors']['vocab']['name_exists'].format(name=self.name)
+            error_text: str = app_data['errors']['vocab']['name']['name_exists'].format(name=self.name)
             self._add_error(error_text)  # Додавання помилки
             return False
         return True
@@ -43,7 +43,7 @@ class VocabNameValidator:
         if not all(char.isalnum() or char in self.correct_symbols for char in self.name):
             logging.warning(f'Назва словника "{self.name}" містить некоректні символи.')
 
-            error_text: str = app_data['errors']['vocab']['invalid_characters']
+            error_text: str = app_data['errors']['vocab']['name']['invalid_characters']
             self._add_error(error_text)  # Додавання помилки
             return False
         return True
@@ -60,8 +60,8 @@ class VocabNameValidator:
             logging.warning(f'Некоректна кількість символів у назві словника: "{self.name}". '
                 f'Очікується від {self.min_len} до {self.max_len} символів.')
 
-            error_text: str = app_data['errors']['vocab']['invalid_length'].format(min_len=self.min_len,
-                                                                                   max_len=self.max_len)
+            error_text: str = app_data['errors']['vocab']['name']['invalid_length'].format(min_len=self.min_len,
+                                                                                           max_len=self.max_len)
             self._add_error(error_text)  # Додавання помилки
             return False
         return True
