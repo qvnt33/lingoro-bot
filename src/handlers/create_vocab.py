@@ -55,9 +55,9 @@ async def process_create_vocab(callback: CallbackQuery, state: FSMContext) -> No
 
     await callback.message.edit_text(text=msg_enter_vocab_name, reply_markup=kb)
 
-    # Переведення FSM у стан очікування назви словника
-    await state.set_state(VocabCreation.waiting_for_vocab_name)
-    logging.debug(f'FSM стан змінено на "{VocabCreation.waiting_for_vocab_name}".')
+    fsm_state: State = VocabCreation.waiting_for_vocab_name  # FSM стан очікування назви
+    await state.set_state(fsm_state)  # Переведення у новий FSM стан
+    logging.debug(f'FSM стан змінено на "{fsm_state}".')
 
 
 @router.message(VocabCreation.waiting_for_vocab_name)
@@ -76,7 +76,7 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
 
     # Якщо користувач намагається змінити стару назву, яка збігається з поточною
     if is_vocab_name_existing and vocab_name.lower() == vocab_name_old.lower():
-        logging.warning(f'Помилка! Нова назва словника "{vocab_name}" збігається з попередньою назвою.')
+        logging.warning(f'Нова назва словника "{vocab_name}" збігається з попередньою назвою.')
 
         # Клавіатура для введення або зміни назви словника
         kb: InlineKeyboardMarkup = get_kb_create_vocab_name(is_keep_old_vocab_name=True)
@@ -84,7 +84,7 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
         # Повідомлення, що назва словника вже є у базі
         msg_vocab_name_existing: str = app_data['errors']['vocab']['duplicate_name']
         msg_vocab_name: str = format_message(vocab_name=vocab_name_old,
-                                                content=msg_vocab_name_existing)
+                                             content=msg_vocab_name_existing)
 
         await message.answer(msg_vocab_name, reply_markup=kb)
         return  # Завершення подальшої обробки
@@ -112,8 +112,9 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
         await state.update_data(vocab_name=vocab_name)  # Збереження назви в кеш FSM
         logging.debug(f'Назва словника "{vocab_name}" збережена у кеш FSM.')
 
-        await state.set_state(VocabCreation.waiting_for_vocab_note)  # Переведення FSM у стан очікування примітки
-        logging.debug(f'FSM стан змінено на "{VocabCreation.waiting_for_vocab_note}".')
+        fsm_state: State = VocabCreation.waiting_for_vocab_note  # FSM стан очікування примітки до словника
+        await state.set_state(fsm_state)  # Переведення у новий FSM стан
+        logging.debug(f'FSM стан змінено на "{fsm_state}".')
     else:
         formatted_errors: str = validator.format_errors()  # Відформатований список помилок
         msg_list_of_errors: str = app_data['errors']['vocab']['list_of_errors'].format(vocab_name=vocab_name,
@@ -140,7 +141,7 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
 
     vocab_note: str = message.text  # Примітка, введена користувачем
 
-    logging.info(f'Користувач ввів примітку "{vocab_note}" до словника "{vocab_name}".')
+    logging.info(f'Введено примітку "{vocab_note}" до словника "{vocab_name}".')
 
     # Валідатор для перевірки примітки до словника
     validator = VocabNoteValidator(note=vocab_note,
