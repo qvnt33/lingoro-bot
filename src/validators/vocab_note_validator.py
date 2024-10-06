@@ -1,10 +1,5 @@
 import logging
 
-import sqlalchemy
-from sqlalchemy.orm.query import Query
-
-from db.models import Vocabulary
-from tools.escape_markdown import escape_markdown
 from tools.read_data import app_data
 
 
@@ -31,7 +26,8 @@ class VocabNoteValidator:
 
         # Якщо к-сть некоректна
         if not is_valid_note_length:
-            logging.warning(f'Помилка! Примітка до словника, містить некоректну кількість символів "{current_length}". Має містити від "{self.min_len}" до "{self.max_len}".')
+            logging.warning(f'Помилка! Примітка до словника, містить некоректну кількість символів "{current_length}". \
+                Має містити від "{self.min_len}" до "{self.max_len}".')
 
             error_text: str = app_data['errors']['vocab']['note']['invalid_length'].format(min_len=self.min_len,
                                                                                            max_len=self.max_len)
@@ -55,4 +51,5 @@ class VocabNoteValidator:
             formatted_error: str = f'{num}. {error}'
             formatted_errors_lst.append(formatted_error)
 
-        return '\n'.join(formatted_errors_lst)
+            joined_errors: str = '\n'.join(formatted_errors_lst)
+        return joined_errors
