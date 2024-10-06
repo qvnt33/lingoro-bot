@@ -144,8 +144,8 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
 
     # Валідатор для перевірки примітки до словника
     validator = VocabNoteValidator(note=vocab_note,
-                                   min_length_vocab_note=MIN_LENGTH_VOCAB_NOTE,
-                                   max_length_vocab_note=MAX_LENGTH_VOCAB_NOTE)
+                                   min_len=MIN_LENGTH_VOCAB_NOTE,
+                                   max_len=MAX_LENGTH_VOCAB_NOTE)
 
     # Якщо примітка коректна
     if validator.is_valid():

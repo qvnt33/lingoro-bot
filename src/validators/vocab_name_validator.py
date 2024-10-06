@@ -83,4 +83,5 @@ class VocabNameValidator:
             formatted_error: str = f'{num}. {error}'
             formatted_errors_lst.append(formatted_error)
 
-        return '\n'.join(formatted_errors_lst)
+            joined_errors: str = '\n'.join(formatted_errors_lst)
+        return joined_errors

@@ -11,11 +11,11 @@ from tools.read_data import app_data
 class VocabNoteValidator:
     def __init__(self,
                  note: str,
-                 min_length_vocab_note: int,
-                 max_length_vocab_note: int) -> None:
+                 min_len: int,
+                 max_len: int) -> None:
         self.note: str = note  # Примітка до словника
-        self.min_length_vocab_note: int = min_length_vocab_note  # Мінімальна кількість символів примітки до словника
-        self.max_length_vocab_note: int = max_length_vocab_note  # Максимальна кількість символів примітки до словника
+        self.min_len: int = min_len  # Мінімальна к-сть символів у примітки до словника
+        self.max_len: int = max_len  # Максимальна к-сть символів у примітки до словника
         self.errors_lst: list = []  # Список усіх помилок
 
     def _add_error(self, error_text: str) -> None:
@@ -23,18 +23,26 @@ class VocabNoteValidator:
         self.errors_lst.append(error_text)
 
     def correct_length(self) -> bool:
-        """Перевіряє, що коректна довжина примітки"""
-        length_note: int = len(self.note)
-        if not (self.min_length_vocab_note <= length_note <= self.max_length_vocab_note):
-            self._add_error(f'Примітка до словника має містити від "{self.min_length_vocab_note}" до "{self.max_length_vocab_note}" символів.')
+        """Перевіряє, що коректна к-сть символів у примітці до словника"""
+        current_length: int = len(self.note)  # К-сть символів у примітці
 
-            logging.warning(f'Помилка! Примітка до словника, містить некоректну кількість символів "{length_note}". Має містити від "{self.min_length_vocab_note}" до "{self.max_length_vocab_note}".')
+        # Коректна кількість символів у примітці
+        is_valid_note_length: bool = self.min_len <= current_length <= self.max_len
+
+        # Якщо к-сть некоректна
+        if not is_valid_note_length:
+            logging.warning(f'Помилка! Примітка до словника, містить некоректну кількість символів "{current_length}". Має містити від "{self.min_len}" до "{self.max_len}".')
+
+            error_text: str = app_data['errors']['vocab']['note']['invalid_length'].format(min_len=self.min_len,
+                                                                                           max_len=self.max_len)
+            self._add_error(error_text)  # Додавання помилки
             return False
         return True
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
-        self.errors_lst = []  # Очищуємо помилки перед перевіркою
+        self.errors_lst = []  # Очищення списку помилок перед перевіркою
+
         checks: list[bool] = [self.correct_length()]
         return all(checks)
 
@@ -42,9 +50,9 @@ class VocabNoteValidator:
         """Форматує список помилок у нумерований рядок"""
         formatted_errors_lst: list = []  # Список всіх відформатованих помилок
 
-        for num, error in enumerate(self.errors_lst, start=1):
+        for num, error in enumerate(iterable=self.errors_lst, start=1):
             # Форматування кожного рядка з номером і помилкою
-            formatted_error: str = f'*{num}*. {escape_markdown(error)}'
+            formatted_error: str = f'{num}. {error}'
             formatted_errors_lst.append(formatted_error)
 
         return '\n'.join(formatted_errors_lst)
