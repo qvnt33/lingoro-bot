@@ -16,8 +16,8 @@ def get_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyb
                                                    callback_data='keep_old_vocab_name')
     btn_cancel = InlineKeyboardButton(text='Скасувати',
                                       callback_data='cancel_create_from_vocab_name')
+    # Якщо потрібно додати кнопку залишення назви
     if is_keep_old_vocab_name:
-
         kb.row(btn_keep_old_vocab_name)
     kb.row(btn_cancel)
 
