@@ -68,6 +68,8 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
     user_id: int = message.from_user.id
     vocab_name: str = message.text.strip()  # Назва словника
 
+    logging.info(f'Введено назву до словника "{vocab_name}".')
+
     data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
     vocab_name_old: Any | None = data_fsm.get('vocab_name')  # Стара назва словника
 
@@ -119,12 +121,12 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
     else:
         formatted_errors: str = validator.format_errors()  # Відформатований список помилок
 
-        # Повідомлення з помилкам введеної назви словника
-        msg_list_of_errors: str = app_data['errors']['vocab']['name']['list_of_errors'].format(vocab_name=vocab_name,
-                                                                                               list_of_errors=formatted_errors)
+        # Текст з помилкам введеної назви словника
+        list_of_errors: str = app_data['errors']['vocab']['name']['list_of_errors'].format(vocab_name=vocab_name,
+                                                                                           list_of_errors=formatted_errors)
         # Повідомлення з заголовком старої назви
         msg_vocab_name: str = format_message(vocab_name=vocab_name_old,
-                                             content=msg_list_of_errors)
+                                             content=list_of_errors)
 
     await message.answer(text=msg_vocab_name, reply_markup=kb)
 
@@ -134,12 +136,12 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
     """Обробляє примітку до словника, яку ввів користувач.
     Переходить до процесу додавання словникових пар, якщо примітка коректна.
     """
-    kb: InlineKeyboardMarkup = get_kb_create_vocab_name()  # Клавіатура для створення примітки
-
     data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
     vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
 
     vocab_note: str = message.text  # Примітка до словника, введена користувачем
+
+    kb: InlineKeyboardMarkup = get_kb_create_vocab_note()  # Клавіатура для створення примітки
 
     logging.info(f'Введено примітку "{vocab_note}" до словника "{vocab_name}".')
 
@@ -151,9 +153,7 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
 
     # Якщо примітка коректна
     if validator.is_valid():
-        logging.info(f'Примітка "{vocab_note}" до словника "{vocab_name}" пройшла всі перевірки.')
-
-        kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для введення назви словника
+        logging.info(f'Примітка "{vocab_note}" до словника "{vocab_name}" пройшла перевірку.')
 
         # Повідомлення, що примітка до словника успішно збережена
         msg_vocab_note_created: str = app_data['success']['vocab']['note']['created']
@@ -161,22 +161,21 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
                                              content=msg_vocab_note_created)
 
         await state.update_data(vocab_note=vocab_note)  # Збереження примітки в кеш FSM
-        logging.debug('"Примітка до словника" збережена у кеш FSM.')
+        logging.debug(f'Примітка "{vocab_note}" до словника "{vocab_name}" збережена у кеш FSM.')
 
-        await state.set_state(VocabCreation.waiting_for_wordpairs)  # Переведення FSM у стан очікування словникових пар
-        logging.debug(f'FSM стан змінено на "{VocabCreation.waiting_for_wordpairs}".')
+        fsm_state: State = VocabCreation.waiting_for_wordpairs  # FSM стан очікування словникових пар
+        await state.set_state(fsm_state)  # Переведення у новий FSM стан
+        logging.debug(f'FSM стан змінено на "{fsm_state}".')
     else:
         formatted_errors: str = validator.format_errors()  # Відформатований список помилок
-        msg_list_of_errors: str = app_data['errors']['vocab']['note']['list_of_errors'].format(vocab_note=vocab_note,
-                                                                                               vocab_name=vocab_name,
-                                                                                               list_of_errors=formatted_errors)
-        # У словника вже є назв
+
+        # Текст з помилкам введеної примітки до словника
+        list_of_errors: str = app_data['errors']['vocab']['note']['list_of_errors'].format(vocab_note=vocab_note,
+                                                                                           vocab_name=vocab_name,
+                                                                                           list_of_errors=formatted_errors)
         msg_vocab_note: str = format_message(vocab_name=vocab_name,
                                              vocab_note=vocab_note,
-                                             content=msg_list_of_errors)
-
-        # Клавіатура для повторного введення назви
-        kb: InlineKeyboardMarkup = get_kb_create_wordpairs()
+                                             content=list_of_errors)
     await message.answer(text=msg_vocab_note, reply_markup=kb)
 
 
@@ -286,12 +285,10 @@ async def process_cancel_create(callback: CallbackQuery, state: FSMContext) -> N
     """Відстежує натискання на кнопку "Скасувати" на всіх етапах створення словника.
     Залишає поточну назву та переводить стан FSM у очікування.
     """
-    logging.info(f'Користувач {callback.from_user.id} натиснув на кнопку "Скасувати" '
-                 'на одну із етапів створення словника.')
+    stage: str = callback.data.split('cancel_create_from_')[1]  # Процес, з якого було натиснута кнопка "Скасувати"
 
-    # Процес, з якого було натиснута кнопка "Скасувати"
-    stage: str = callback.data.split('cancel_create_from_')[1]
-    logging.info(f'Користувач {callback.from_user.id} натиснув на кнопку "Скасувати" на етапі створення словника "{stage}".')
+    logging.info(f'Була натиснута кнопка "Скасувати" при створенні словника, на етапі "{stage}".')
+
     msg_cancel_create = 'Ви дійсно хочете скасувати створення словника?'
     await state.set_state()  # FSM у очікування
 
