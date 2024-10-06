@@ -30,7 +30,7 @@ class VocabNameValidator:
 
         # Якщо у базі вже є словник з такою назвою
         if is_existing_vocab:
-            logging.warning(f'Помилка! У базі словників користувача, вже є назва "{self.name}".')
+            logging.warning(f'У базі словників користувача, вже є назва "{self.name}".')
 
             error_text: str = app_data['errors']['vocab']['name_exists'].format(name=self.name)
             self._add_error(error_text)  # Додавання помилки
@@ -41,7 +41,7 @@ class VocabNameValidator:
         """Перевіряє, що назва містить лише дозволені символи: літери, цифри, пробіли, тире та підкреслення"""
         # Якщо у назві словника є заборонені символи
         if not all(char.isalnum() or char in self.correct_symbols for char in self.name):
-            logging.warning(f'Помилка! Назва словника "{self.name}" містить некоректні символи.')
+            logging.warning(f'Назва словника "{self.name}" містить некоректні символи.')
 
             error_text: str = app_data['errors']['vocab']['invalid_characters']
             self._add_error(error_text)  # Додавання помилки
@@ -50,10 +50,15 @@ class VocabNameValidator:
 
     def correct_name_length(self) -> bool:
         """Перевіряє, що довжина назви коректна"""
-        current_len: int = len(self.name)  # Кількість символів у назві словника
-        if not (self.min_len <= current_len <= self.max_len):
-            logging.warning(f'Помилка! Назва словника "{self.name}" має містити від \
-                {self.min_len} до {self.max_len} символів.')
+        current_length: int = len(self.name)  # Кількість символів у назві словника
+
+        # Коректна кількість символів у назві словника
+        is_valid_length: bool = self.min_len <= current_length <= self.max_len
+
+        # Якщо к-сть некоректна
+        if not is_valid_length:
+            logging.warning(f'Некоректна кількість символів у назві словника: "{self.name}". '
+                f'Очікується від {self.min_len} до {self.max_len} символів.')
 
             error_text: str = app_data['errors']['vocab']['invalid_length'].format(min_len=self.min_len,
                                                                                    max_len=self.max_len)

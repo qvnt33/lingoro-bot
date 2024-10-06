@@ -22,12 +22,12 @@ class VocabNoteValidator:
         current_length: int = len(self.note)  # К-сть символів у примітці
 
         # Коректна кількість символів у примітці
-        is_valid_note_length: bool = self.min_len <= current_length <= self.max_len
+        is_valid_length: bool = self.min_len <= current_length <= self.max_len
 
         # Якщо к-сть некоректна
-        if not is_valid_note_length:
-            logging.warning(f'Помилка! Примітка до словника, містить некоректну кількість символів "{current_length}". \
-                Має містити від "{self.min_len}" до "{self.max_len}".')
+        if not is_valid_length:
+            logging.warning(f'Некоректна кількість символів у примітці до словника: "{self.name}."'
+                f'Очікується від {self.min_len} до {self.max_len} символів.')
 
             error_text: str = app_data['errors']['vocab']['note']['invalid_length'].format(min_len=self.min_len,
                                                                                            max_len=self.max_len)
