@@ -47,7 +47,9 @@ async def process_create_vocab(callback: CallbackQuery, state: FSMContext) -> No
     Виконується процес створення словника.
     """
     user_id: int = callback.message.from_user.id
-    logging.info(f'Користувач "{user_id}" почав "процес створення словника".')
+
+    log_text: str = app_data['logging']['process']['start']['create_vocab'].format(user_id=user_id)
+    logging.info(log_text)
 
     kb: InlineKeyboardMarkup = get_kb_create_vocab_name()   # Клавіатура для створення назви словника
 
@@ -97,8 +99,6 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
         validator = VocabNameValidator(
             name=vocab_name,
             user_id=user_id,
-            min_len=MIN_LENGTH_VOCAB_NAME,
-            max_len=MAX_LENGTH_VOCAB_NAME,
             db_session=db)
 
     # Якщо назва словника коректна

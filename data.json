@@ -116,6 +116,11 @@
     },
     "annotation": {
       "invalid_length": "Анотація \"{annotation}\" до словникової пари \"{wordpair}\" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length} символів."
+    },
+    "process": {
+      "start": {
+        "create_vocab": "Користувач \"{user_id}\" почав \"процес створення словника\"."
+      }
     }
   }
 }
