@@ -26,7 +26,7 @@ class VocabNameValidator(ValidatorBase):
         # Якщо у базі вже є словник з такою назвою
         if is_existing_vocab:
             error_text: str = app_data['errors']['vocab']['name']['name_exists'].format(name=self.name)
-            log_text: str = app_data['logging']['vocab']['name']['name_exists'].format(name=self.name)
+            log_text: str = app_data['logging']['warning']['vocab']['name']['name_exists'].format(name=self.name)
             self.add_error_with_log(error_text, log_text)
             return False
         return True
@@ -38,7 +38,7 @@ class VocabNameValidator(ValidatorBase):
             error_text: str = app_data['errors']['vocab']['name']['invalid_length'].format(
                 min_length=MIN_LENGTH_VOCAB_NAME,
                 max_length=MAX_LENGTH_VOCAB_NAME)
-            log_text: str = app_data['logging']['vocab']['name']['invalid_length'].format(
+            log_text: str = app_data['logging']['warning']['vocab']['name']['invalid_length'].format(
                 name=self.name,
                 current_length=length_name,
                 min_length=MIN_LENGTH_VOCAB_NAME,
@@ -53,7 +53,7 @@ class VocabNameValidator(ValidatorBase):
         if not all(char.isalnum() or char in ALLOWED_CHARACTERS for char in self.name):
             error_text: str = app_data['errors']['vocab']['name']['invalid_characters'].format(
                 allowed_characters=ALLOWED_CHARACTERS)
-            log_text: str = app_data['logging']['vocab']['name']['invalid_characters'].format(
+            log_text: str = app_data['logging']['warning']['vocab']['name']['invalid_characters'].format(
                 name=self.name,
                 allowed_characters=ALLOWED_CHARACTERS)
             self.add_error_with_log(error_text, log_text)

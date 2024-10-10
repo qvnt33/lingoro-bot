@@ -11,27 +11,6 @@
         "invalid_length": "Примітка до словника має містити від {min_length} до {max_length} символів.",
         "list_of_errors": "Помилка! У примітці \"{vocab_note}\" до словника \"{vocab_name}\" є помилки:\n{list_of_errors}\nЯкщо примітка до словника не потрібна - натисніть на кнопку \"Пропустити\"."
       }
-    },
-
-    "wordpair": {
-      "word": {
-        "invalid_length": "Слово до словникової пари має містити від {min_length} до {max_length} символів.",
-        "invalid_count": "Словникова пара має містити від {min_count} до {max_count} слів.",
-        "invalid_characters": "Слово до словникової пари може містити лише літери, цифри та \"{allowed_characters}\""
-      },
-      "translation": {
-        "invalid_length": "Переклад до словникової пари має містити від {min_length} до {max_length} символів.",
-        "invalid_count": "Словникова пара має містити від {min_count} до {max_count} перекладів.",
-        "invalid_characters": "Переклад до словникової пари може містити лише літери, цифри та \"{allowed_characters}\""
-      },
-      "annotation": {
-        "invalid_length": "Анотація до словникової пари має містити від {min_length} до {max_length} символів."
-      }
-    },
-
-    "general": {
-      "invalid_input": "Невірне введення. Будь ласка, спробуйте ще раз.",
-      "missing_data": "Не вистачає необхідних даних для продовження."
     }
   },
 
@@ -54,6 +33,27 @@
         "operation_successful": "Операція успішно виконана."
       }
     }
+  },
+
+  "wordpair": {
+    "word": {
+      "invalid_length": "Слово до словникової пари має містити від {min_length} до {max_length} символів.",
+      "invalid_count": "Словникова пара має містити від {min_count} до {max_count} слів.",
+      "invalid_characters": "Слово до словникової пари може містити лише літери, цифри та \"{allowed_characters}\""
+    },
+    "translation": {
+      "invalid_length": "Переклад до словникової пари має містити від {min_length} до {max_length} символів.",
+      "invalid_count": "Словникова пара має містити від {min_count} до {max_count} перекладів.",
+      "invalid_characters": "Переклад до словникової пари може містити лише літери, цифри та \"{allowed_characters}\""
+    },
+    "annotation": {
+      "invalid_length": "Анотація до словникової пари має містити від {min_length} до {max_length} символів."
+    }
+  },
+
+  "general": {
+    "invalid_input": "Невірне введення. Будь ласка, спробуйте ще раз.",
+    "missing_data": "Не вистачає необхідних даних для продовження."
   },
 
   "info": {
@@ -89,19 +89,32 @@
   },
 
   "logging": {
-    "vocab": {
-      "name": {
-        "invalid_length": "Назва до словника \"{name}\" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length} символів.",
-        "invalid_characters": "Назва до словника \"{name}\" містить некоректні символи: Допустимі символи: літери, цифри та \"{allowed_characters}\".",
-        "name_exists": "Назва до словника \"{name}\" вже знаходиться у базі користувача"
-      },
-      "note": {
-        "invalid_length":"Примітка до словника \"{note}\" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length} символів."
-      },
-      "process": {
-        "create_vocab": "Користувач \"{user_id}\" почав \"процес створення словника\".",
-        "fsm_changed": "FSM стан змінено на \"{fsm_state}\"."
+    "debug": {
+      "fsm": {
+        "vocab": {
+          "saved": "Назва словника \"{name}\" збережена у кеш FSM."
+        },
+        "changed": "FSM стан змінено на \"{fsm_state}\"."
       }
+    },
+    "info": {
+      "vocab": {
+        "create_vocab": "Користувач \"{user_id}\" почав \"процес створення словника\".",
+        "name_entered": "Введено назву до словника \"{name}\".",
+        "name_passed_test": "Назва словника \"{name}\" пройшла перевірку."
+      }
+    },
+    "warning": {
+      "vocab": {
+        "name": {
+          "name_exists": "Назва до словника \"{name}\" вже знаходиться у базі користувача",
+          "invalid_length": "Назва до словника \"{name}\" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length}",
+          "invalid_characters": "Назва до словника \"{name}\" містить некоректні символи. Допустимі символи: літери, цифри та \"{allowed_characters}\"."
+      }
+    }
+  },
+    "error": {
+
     }
   }
 }

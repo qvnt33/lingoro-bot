@@ -48,7 +48,7 @@ async def process_create_vocab(callback: CallbackQuery, state: FSMContext) -> No
     """
     user_id: int = callback.message.from_user.id
 
-    log_text: str = app_data['logging']['vocab']['process']['create_vocab'].format(user_id=user_id)
+    log_text: str = app_data['logging']['info']['vocab']['create_vocab'].format(user_id=user_id)
     logging.info(log_text)
 
     kb: InlineKeyboardMarkup = get_kb_create_vocab_name()   # Клавіатура для створення назви словника
@@ -60,7 +60,7 @@ async def process_create_vocab(callback: CallbackQuery, state: FSMContext) -> No
     fsm_state: State = VocabCreation.waiting_for_vocab_name  # FSM стан очікування назви
     await state.set_state(fsm_state)  # Переведення у новий FSM стан
 
-    log_text: str = app_data['logging']['vocab']['process']['fsm_changed'].format(fsm_state=fsm_state)
+    log_text: str = app_data['logging']['debug']['fsm']['changed'].format(fsm_state=fsm_state)
     logging.debug(log_text)
 
 
@@ -72,8 +72,8 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
     user_id: int = message.from_user.id
     vocab_name: str = message.text.strip()  # Назва словника
 
-
-    logging.info(f'Введено назву до словника "{vocab_name}".')
+    log_text: str = app_data['logging']['info']['vocab']['name_entered'].format(name=vocab_name)
+    logging.info(log_text)
 
     data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
     vocab_name_old: Any | None = data_fsm.get('vocab_name')  # Стара назва словника
@@ -93,13 +93,13 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
         # Повідомлення, що назва словника не може збігатися з поточною
         msg_vocab_same_name: str = app_data['info']['vocab']['name']['same_name']
         msg_vocab_name: str = format_message(vocab_name=vocab_name_old,
-                                            content=msg_vocab_same_name)
+                                             content=msg_vocab_same_name)
 
         await message.answer(msg_vocab_name, reply_markup=kb)
         return  # Завершення подальшої обробки
 
     with Session() as db:
-        # Валідатор для перевірки коректності назви словника
+        # Валідатор для перевірки
         validator = VocabNameValidator(
             name=vocab_name,
             user_id=user_id,
@@ -107,7 +107,8 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
 
     # Якщо назва словника коректна
     if validator.is_valid():
-        logging.info(f'Назва словника "{vocab_name}" пройшла перевірку.')
+        log_text: str = app_data['logging']['info']['vocab']['name_passed_test'].format(name=vocab_name)
+        logging.info(log_text)
 
         # Повідомлення про успішне збереження назви словника
         msg_vocab_name_created: str = app_data['success']['vocab']['name']['created']
@@ -117,11 +118,13 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
         kb: InlineKeyboardMarkup = get_kb_create_vocab_note()  # Клавіатура для створення примітки
 
         await state.update_data(vocab_name=vocab_name)  # Збереження назви в кеш FSM
-        logging.debug(f'Назва словника "{vocab_name}" збережена у кеш FSM.')
+        log_text: str = app_data['logging']['debug']['fsm']['vocab']['saved'].format(name=vocab_name)
+        logging.info(log_text)
 
         fsm_state: State = VocabCreation.waiting_for_vocab_note  # FSM стан очікування примітки до словника
         await state.set_state(fsm_state)  # Переведення у новий FSM стан
-        logging.debug(f'FSM стан змінено на "{fsm_state}".')
+        log_text: str = app_data['logging']['debug']['fsm']['changed'].format(fsm_state=fsm_state)
+        logging.debug(log_text)
     else:
         formatted_errors: str = validator.format_errors()  # Відформатований список помилок
 
