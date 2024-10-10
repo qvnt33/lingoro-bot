@@ -48,7 +48,7 @@ async def process_create_vocab(callback: CallbackQuery, state: FSMContext) -> No
     """
     user_id: int = callback.message.from_user.id
 
-    log_text: str = app_data['logging']['process']['start']['create_vocab'].format(user_id=user_id)
+    log_text: str = app_data['logging']['vocab']['process']['create_vocab'].format(user_id=user_id)
     logging.info(log_text)
 
     kb: InlineKeyboardMarkup = get_kb_create_vocab_name()   # Клавіатура для створення назви словника
@@ -59,7 +59,9 @@ async def process_create_vocab(callback: CallbackQuery, state: FSMContext) -> No
 
     fsm_state: State = VocabCreation.waiting_for_vocab_name  # FSM стан очікування назви
     await state.set_state(fsm_state)  # Переведення у новий FSM стан
-    logging.debug(f'FSM стан змінено на "{fsm_state}".')
+
+    log_text: str = app_data['logging']['vocab']['process']['fsm_changed'].format(fsm_state=fsm_state)
+    logging.debug(log_text)
 
 
 @router.message(VocabCreation.waiting_for_vocab_name)
@@ -69,6 +71,7 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
     """
     user_id: int = message.from_user.id
     vocab_name: str = message.text.strip()  # Назва словника
+
 
     logging.info(f'Введено назву до словника "{vocab_name}".')
 
@@ -81,7 +84,8 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
 
     # Якщо введена назва словника збігається з поточною
     if is_vocab_name_existing and vocab_name.lower() == vocab_name_old.lower():
-        logging.warning(f'Нова назва словника "{vocab_name}" збігається з поточною назвою.')
+        log_text: str = app_data['logging']['vocab']['name']['name_exists'].format(name=vocab_name)
+        logging.warning(log_text)
 
         # Клавіатура для введення або зміни назви словника
         kb: InlineKeyboardMarkup = get_kb_create_vocab_name(is_keep_old_vocab_name=True)
