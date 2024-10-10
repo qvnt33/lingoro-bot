@@ -25,5 +25,5 @@ class ValidatorBase:
         return joined_errors
 
     def is_valid(self) -> bool:
-        """Чи пройшла валідація успішно"""
-        return len(self.errors_lst) == 0
+        count_all_errors: int = len(self.errors_lst)
+        return count_all_errors == 0
