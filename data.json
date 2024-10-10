@@ -3,20 +3,29 @@
     "vocab": {
       "name": {
         "name_exists": "У вашій базі вже є словник з назвою \"{name}\".",
-        "invalid_characters": "Назва словника може містити лише літери, цифри, пробіли, тире (-) та підкреслення (_).",
-        "invalid_length": "Назва словника повинна містити від {min_len} до {max_len} символів.",
+        "invalid_characters": "Назва словника може містити лише літери, цифри та \"{allowed_characters}\"",
+        "invalid_length": "Назва словника має містити від {min_length} до {max_length} символів.",
         "list_of_errors": "У назві словника \"{vocab_name}\" є помилки:\n{list_of_errors}"
       },
       "note": {
-        "invalid_length": "Примітка до словника повинна містити від \"{min_len}\" до \"{max_len}\" символів.",
+        "invalid_length": "Примітка до словника має містити від {min_length} до {max_length} символів.",
         "list_of_errors": "Помилка! У примітці \"{vocab_note}\" до словника \"{vocab_name}\" є помилки:\n{list_of_errors}\nЯкщо примітка до словника не потрібна - натисніть на кнопку \"Пропустити\"."
       }
     },
     "wordpair": {
-      "invalid_format": "Словникова пара має бути у форматі: слово : переклад.",
-      "too_many_words": "Словникова пара не може містити більше {max_words} слів.",
-      "invalid_word_length": "Кожне слово має містити від {min_len} до {max_len} символів.",
-      "invalid_translation_length": "Кожен переклад має містити від {min_len} до {max_len} символів."
+      "word": {
+        "invalid_length": "Слово до словникової пари має містити від {min_length} до {max_length} символів.",
+        "invalid_count": "Словникова пара має містити від {min_count} до {max_count} слів.",
+        "invalid_characters": "Слово до словникової пари може містити лише літери, цифри та \"{allowed_characters}\""
+      },
+      "translation": {
+        "invalid_length": "Переклад до словникової пари має містити від {min_length} до {max_length} символів.",
+        "invalid_count": "Словникова пара має містити від {min_count} до {max_count} перекладів.",
+        "invalid_characters": "Переклад до словникової пари може містити лише літери, цифри та \"{allowed_characters}\""
+      },
+      "annotation": {
+        "invalid_length": "Анотація до словникової пари має містити від {min_length} до {max_length} символів."
+      }
     },
     "general": {
       "invalid_input": "Невірне введення. Будь ласка, спробуйте ще раз.",
@@ -76,5 +85,38 @@
       "enter_data": "Будь ласка, введіть необхідні дані для продовження.",
       "confirm_action": "Ви впевнені, що хочете виконати цю дію?"
     }
+  },
+
+  "logging": {
+    "vocab": {
+      "name": {
+        "invalid_length": "Назва до словника \"{name}\" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length} символів.",
+        "invalid_characters": "Назва до словника \"{name}\" містить некоректні символи: Допустимі символи: літери, цифри та \"{allowed_characters}\".",
+        "name_exists": "Назва до словника \"{name}\" вже знаходиться у базі користувача"
+      },
+      "note": {
+        "invalid_length":"Примітка до словника \"{note}\" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length} символів."
+      },
+      "name_exists": "Користувач спробував додати словник з існуючою назвою \"{name}\".",
+      "invalid_characters": "Користувач спробував додати словник з некоректними символами у назві.",
+      "invalid_length": "Користувач спробував додати словник з назвою, яка не відповідає вимогам по довжині.",
+      "created": "Користувач створив новий словник з назвою \"{name}\".",
+      "updated": "Користувач оновив назву словника на \"{name}\"."
+    },
+    "wordpair": {
+      "word": {
+        "invalid_length": "Слово \"{word}\" до словникової пари \"{wordpair}\" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length} символів.",
+        "invalid_count": "Словникова пара \"{wordpair}\" не відповідає вимогам по довжині слів: довжина {current_count} слів. Доступа кількість від {min_count} до {max_count} слів.",
+        "invalid_characters": "Слово \"{word}\" до словникової пари \"{wordpair}\" містить недозволені символи."
+    },
+    "translation": {
+        "invalid_length": "Переклад \"{translation}\" до словникової пари \"{wordpair}\" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length} символів.",
+        "invalid_count": "Словникова пара \"{wordpair}\" не відповідає вимогам по кількості перекладів: кількість {current_count} перекладів. Доступа кількість від {min_count} до {max_count} перекладів.",
+        "invalid_characters": "Переклад \"{translation}\" до словникової пари \"{wordpair}\" містить недозволені символи."
+    },
+    "annotation": {
+      "invalid_length": "Анотація \"{annotation}\" до словникової пари \"{wordpair}\" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length} символів."
+    }
   }
+}
 }
