@@ -1,8 +1,9 @@
+from .base_validator import ValidatorBase
+
 from config import MAX_LENGTH_VOCAB_NOTE, MIN_LENGTH_VOCAB_NOTE
-from tools.read_data import app_data
 
 
-class VocabNoteValidator:
+class VocabNoteValidator(ValidatorBase):
     def __init__(self,
                  note: str,
                  vocab_name: str) -> None:
@@ -14,11 +15,11 @@ class VocabNoteValidator:
         """Перевіряє, що коректна довжини"""
         length_note: int = len(self.note)
         if not MIN_LENGTH_VOCAB_NOTE <= length_note <= MAX_LENGTH_VOCAB_NOTE:
-            error_text: str = app_data['errors']['vocab']['name']['invalid_length'].format(
+            error_text: str = 'Назва словника має містити від {min_length} до {max_length} символів.'.format(
                 min_length=MIN_LENGTH_VOCAB_NOTE,
                 max_length=MAX_LENGTH_VOCAB_NOTE)
-            log_text: str = app_data['logging']['warning']['vocab']['name']['invalid_length'].format(
-                name=self.name,
+            log_text: str = 'Назва до словника "{vocab_name}" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length}'.format(
+                vocab_name=self.name,
                 current_length=length_note,
                 min_length=MIN_LENGTH_VOCAB_NOTE,
                 max_length=MAX_LENGTH_VOCAB_NOTE)

@@ -1,5 +1,6 @@
 import logging
 from typing import Any
+from .base_validator import ValidatorBase
 
 import sqlalchemy
 from sqlalchemy.orm.query import Query
@@ -7,27 +8,51 @@ from sqlalchemy.orm.query import Query
 from db.models import Vocabulary
 # from tools.escape_markdown import escape_markdown
 from tools.read_data import app_data
+from config import WORDPAIR_SEPARATOR
 
 
-class WordPairValidator:
+class WordPairValidator(ValidatorBase):
     def __init__(self,
                  wordpair: str,
                  user_id: int,
-                 max_count_words: int,
-                 max_count_translations: int,
-                 max_length_word: int,
-                 max_length_translation: int) -> None:
-        self.wordpair: str = wordpair.strip()  # Словникова пара без зайвих пробілів
-        self.user_id: int = user_id
-        self.max_count_words: int = max_count_words  # Максимальна кількість слів у словниковій парі
-        self.max_count_translation: int = max_count_translations  # Максимальна кількість перекладів у словниковій парі
-        self.max_length_word: int = max_length_word  # Максимальна кількість символів слова
-        self.max_length_translation: int = max_length_translation  # Максимальна кількість символів перекладу
-        self.errors_lst: list = []  # Список помилок
+                 vocab_name: setattr) -> None:
+        super().__init__()  # Виклик конструктора базового класу
+        self.wordpair: str = wordpair.strip()  # Словникова пара
+        self.user_id: int = user_id  # ID користувача
+        self.vocab_name: str = vocab_name
 
-    def _add_error(self, error_text: str) -> None:
-        """Додає помилку до списку помилок"""
-        self.errors_lst.append(error_text)
+    def check_valid_format(self) -> bool:
+        """Перевіряє, що назва словника унікальна серед словників користувача (незалежно від регістру)"""
+        parts_wordpair: list[str] = self.wordpair.split(WORDPAIR_SEPARATOR)  # Частини словникової пари
+        length_wordpair = len(parts_wordpair)
+
+        is_wordpair_with_translation: bool = length_wordpair > 2  # Словникова пара не містить перекладу
+        is_wordpair_has_more_parts: bool = length_wordpair > 3  # Словникова пара складається більше ніж з 3 частин
+
+        if not is_wordpair_with_translation:
+            error_text: str = 'Помилка! Формат словникової пари некоректний! Словникова пара повинна містити щонайменше одне слово та один переклад, розділені символом "{wordpair_separator}".'.format(wordpair_separator=WORDPAIR_SEPARATOR)
+            log_text: str = 'Помилка словникової пари "{wordpair}" до словника "{vocab_name}". Словникова пара не містить перекладу.'.format(wordpair=self.wordpair,
+                                                                                                                                             vocab_name=self.name)
+            self.add_error_with_log()
+            self._add_error('Помилка формату словникової пари! Словникова пара повинна містити щонайменше одне слово та один переклад, розділені символом ":".')
+            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" має неправильний формат.')
+            return False
+        if not is_wordpair_has_more_parts:
+            self._add_error('Помилка формату словникової пари! Максимальна кількість частин у словниковій парі - три (слова, переклади, анотація).')
+            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" містить більше трьох частин.')
+            return False
+        return True
+        is_existing_vocab: Query[Vocabulary] | None = self.db_session.query(Vocabulary).filter(
+            Vocabulary.name.ilike(self.name),
+            Vocabulary.user_id == self.user_id).first()
+
+        # Якщо у базі вже є словник з такою назвою
+        if is_existing_vocab:
+            error_text: str = 'У вашій базі вже є словник з назвою "{vocab_name}".'.format(vocab_name=self.name)
+            log_text: str = 'Назва до словника "{vocab_name}" вже знаходиться у базі користувача'.format(vocab_name=self.name)
+            self.add_error_with_log(error_text, log_text)
+            return False
+        return True
 
     def valid_format(self) -> bool:
         """Перевіряє, що словникова пара має правильну структуру (мінімум слово та переклад)"""

@@ -157,9 +157,7 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
 
     # Валідатор для перевірки примітки до словника
     validator = VocabNoteValidator(note=vocab_note,
-                                   vocab_name=vocab_name,
-                                   min_len=MIN_LENGTH_VOCAB_NOTE,
-                                   max_len=MAX_LENGTH_VOCAB_NOTE)
+                                   vocab_name=vocab_name)
 
     # Якщо примітка коректна
     if validator.is_valid():
@@ -215,7 +213,8 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
 
     for wordpair in wordpairs_lst:
         validator = WordPairValidator(wordpair=wordpair,
-                                      user_id=user_id)
+                                      user_id=user_id,
+                                      vocab_name=vocab_name)
 
         # Якщо словникова пара валідна
         if validator.is_valid():

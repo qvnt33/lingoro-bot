@@ -4,7 +4,6 @@ from sqlalchemy.orm.query import Query
 
 from config import ALLOWED_CHARACTERS, MAX_LENGTH_VOCAB_NAME, MIN_LENGTH_VOCAB_NAME
 from db.models import Vocabulary
-from tools.read_data import app_data
 
 
 class VocabNameValidator(ValidatorBase):
@@ -25,8 +24,8 @@ class VocabNameValidator(ValidatorBase):
 
         # Якщо у базі вже є словник з такою назвою
         if is_existing_vocab:
-            error_text: str = app_data['errors']['vocab']['name']['name_exists'].format(name=self.name)
-            log_text: str = app_data['logging']['warning']['vocab']['name']['name_exists'].format(name=self.name)
+            error_text: str = f'У вашій базі вже є словник з назвою "{self.name}".'
+            log_text: str = f'Назва до словника "{self.name}" вже знаходиться у базі користувача'
             self.add_error_with_log(error_text, log_text)
             return False
         return True
@@ -35,11 +34,10 @@ class VocabNameValidator(ValidatorBase):
         """Перевіряє, що коректна довжини"""
         length_name: int = len(self.name)
         if not MIN_LENGTH_VOCAB_NAME <= length_name <= MAX_LENGTH_VOCAB_NAME:
-            error_text: str = app_data['errors']['vocab']['name']['invalid_length'].format(
-                min_length=MIN_LENGTH_VOCAB_NAME,
-                max_length=MAX_LENGTH_VOCAB_NAME)
-            log_text: str = app_data['logging']['warning']['vocab']['name']['invalid_length'].format(
-                name=self.name,
+            error_text: str = 'Назва словника має містити від {min_length} до {max_length} символів.'.format(min_length=MIN_LENGTH_VOCAB_NAME,
+                                                                                                       max_length=MAX_LENGTH_VOCAB_NAME)
+            log_text: str = 'Назва до словника "{vocab_name}" не відповідає вимогам по довжині: довжина {current_length} символів. Допустима довжина: від {min_length} до {max_length}'.format(
+                vocab_name=self.name,
                 current_length=length_name,
                 min_length=MIN_LENGTH_VOCAB_NAME,
                 max_length=MAX_LENGTH_VOCAB_NAME)
@@ -51,10 +49,10 @@ class VocabNameValidator(ValidatorBase):
         """Перевіряє, що містить лише коректні символи"""
         # Якщо у назві словника є заборонені символи
         if not all(char.isalnum() or char in ALLOWED_CHARACTERS for char in self.name):
-            error_text: str = app_data['errors']['vocab']['name']['invalid_characters'].format(
+            error_text: str = 'Назва словника може містити лише літери, цифри та "{allowed_characters}"'.format(
                 allowed_characters=ALLOWED_CHARACTERS)
-            log_text: str = app_data['logging']['warning']['vocab']['name']['invalid_characters'].format(
-                name=self.name,
+            log_text: str = 'Назва до словника "{vocab_name}" містить некоректні символи. Допустимі символи: літери, цифри та "{allowed_characters}"'.format(
+                vocab_name=self.name,
                 allowed_characters=ALLOWED_CHARACTERS)
             self.add_error_with_log(error_text, log_text)
             return False
