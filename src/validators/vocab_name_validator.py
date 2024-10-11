@@ -31,10 +31,10 @@ class VocabNameValidator(ValidatorBase):
             return False
         return True
 
-    def check_valid_length(self, name: str, min_len: int, max_len: int) -> bool:
+    def check_valid_length(self, name: str) -> bool:
         """Перевіряє, що коректна довжини"""
         length_name: int = len(name)
-        if not min_len <= length_name <= max_len:
+        if not MIN_LENGTH_VOCAB_NAME <= length_name <= MAX_LENGTH_VOCAB_NAME:
             error_text: str = app_data['errors']['vocab']['name']['invalid_length'].format(
                 min_length=MIN_LENGTH_VOCAB_NAME,
                 max_length=MAX_LENGTH_VOCAB_NAME)

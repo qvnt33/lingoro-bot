@@ -202,8 +202,8 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
     user_id: int = message.from_user.id
     wordpairs: str = message.text  # Введені користувачем словникові пари
 
-    log_text: str = app_data['logging']['info']['wordpair']['entered_all'].format(wordpairs=wordpairs,
-                                                                                  vocab_name=vocab_name)
+    log_text: str = app_data['logging']['info']['vocab']['wordpair']['entered_all'].format(wordpairs=wordpairs,
+                                                                                           vocab_name=vocab_name)
     logging.info(log_text)
 
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для створення назви словника
@@ -217,13 +217,18 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
         validator = WordPairValidator(wordpair=wordpair,
                                       user_id=user_id)
 
-        # Якщо словникова пара валідна, витягуємо дані
-        print(validator.is_valid())
+        # Якщо словникова пара валідна
         if validator.is_valid():
-            logging.info(f'Словникова пара "{wordpair}" пройшла всі перевірки.')
-
             wordpair_data: dict = validator.extract_data()  # Розділена словникова пара
             valid_wordpairs_lst.append(wordpair_data)  # Додавання до списку словникових пар
+
+
+            log_text: str = app_data['logging']['info']['vocab']['wordpair']['passed_test'].format(wordpair=wordpair)
+            logging.info(log_text)
+
+            msg_vocab_note_created: str = app_data['success']['vocab']['note']['created']
+            msg_vocab_note: str = format_message(vocab_name=vocab_name,
+                                                content=msg_vocab_note_created)
         else:
             # Якщо є помилки, додаємо в список невалідну словникову пару та її помилку
             invalid_wordpairs_lst.append({
