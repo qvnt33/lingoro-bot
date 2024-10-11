@@ -31,9 +31,9 @@ class VocabNameValidator(ValidatorBase):
             return False
         return True
 
-    def check_valid_length(self, name: str) -> bool:
+    def check_valid_length(self) -> bool:
         """Перевіряє, що коректна довжини"""
-        length_name: int = len(name)
+        length_name: int = len(self.name)
         if not MIN_LENGTH_VOCAB_NAME <= length_name <= MAX_LENGTH_VOCAB_NAME:
             error_text: str = app_data['errors']['vocab']['name']['invalid_length'].format(
                 min_length=MIN_LENGTH_VOCAB_NAME,
@@ -62,7 +62,7 @@ class VocabNameValidator(ValidatorBase):
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
-        checks: list[bool] = [self.check_valid_length(self.name, MIN_LENGTH_VOCAB_NAME, MAX_LENGTH_VOCAB_NAME),
+        checks: list[bool] = [self.check_valid_length(),
                               self.check_valid_characters(),
                               self.check_unique_name_per_user()]
         return all(checks)
