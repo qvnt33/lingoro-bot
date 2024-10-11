@@ -23,7 +23,3 @@ class ValidatorBase:
 
         joined_errors: str = '\n'.join(formatted_errors_lst)
         return joined_errors
-
-    def is_valid(self) -> bool:
-        count_all_errors: int = len(self.errors_lst)
-        return count_all_errors == 0
