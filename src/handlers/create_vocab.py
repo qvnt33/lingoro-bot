@@ -196,26 +196,26 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
 @router.message(VocabCreation.waiting_for_wordpairs)
 async def process_wordpairs(message: Message, state: FSMContext) -> None:
     """Обробляє словникові пари, введені користувачем"""
-    user_id = message.from_user.id
+    data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
+    vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
+
+    user_id: int = message.from_user.id
     wordpairs: str = message.text  # Введені користувачем словникові пари
 
-    logging.info(f'Користувач ввів словникові пари "{wordpairs}"')
+    log_text: str = app_data['logging']['info']['wordpair']['entered_all'].format(wordpairs=wordpairs,
+                                                                                  vocab_name=vocab_name)
+    logging.info(log_text)
 
-    # Клавіатура для створення назви словника з кнопкою "Залишити поточну назву"
-    kb: InlineKeyboardMarkup = get_kb_create_wordpairs()
+    kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для створення назви словника
 
-    wordpairs_lst: list[str] = wordpairs.split('\n')  # Список словникових паh
+    wordpairs_lst: list[str] = wordpairs.split('\n')  # Список всіх словникових пар
 
-    valid_wordpairs: list = []  # Валідні словникові пари
-    invalid_wordpairs: list = []  # Невалідні словникові пари
+    valid_wordpairs_lst: list = []  # Валідні словникові пари
+    invalid_wordpairs_lst: list = []  # Невалідні словникові пари
 
     for wordpair in wordpairs_lst:
         validator = WordPairValidator(wordpair=wordpair,
-                                      user_id=user_id,
-                                      max_count_words=MAX_COUNT_WORDS_WORDPAIR,
-                                      max_count_translations=MAX_COUNT_TRANSLATIONS_WORDPAIR,
-                                      max_length_word=MAX_LENGTH_WORD_WORDPAIR,
-                                      max_length_translation=MAX_LENGTH_TRANSLATION_WORDPAIR)
+                                      user_id=user_id)
 
         # Якщо словникова пара валідна, витягуємо дані
         print(validator.is_valid())
@@ -223,24 +223,24 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
             logging.info(f'Словникова пара "{wordpair}" пройшла всі перевірки.')
 
             wordpair_data: dict = validator.extract_data()  # Розділена словникова пара
-            valid_wordpairs.append(wordpair_data)  # Додавання до списку словникових пар
+            valid_wordpairs_lst.append(wordpair_data)  # Додавання до списку словникових пар
         else:
             # Якщо є помилки, додаємо в список невалідну словникову пару та її помилку
-            invalid_wordpairs.append({
+            invalid_wordpairs_lst.append({
                 'wordpair': wordpair,
                 'errors': validator.format_errors()})
 
     # Якщо є невалідні словникові пари
-    if len(invalid_wordpairs) != 0:
+    if len(invalid_wordpairs_lst) != 0:
         formatted_errors = '\n\n'.join([f'❌ Словникова пара: {pair["wordpair"]}\nПомилки:\n{pair["errors"]}'
-                                        for pair in invalid_wordpairs])
+                                        for pair in invalid_wordpairs_lst])
         msg_wordpairs = 'Є помилки у наступних парах:\n\n{formatted_errors}'
     else:
         # Обробка валідних пар
         msg_wordpairs = 'Всі словникові пари валідні!'
 
         # Можна тут додати логіку для збереження чи іншої обробки валідних пар
-        for pair in valid_wordpairs:
+        for pair in valid_wordpairs_lst:
             words = ', '.join(pair['words'])
             translations = ', '.join(pair['translations'])
             annotation = pair['annotation'] or 'Без анотації'
