@@ -4,7 +4,7 @@ from sqlalchemy.orm.query import Query
 
 from config import ALLOWED_CHARACTERS, MAX_LENGTH_VOCAB_NAME, MIN_LENGTH_VOCAB_NAME
 from db.models import Vocabulary
-from src.filters.allowed_chars_filters import AllowedCharactersFilter
+from src.filters.allowed_chars_filter import AllowedCharactersFilter
 from src.filters.length_filter import LengthFilter
 
 

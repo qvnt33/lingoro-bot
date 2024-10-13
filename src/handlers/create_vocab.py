@@ -9,18 +9,6 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import logging
-from config import (
-    DEFAULT_VOCAB_NOTE,
-    MAX_LENGTH_VOCAB_NAME,
-    MAX_LENGTH_VOCAB_NOTE,
-    MIN_LENGTH_VOCAB_NAME,
-    MIN_LENGTH_VOCAB_NOTE,
-    VOCAB_PAGINATION_LIMIT,
-    MAX_COUNT_WORDS_WORDPAIR,
-    MAX_COUNT_TRANSLATIONS_WORDPAIR,
-    MAX_LENGTH_WORD_WORDPAIR,
-    MAX_LENGTH_TRANSLATION_WORDPAIR
-)
 from db.database import Session
 from src.fsm.states import VocabCreation
 from src.keyboards.create_vocab_kb import (
@@ -187,41 +175,59 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
 async def process_wordpairs(message: Message, state: FSMContext) -> None:
     """Обробляє словникові пари, введені користувачем"""
     data_fsm: dict = await state.get_data()  # Дані з FSM
-    vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
+    vocab_name: str = data_fsm.get('vocab_name')  # Назва словника
+    vocab_note: str = data_fsm.get('vocab_note')  # Примітка до словника
 
-    user_id: int = message.from_user.id
     wordpairs: str = message.text  # Введені користувачем словникові пари
 
     log_text: str = f'Введено словникові пари "{wordpairs}" до словника "{vocab_name}"'
     logging.info(log_text)
 
-    kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для словникових пар
+    # Клавіатура для подальшого введення або збереження
+    kb: InlineKeyboardMarkup = get_kb_create_wordpairs()
 
-    wordpairs_lst: list[str] = wordpairs.split('\n')  # Список словникових пар
+    # Розбиваємо словникові пари за рядками
+    wordpairs_lst: list[str] = wordpairs.split('\n')
 
-    valid_wordpairs_lst: list = []  # Валідні словникові пари
-    invalid_wordpairs_lst: list = []  # Невалідні словникові пари
+    # Списки для валідних та невалідних словникових пар
+    valid_wordpairs_lst: list[dict] = []
+    invalid_wordpairs_lst: list[dict] = []
 
+    # Проходимо через кожну словникову пару
     for wordpair in wordpairs_lst:
-        validator = WordPairValidator(wordpair=wordpair)
+        validator = WordPairValidator(wordpair=wordpair, vocab_name=vocab_name)
 
-        # Якщо словникова пара валідна
         if validator.is_valid():
-            wordpair_data: dict = validator.extract_data()  # Розділена словникова пара
-            valid_wordpairs_lst.append(wordpair_data)  # Додавання до списку словникових пар
+            # Дані зі словникової пари
+            wordpair_data: dict = validator.extract_data()
+            valid_wordpairs_lst.append(wordpair_data)
 
-            log_text: str = app_data['logging']['info']['vocab']['wordpair']['passed_test'].format(wordpair=wordpair)
+            log_text = f'Словникова пара "{wordpair}" пройшла перевірку'
             logging.info(log_text)
 
-            msg_vocab_note_created: str = app_data['success']['vocab']['note']['created']
-            msg_vocab_note: str = format_message(vocab_name=vocab_name,
-                                                content=msg_vocab_note_created)
-        else:
-            # Якщо є помилки, додаємо в список невалідну словникову пару та її помилку
-            invalid_wordpairs_lst.append({
-                'wordpair': wordpair,
-                'errors': validator.format_errors()})
+            msg_wordpair_created: str = (
+                f'Словникова пара "{wordpair}" успішно збережена.\n'
+                'Введіть наступні словникові пари або натисніть "Зберегти".')
 
+            # Форматуємо повідомлення з відповідною інформацією
+            msg_wordpair: str = format_message(vocab_name=vocab_name,
+                                            vocab_note=vocab_note,
+                                            content=msg_wordpair_created)
+        else:
+            formatted_errors: str = validator.format_errors()  # Відформатований список помилок
+            msg_wordpair_created: str = f'У словникової пари "{wordpair}" є помилки:\n{formatted_errors}'
+
+            # Форматуємо повідомлення з відповідною інформацією
+            msg_wordpair: str = format_message(vocab_name=vocab_name,
+                                            vocab_note=vocab_note,
+                                            content=msg_wordpair_created)
+
+        # Виводимо результат користувачу
+        await message.answer(text=msg_wordpair, reply_markup=kb)
+
+
+    # Ви можете зберігати або обробляти валідні пари тут, залежно від подальшої логіки.
+"""
     # Якщо є невалідні словникові пари
     if len(invalid_wordpairs_lst) != 0:
         formatted_errors = '\n\n'.join([f'❌ Словникова пара: {pair["wordpair"]}\nПомилки:\n{pair["errors"]}'
@@ -239,7 +245,7 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
             msg_wordpairs = 'Слова: {words}\nПереклади: {translations}\nАнотація: {annotation}'
 
     await message.answer(text=msg_wordpairs, reply_markup=kb)
-
+"""
 
 @router.callback_query(F.data == 'change_vocab_name')
 async def process_change_vocab_name(callback: CallbackQuery, state: FSMContext) -> None:
