@@ -23,3 +23,7 @@ class ValidatorBase:
 
         joined_errors: str = '\n'.join(formatted_errors_lst)
         return joined_errors
+
+    def is_valid(self) -> bool:
+        """Перевіряє словникову пару на коректність"""
+        return len(self.errors_lst) == 0

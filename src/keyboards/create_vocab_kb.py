@@ -72,14 +72,14 @@ def get_kb_create_wordpairs() -> InlineKeyboardMarkup:
     кнопкою збереження готового словника у БД та перевіркою поточного статусу.
     """
     kb = InlineKeyboardBuilder()
-    btn_back_to_name = InlineKeyboardButton(text='Зберегти',
-                                            callback_data='back_to_vocab_name')
+    btn_back_to_vocab_name = InlineKeyboardButton(text='Зберегти',
+                                                  callback_data='back_to_vocab_name')
     btn_status = InlineKeyboardButton(text='Статус',
-                                         callback_data='create_wordpairs_status')
+                                      callback_data='create_wordpairs_status')
     btn_cancel_add = InlineKeyboardButton(text='Скасувати',
                                           callback_data='cancel_create_from_wordpairs')
 
-    kb.row(btn_back_to_name,
+    kb.row(btn_back_to_vocab_name,
            btn_status,
            btn_cancel_add,
            width=1)

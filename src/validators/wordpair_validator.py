@@ -1,147 +1,207 @@
-import logging
-from typing import Any
 from .base_validator import ValidatorBase
 
-import sqlalchemy
-from sqlalchemy.orm.query import Query
-
-from db.models import Vocabulary
-# from tools.escape_markdown import escape_markdown
-from tools.read_data import app_data
-from config import WORDPAIR_SEPARATOR
+from config import (
+    ALLOWED_CHARACTERS,
+    ITEM_SEPARATOR,
+    MAX_COUNT_TRANSLATIONS_WORDPAIR,
+    MAX_COUNT_WORDS_WORDPAIR,
+    MAX_LENGTH_ANNOTATION_WORDPAIR,
+    MAX_LENGTH_TRANSLATION_WORDPAIR,
+    MAX_LENGTH_WORD_WORDPAIR,
+    MIN_COUNT_TRANSLATIONS_WORDPAIR,
+    MIN_COUNT_WORDS_WORDPAIR,
+    MIN_LENGTH_ANNOTATION_WORDPAIR,
+    MIN_LENGTH_TRANSLATION_WORDPAIR,
+    MIN_LENGTH_WORD_WORDPAIR,
+    WORDPAIR_SEPARATOR,
+)
+from src.filters.count_filter import CountFilter
+from src.filters.length_filter import LengthFilter
 
 
 class WordPairValidator(ValidatorBase):
-    def __init__(self,
-                 wordpair: str,
-                 user_id: int,
-                 vocab_name: setattr) -> None:
-        super().__init__()  # Виклик конструктора базового класу
-        self.wordpair: str = wordpair.strip()  # Словникова пара
-        self.user_id: int = user_id  # ID користувача
-        self.vocab_name: str = vocab_name
+    def __init__(self, wordpair: str) -> None:
+        super().__init__()
+        self.wordpair: str = wordpair.strip()  # Словникова пара (без зайвих пробілів)
+        self.wordpair_parts: list[str] = self.wordpair.split(WORDPAIR_SEPARATOR)  # Частини словникової пари
+
+        # Частини словникової пари
+        self.part_of_words: str = self.wordpair_parts[0]
+        self.part_of_translation: str = self.wordpair_parts[1] if len(self.wordpair_parts) >= 2 else None
+        self.part_of_annotation: str = self.wordpair_parts[2] if len(self.wordpair_parts) == 3 else None
 
     def check_valid_format(self) -> bool:
-        """Перевіряє, що назва словника унікальна серед словників користувача (незалежно від регістру)"""
-        parts_wordpair: list[str] = self.wordpair.split(WORDPAIR_SEPARATOR)  # Частини словникової пари
-        length_wordpair = len(parts_wordpair)
+        """Перевіряє, що коректний формат словникової пари"""
+        count_parts: int = len(self.wordpair_parts)  # Кількість частин словникової пари
 
-        is_wordpair_with_translation: bool = length_wordpair > 2  # Словникова пара не містить перекладу
-        is_wordpair_has_more_parts: bool = length_wordpair > 3  # Словникова пара складається більше ніж з 3 частин
+        # Перевірка на наявність хоча б 2 частин (слово і переклад)
+        if count_parts < 2:
+            error_text: str = (
+                'Словникова пара повинна містити щонайменше одне слово та один переклад, '
+                f'розділені символом "{WORDPAIR_SEPARATOR}".')
+            log_text: str = f'Словникова пара "{self.wordpair}" до словника "{self.name}" не містить перекладу.'
+            self.add_error_with_log(error_text, log_text)  # Додавання помилок та виведення логування
+            return False
 
-        if not is_wordpair_with_translation:
-            error_text: str = 'Помилка! Формат словникової пари некоректний! Словникова пара повинна містити щонайменше одне слово та один переклад, розділені символом "{wordpair_separator}".'.format(wordpair_separator=WORDPAIR_SEPARATOR)
-            log_text: str = 'Помилка словникової пари "{wordpair}" до словника "{vocab_name}". Словникова пара не містить перекладу.'.format(wordpair=self.wordpair,
-                                                                                                                                             vocab_name=self.name)
-            self.add_error_with_log()
-            self._add_error('Помилка формату словникової пари! Словникова пара повинна містити щонайменше одне слово та один переклад, розділені символом ":".')
-            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" має неправильний формат.')
+        # Перевірка на наявність не більше ніж 3 частини (слова, переклади, анотація)
+        if count_parts > 3:
+            error_text: str = 'Максимальна кількість частин у словниковій парі - три (слова, переклади, анотація).'
+            log_text: str = f'Словникова пара "{self.wordpair}" до словника "{self.name}" має більше 3 частин.'
+            self.add_error_with_log(error_text, log_text)  # Додавання помилок та виведення логування
             return False
-        if not is_wordpair_has_more_parts:
-            self._add_error('Помилка формату словникової пари! Максимальна кількість частин у словниковій парі - три (слова, переклади, анотація).')
-            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" містить більше трьох частин.')
-            return False
+
         return True
-        is_existing_vocab: Query[Vocabulary] | None = self.db_session.query(Vocabulary).filter(
-            Vocabulary.name.ilike(self.name),
-            Vocabulary.user_id == self.user_id).first()
 
-        # Якщо у базі вже є словник з такою назвою
-        if is_existing_vocab:
-            error_text: str = 'У вашій базі вже є словник з назвою "{vocab_name}".'.format(vocab_name=self.name)
-            log_text: str = 'Назва до словника "{vocab_name}" вже знаходиться у базі користувача'.format(vocab_name=self.name)
+    def is_valid(self) -> bool:
+        """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
+        return self.check_valid_format()
+
+
+class WordsValidator(WordPairValidator):
+    def __init__(self, wordpair: str) -> None:
+        super().__init__(wordpair)
+        self.words_lst: list = self.part_of_words.split(ITEM_SEPARATOR)  # Список слів
+        self.count_words: int = len(self.words_lst)  # Кількість слів
+
+        # Фільтри
+        self.length_filter = LengthFilter(min_length=MIN_LENGTH_WORD_WORDPAIR, max_length=MAX_LENGTH_WORD_WORDPAIR)
+        self.count_filter = CountFilter(min_count=MIN_COUNT_WORDS_WORDPAIR, max_count=MAX_COUNT_WORDS_WORDPAIR)
+
+    def check_valid_count(self) -> bool:
+        """Перевіряє, що коректна кількість всіх слів у словниковій парі"""
+        if not self.count_filter.apply(self.count_words):
+            error_text: str = (
+                    'Кількість слів до словникової має бути від '
+                    f'{MIN_COUNT_WORDS_WORDPAIR} до {MAX_COUNT_WORDS_WORDPAIR} слів.')
+            log_text: str = (
+                f'Словникова пара "{self.wordpair}" не відповідає вимогам по кількості СЛІВ. '
+                f'Кількість: "{self.count_words}". '
+                f'Має бути: "{MIN_COUNT_WORDS_WORDPAIR}" - "{MAX_COUNT_WORDS_WORDPAIR}"')
             self.add_error_with_log(error_text, log_text)
             return False
         return True
 
-    def valid_format(self) -> bool:
-        """Перевіряє, що словникова пара має правильну структуру (мінімум слово та переклад)"""
-        parts_wordpair: list[str] = self.wordpair.split(':')  # Розділяємо на частини за двокрапкою
-        if len(parts_wordpair) < 2:
-            self._add_error('Помилка формату словникової пари! Словникова пара повинна містити щонайменше одне слово та один переклад, розділені символом ":".')
-            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" має неправильний формат.')
-            return False
-        if len(parts_wordpair) > 3:
-            self._add_error('Помилка формату словникової пари! Максимальна кількість частин у словниковій парі - три (слова, переклади, анотація).')
-            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" містить більше трьох частин.')
-            return False
-        return True
-
-    def valid_words(self) -> bool:
-        """Перевіряє коректність слів у словниковій парі"""
-        words_lst: list[str] = self.wordpair.split(':')[0].split(',')
-        words_lst_cleared: list[str] = [word.strip() for word in words_lst]
-        count_words: int = len(words_lst)
-
-        if not (1 <= count_words <= self.max_count_words):
-            self._add_error(f'Словникова пара повинна містити від 1 до {self.max_count_words} слів.')
-            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" містить некоректну кількість слів: {count_words}.')
-            return False
-
-        for word in words_lst_cleared:
-            if not (1 <= len(word) <= self.max_length_word):
-                self._add_error(f'Слово "{word}" повинно містити від 1 до {self.max_length_word} символів.')
-                logging.warning(f'Помилка! Слово "{word}" містить некоректну кількість символів.')
+    def check_valid_all_items(self) -> bool:
+        """Перевіряє, що кожне слово в словниковій парі відповідає вимогам"""
+        for word in self.words_lst:
+            if not self.length_filter.apply(len(word)):
+                error_text: str = (
+                    'Кількість слів до словникової має бути від '
+                    f'{MIN_COUNT_WORDS_WORDPAIR} до {MAX_COUNT_WORDS_WORDPAIR} слів.')
+                log_text: str = (
+                    f'Словникова пара "{self.wordpair}" не відповідає вимогам по кількості СЛІВ. '
+                    f'Кількість: "{self.count_words}". '
+                    f'Має бути: "{MIN_COUNT_WORDS_WORDPAIR}" - "{MAX_COUNT_WORDS_WORDPAIR}"')
+                self.add_error_with_log(error_text, log_text)
                 return False
-            if not all(char.isalnum() or char in '-_ ' for char in word):
 
-                self._add_error(f'Слово "{word}" має містити лише літери, цифри, пробіли, тире та підкреслення.')
-                logging.warning(f'Помилка! Слово "{word}" містить некоректні символи.')
+            if not self.allowed_character_filter.apply(word):
+                error_text = f'Слово "{word}" може містити лише літери, цифри та символи "{ALLOWED_CHARACTERS}".'
+                log_text = f'Слово "{word}" містить некоректні символи.'
+                self.add_error_with_log(error_text, log_text)
                 return False
         return True
-
-    def valid_translations(self) -> bool:
-        """Перевіряє коректність перекладів у словниковій парі"""
-        translations_lst: list[str] = self.wordpair.split(':')[1].split(',')
-        translations_lst_cleared: list[str] = [translation.strip() for translation in translations_lst]
-        count_translations: int = len(translations_lst)
-
-        if not (1 <= count_translations <= self.max_count_translation):
-            self._add_error(f'Словникова пара повинна містити від 1 до {self.max_count_translation} перекладів.')
-            logging.warning(f'Помилка! Словникова пара "{self.wordpair}" містить некоректну кількість перекладів: {count_translations}.')
-            return False
-
-        for translation in translations_lst_cleared:
-            if not (1 <= len(translation) <= self.max_length_translation):
-                self._add_error(f'Переклад "{translation}" повинен містити від "1" до "{self.max_length_translation}" символів.')
-                logging.warning(f'Помилка! Переклад "{translation}" містить некоректну кількість символів.')
-                return False
-            if not all(char.isalnum() or char in '-_ ' for char in translation):
-                self._add_error(f'Переклад "{translation}" має містити лише літери, цифри, пробіли, тире та підкреслення.')
-                logging.warning(f'Помилка! Переклад "{translation}" містить некоректні символи.')
-                return False
-        return True
-
-    def extract_data(self) -> dict:
-        """Повертає слова, переклади та анотацію з валідної пари"""
-        parts_wordpair: list[str] = self.wordpair.split(':')  # Розбита словникова пара
-
-        # Слова словникової пари
-        words: list[str] = [word.strip() for word in parts_wordpair[0].split(',')]
-
-        # Переклади словникової пари
-        translations: list[str] = [translation.strip() for translation in parts_wordpair[1].split(',')]
-
-        # Анотація словникової пари
-        annotation: str | None = parts_wordpair[2].strip() if len(parts_wordpair) == 3 else None
-
-        # Словник словникової пари
-        wordpair_data: dict[str, Any] = {'words': words,
-                                         'translations': translations,
-                                         'annotation': annotation}
-        return wordpair_data
 
     def is_valid(self) -> bool:
-        """Перевіряє словникову пару на коректність"""
-        self.errors_lst = []  # Очищення списку помилок
-        if self.valid_format():
-            checks: list[bool] = [self.valid_words(), self.valid_translations()]
-            return all(checks)
-        return False
+        """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
+        if not self.check_valid_format():
+            return False
 
-    def format_errors(self) -> str:
-        """Форматує список помилок у зручний для виведення формат"""
-        formatted_errors_lst: list = [f'{num}. {error}' for num, error in enumerate(self.errors_lst, start=1)]
-        logging.info(f'Всі помилки словникової пари "{self.wordpair}" відформатовані у рядок.')
+        checks: list[bool] = [self.check_valid_count(),
+                              self.check_valid_all_items()]
+        return all(checks)
 
-        return '\n'.join(formatted_errors_lst)
+
+class TranslationValidator(WordPairValidator):
+    def __init__(self, wordpair: str) -> None:
+        super().__init__(wordpair)
+        # Список перекладів
+        self.translations_lst: list = self.part_of_translation.split(ITEM_SEPARATOR) if self.part_of_translation else []
+        self.count_translations: int = len(self.translations_lst)  # Кількість перекладів
+
+        # Фільтри
+        self.count_filter = CountFilter(min_count=MIN_COUNT_TRANSLATIONS_WORDPAIR,
+                                        max_count=MAX_COUNT_TRANSLATIONS_WORDPAIR)
+        self.length_filter = LengthFilter(min_length=MIN_LENGTH_TRANSLATION_WORDPAIR,
+                                          max_length=MAX_LENGTH_TRANSLATION_WORDPAIR)
+
+    def check_valid_count(self) -> bool:
+        """Перевіряє кількість перекладів"""
+        if not self.count_filter.apply(self.count_translations):
+            error_text: str = (
+                'Кількість перекладів до словникової має бути від '
+                f'{MIN_COUNT_TRANSLATIONS_WORDPAIR} до {MAX_COUNT_TRANSLATIONS_WORDPAIR} перекладів.')
+            log_text: str = (
+                f'Словникова пара "{self.wordpair}" не відповідає вимогам по кількості ПЕРЕКЛАДІВ. '
+                f'Кількість: "{self.count_translations}". '
+                f'Має бути: "{MIN_COUNT_TRANSLATIONS_WORDPAIR}" - "{MAX_COUNT_TRANSLATIONS_WORDPAIR}"')
+            self.add_error_with_log(error_text, log_text)
+            return False
+        return True
+
+    def check_valid_all_items(self) -> bool:
+        """Перевіряє кожен переклад"""
+        for translation in self.translations_lst:
+            if not self.length_filter.apply(len(translation)):
+                error_text: str = (
+                'Кількість перекладів до словникової має бути від '
+                f'{MIN_COUNT_TRANSLATIONS_WORDPAIR} до {MAX_COUNT_TRANSLATIONS_WORDPAIR} перекладів.')
+                log_text: str = (
+                    f'Словникова пара "{self.wordpair}" не відповідає вимогам по кількості ПЕРЕКЛАДІВ. '
+                    f'Кількість: "{self.count_translations}". '
+                    f'Має бути: "{MIN_COUNT_TRANSLATIONS_WORDPAIR}" - "{MAX_COUNT_TRANSLATIONS_WORDPAIR}"')
+                self.add_error_with_log(error_text, log_text)
+                return False
+
+            if not self.allowed_character_filter.apply(translation):
+                error_text: str = (
+                    f'Переклад до словникової пари може містити лише літери, цифри та символи: "{ALLOWED_CHARACTERS}".')
+                log_text: str = (
+                    f'Переклад "{translation}" до словникової пари "{self.name}" містить некоректні символи. '
+                    f'Допустимі символи: літери, цифри та "{ALLOWED_CHARACTERS}"')
+                self.add_error_with_log(error_text, log_text)
+                return False
+        return True
+
+    def is_valid(self) -> bool:
+        """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
+        if not self.check_valid_format():
+            return False
+
+        checks: list[bool] = [self.check_valid_count(), self.check_valid_all_items()]
+        return all(checks)
+
+
+class AnnotationValidator(WordPairValidator):
+    def __init__(self, wordpair: str) -> None:
+        super().__init__(wordpair)
+
+        self.annotation: list = self.part_of_annotation.strip() if self.part_of_annotation else None
+
+    def check_valid_length(self) -> bool:
+        """Перевіряє, що коректна кількість символів у анотації"""
+        if self.annotation is None:
+            return False
+
+        self.length_filter = LengthFilter(min_length=MIN_LENGTH_TRANSLATION_WORDPAIR,
+                                          max_length=MAX_LENGTH_TRANSLATION_WORDPAIR)
+        length_annotation: int = len(self.annotation)
+
+        if not self.length_filter(value=length_annotation):
+            error_text: str = (
+                f'Анотація до словникової пари має містити від {MIN_LENGTH_ANNOTATION_WORDPAIR} до '
+                f'{MAX_LENGTH_ANNOTATION_WORDPAIR} символів.')
+            log_text: str = (
+                f'Анотація "{self.annotation_of_wordpair}" до словникової пари "{self.wordpair}" не '
+                f'відповідає вимогам по довжині. Кількість символів: "{length_annotation}".')
+            self.add_error_with_log(error_text, log_text)
+            return False
+        return True
+
+    def is_valid(self) -> bool:
+        """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
+        if self.annotation is None:
+            return False
+
+        checks: list[bool] = [self.check_valid_length()]
+        return all(checks)

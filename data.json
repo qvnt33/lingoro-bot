@@ -3,7 +3,7 @@
     "vocab": {
       "name": {
         "name_exists": "У вашій базі вже є словник з назвою \"{name}\".",
-        "invalid_characters": "Назва словника може містити лише літери, цифри та \"{allowed_characters}\"",
+        "invalid_characters": "3Назва словника може містити лише літери, цифри та \"{allowed_characters}\"",
         "invalid_length": "Назва словника має містити від {min_length} до {max_length} символів.",
         "list_of_errors": "У назві словника \"{vocab_name}\" є помилки:\n{list_of_errors}"
       },
@@ -128,8 +128,8 @@
         "wordpair": {
         "invalid_format": {
           "translation": "Помилка словникової пари \"{wordpair\" до словника \"{vocab_name}\". Словникова пара не містить перекладу.",
-          "invalid_format": "translation": "Помилка словникової пари \"{wordpair\" до словника \"{vocab_name}\". Словникова пара не містить перекладу."
-        }"Помилка! Формат словникової пари некоректний! Словникова пара повинна містити щонайменше одне слово та один переклад, розділені символом \"{wordpair_separator}\"."
+          "invalid_format": "translation Помилка словникової пари \"{wordpair\" до словника \"{vocab_name}\". Словникова пара не містить перекладу."
+        }
       }
     }
   }
