@@ -1,3 +1,5 @@
+import logging
+
 from .base_validator import ValidatorBase
 
 from config import (
@@ -18,8 +20,8 @@ from src.filters.not_empty_filters import NotEmptyFilter
 
 
 class WordPairValidator(ValidatorBase):
-    def __init__(self, wordpair: str, vocab_name: str) -> None:
-        super().__init__()
+    def __init__(self, wordpair: str, vocab_name: str, errors_lst: list = None) -> None:
+        super().__init__(errors_lst)
         self.wordpair: str = wordpair.strip()  # Словникова пара (без зайвих пробілів)
         self.vocab_name: str = vocab_name  # Назва словника
 
@@ -47,14 +49,16 @@ class WordPairValidator(ValidatorBase):
                 'Словникова пара повинна містити щонайменше одне слово та один переклад, '
                 f'розділені символом "{WORDPAIR_SEPARATOR}".')
             log_text: str = f'Словникова пара "{self.wordpair}" до словника "{self.vocab_name}" не містить перекладу.'
-            self.add_error_with_log(error_text, log_text)  # Додавання помилок та виведення логування
+            self.add_validator_error(error_text)
+            logging.warning(log_text)
             return False
 
         # Перевірка на наявність не більше ніж 3 частини (слова, переклади, анотація)
         if count_parts > 3:
             error_text: str = 'Максимальна кількість частин у словниковій парі - три (слова, переклади, анотація).'
             log_text: str = f'Словникова пара "{self.wordpair}" до словника "{self.vocab_name}" має більше 3 частин.'
-            self.add_error_with_log(error_text, log_text)
+            self.add_validator_error(error_text)
+            logging.warning(log_text)
             return False
         return True
 
@@ -63,20 +67,23 @@ class WordPairValidator(ValidatorBase):
         if not self.not_empty_filter.apply(self.part_of_words):
             error_text: str = 'Слово в словниковій парі не може бути порожнім.'
             log_text: str = f'Слово в словниковій парі "{self.wordpair}" порожнє.'
-            self.add_error_with_log(error_text, log_text)
+            self.add_validator_error(error_text)
+            logging.warning(log_text)
             return False
 
         if not self.not_empty_filter.apply(self.part_of_translation):
             error_text: str = 'Переклад в словниковій парі не може бути порожнім.'
             log_text: SystemError = f'Переклад у словниковій парі "{self.wordpair}" порожній.'
-            self.add_error_with_log(error_text, log_text)
+            self.add_validator_error(error_text)
+            logging.warning(log_text)
             return False
 
         # Якщо є анотація, перевіряємо, що вона теж не порожня (якщо фільтр приймає None - то повертає True)
         if not self.not_empty_filter.apply(self.part_of_annotation):
             error_text: str = 'Анотація в словниковій парі не може бути порожньою, якщо вона присутня.'
             log_text: str = f'Анотація в словниковій парі "{self.wordpair}" порожня.'
-            self.add_error_with_log(error_text, log_text)
+            self.add_validator_error(error_text)
+            logging.warning(log_text)
             return False
         return True
 
@@ -93,19 +100,27 @@ class WordPairValidator(ValidatorBase):
         if not self.check_valid_format():
             return False
 
-        checks: list[bool] = [self.check_not_empty_parts()]
-        return all(checks)
+        # Перевірки на непусті частини
+        if not self.check_not_empty_parts():
+            return False
+
+        # Передаємо спільний список помилок дочірнім валідаторам
+        WordsValidator(self.wordpair, self.vocab_name, self.errors_lst).is_valid()
+        TranslationValidator(self.wordpair, self.vocab_name, self.errors_lst).is_valid()
+        if self.part_of_annotation:
+            AnnotationValidator(self.wordpair, self.vocab_name, self.errors_lst).is_valid()
+        return len(self.errors_lst) == 0
 
 
 class WordsValidator(WordPairValidator):
-    def __init__(self, wordpair: str) -> None:
-        super().__init__(wordpair)
+    def __init__(self, wordpair: str, vocab_name: str, errors_lst: list = None) -> None:
+        super().__init__(wordpair, vocab_name, errors_lst)
         self.words_lst: list = self.part_of_words.split(ITEM_SEPARATOR)
         self.count_words: int = len(self.words_lst)
 
     def check_valid_count(self) -> bool:
         """Перевіряє, що коректна кількість"""
-        if not self.count_filter.apply(self.count_words):
+        if not self.count_filter.apply(self.words_lst):
             error_text: str = (
                 'Кількість слів до словникової пари має бути від '
                 f'{MIN_COUNT_WORDS_WORDPAIR} до {MAX_COUNT_WORDS_WORDPAIR}.')
@@ -113,7 +128,8 @@ class WordsValidator(WordPairValidator):
                 f'Словникова пара "{self.wordpair}" не відповідає вимогам по кількості слів. '
                 f'Кількість: "{self.count_words}". '
                 f'Має бути: "{MIN_COUNT_WORDS_WORDPAIR}" - "{MAX_COUNT_WORDS_WORDPAIR}"')
-            self.add_error_with_log(error_text, log_text)
+            self.add_validator_error(error_text)
+            logging.warning(log_text)
             return False
         return True
 
@@ -130,7 +146,8 @@ class WordsValidator(WordPairValidator):
                     f'Слово "{word}" до словникової пари "{self.wordpair}" не відповідає вимогам по довжині.'
                     f'Довжина: "{length_word}". '
                     f'Має бути: "{MIN_LENGTH_WORD_WORDPAIR}" - "{MAX_LENGTH_WORD_WORDPAIR}"')
-                self.add_error_with_log(error_text, log_text)
+                self.add_validator_error(error_text)
+                logging.warning(log_text)
                 return False
 
             if not self.allowed_character_filter.apply(word):
@@ -139,7 +156,8 @@ class WordsValidator(WordPairValidator):
                 log_text: str = (
                     f'Слово "{word}" до словникової пари "{self.wordpair}" містить некоректні символи. '
                     f'Допустимі символи: літери, цифри та "{ALLOWED_CHARACTERS}"')
-                self.add_error_with_log(error_text, log_text)
+                self.add_validator_error(error_text)
+                logging.warning(log_text)
                 return False
         return True
 
@@ -154,14 +172,14 @@ class WordsValidator(WordPairValidator):
 
 
 class TranslationValidator(WordPairValidator):
-    def __init__(self, wordpair: str) -> None:
-        super().__init__(wordpair)
+    def __init__(self, wordpair: str, vocab_name: str, errors_lst: list = None) -> None:
+        super().__init__(wordpair, vocab_name, errors_lst)
         self.translations_lst: list = self.part_of_translation.split(ITEM_SEPARATOR) if self.part_of_translation else []
         self.count_translations: int = len(self.translations_lst)
 
     def check_valid_count(self) -> bool:
         """Перевіряє, що коректна кількість"""
-        if not self.count_filter.apply(self.count_translations):
+        if not self.count_filter.apply(self.translations_lst):
             error_text: str = (
                 'Кількість перекладів до словникової пари має бути від '
                 f'{MIN_COUNT_WORDS_WORDPAIR} до {MAX_COUNT_WORDS_WORDPAIR}.')
@@ -169,7 +187,8 @@ class TranslationValidator(WordPairValidator):
                 f'Словникова пара "{self.wordpair}" не відповідає вимогам по кількості перекладів. '
                 f'Кількість: "{self.count_words}". '
                 f'Має бути: "{MIN_COUNT_WORDS_WORDPAIR}" - "{MAX_COUNT_WORDS_WORDPAIR}"')
-            self.add_error_with_log(error_text, log_text)
+            self.add_validator_error(error_text)
+            logging.warning(log_text)
             return False
         return True
 
@@ -186,7 +205,8 @@ class TranslationValidator(WordPairValidator):
                     f'Переклад "{translation}" до словникової пари "{self.wordpair}" не відповідає вимогам по довжині.'
                     f'Довжина: "{length_translation}". '
                     f'Має бути: "{MIN_LENGTH_WORD_WORDPAIR}" - "{MAX_LENGTH_WORD_WORDPAIR}"')
-                self.add_error_with_log(error_text, log_text)
+                self.add_validator_error(error_text)
+                logging.warning(log_text)
                 return False
 
             if not self.allowed_character_filter.apply(translation):
@@ -195,7 +215,8 @@ class TranslationValidator(WordPairValidator):
                 log_text: str = (
                     f'Переклад "{translation}" до словникової пари "{self.wordpair}" містить некоректні символи. '
                     f'Допустимі символи: літери, цифри та "{ALLOWED_CHARACTERS}"')
-                self.add_error_with_log(error_text, log_text)
+                self.add_validator_error(error_text)
+                logging.warning(log_text)
                 return False
         return True
 
@@ -209,8 +230,8 @@ class TranslationValidator(WordPairValidator):
 
 
 class AnnotationValidator(WordPairValidator):
-    def __init__(self, wordpair: str) -> None:
-        super().__init__(wordpair)
+    def __init__(self, wordpair: str, vocab_name: str, errors_lst: list = None) -> None:
+        super().__init__(wordpair, vocab_name, errors_lst)
 
         self.annotation: list = self.part_of_annotation.strip() if self.part_of_annotation else None
 
@@ -223,14 +244,15 @@ class AnnotationValidator(WordPairValidator):
                                           max_length=MAX_LENGTH_ANNOTATION_WORDPAIR)
         length_annotation: int = len(self.annotation)
 
-        if not self.length_filter(value=length_annotation):
+        if not self.length_filter.apply(self.annotation):
             error_text: str = (
                 f'Анотація до словникової пари має містити від {MIN_LENGTH_ANNOTATION_WORDPAIR} до '
                 f'{MAX_LENGTH_ANNOTATION_WORDPAIR} символів.')
             log_text: str = (
                 f'Анотація "{self.annotation_of_wordpair}" до словникової пари "{self.wordpair}" не '
                 f'відповідає вимогам по довжині. Кількість символів: "{length_annotation}".')
-            self.add_error_with_log(error_text, log_text)
+            self.add_validator_error(error_text)
+            logging.warning(log_text)
             return False
         return True
 

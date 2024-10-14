@@ -1,15 +1,15 @@
-import logging
-
-
 class ValidatorBase:
     """Базовий клас для загальних перевірок"""
 
-    def __init__(self) -> None:
-        self.errors_lst: list = []  # Загальний список для помилок
+    def __init__(self, errors_lst: list = None) -> None:
+        # Використовуємо спільний список помилок, якщо він переданий
+        if errors_lst is None:
+            self.errors_lst: list = []
+        else:
+            self.errors_lst: list = errors_lst
 
-    def add_error_with_log(self, error_text: str, log_text: str) -> None:
+    def add_validator_error(self, error_text: str) -> None:
         """Додає помилку та виводить логування"""
-        logging.warning(log_text)  # Виведення логу
         self.errors_lst.append(error_text)  # Додавання помилки
 
     def format_errors(self) -> str:
@@ -23,7 +23,3 @@ class ValidatorBase:
 
         joined_errors: str = '\n'.join(formatted_errors_lst)
         return joined_errors
-
-    def is_valid(self) -> bool:
-        """Перевіряє словникову пару на коректність"""
-        return len(self.errors_lst) == 0

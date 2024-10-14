@@ -174,56 +174,66 @@ async def process_vocab_note(message: Message, state: FSMContext) -> None:
 @router.message(VocabCreation.waiting_for_wordpairs)
 async def process_wordpairs(message: Message, state: FSMContext) -> None:
     """Обробляє словникові пари, введені користувачем"""
-    data_fsm: dict = await state.get_data()  # Дані з FSM
-    vocab_name: str = data_fsm.get('vocab_name')  # Назва словника
-    vocab_note: str = data_fsm.get('vocab_note')  # Примітка до словника
 
-    wordpairs: str = message.text  # Введені користувачем словникові пари
+    # Отримуємо дані з FSM (назва та примітка до словника)
+    data_fsm: dict = await state.get_data()
+    vocab_name: str = data_fsm.get('vocab_name')
+    vocab_note: str = data_fsm.get('vocab_note')
 
-    log_text: str = f'Введено словникові пари "{wordpairs}" до словника "{vocab_name}"'
-    logging.info(log_text)
+    # Отримуємо введені користувачем словникові пари
+    wordpairs: str = message.text.strip()
 
-    # Клавіатура для подальшого введення або збереження
+    # Логування введених даних
+    logging.info(f'Введено словникові пари "{wordpairs}" до словника "{vocab_name}"')
+
+    # Отримуємо клавіатуру для подальшого введення або збереження
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs()
 
-    # Розбиваємо словникові пари за рядками
+    # Розбиваємо введені словникові пари за рядками
     wordpairs_lst: list[str] = wordpairs.split('\n')
 
-    # Списки для валідних та невалідних словникових пар
-    valid_wordpairs_lst: list[dict] = []
+    # Ініціалізуємо списки для валідних та невалідних словникових пар
+    valid_wordpairs_lst: list[str] = []
     invalid_wordpairs_lst: list[dict] = []
 
-    # Проходимо через кожну словникову пару
+    # Проходимо через кожну словникову пару та перевіряємо її
     for wordpair in wordpairs_lst:
+        wordpair = wordpair.strip()  # Видаляємо зайві пробіли
         validator = WordPairValidator(wordpair=wordpair, vocab_name=vocab_name)
 
         if validator.is_valid():
-            # Дані зі словникової пари
-            wordpair_data: dict = validator.extract_data()
-            valid_wordpairs_lst.append(wordpair_data)
-
-            log_text = f'Словникова пара "{wordpair}" пройшла перевірку'
-            logging.info(log_text)
-
-            msg_wordpair_created: str = (
-                f'Словникова пара "{wordpair}" успішно збережена.\n'
-                'Введіть наступні словникові пари або натисніть "Зберегти".')
-
-            # Форматуємо повідомлення з відповідною інформацією
-            msg_wordpair: str = format_message(vocab_name=vocab_name,
-                                            vocab_note=vocab_note,
-                                            content=msg_wordpair_created)
+            # Якщо пара валідна, додаємо її до списку валідних
+            valid_wordpairs_lst.append(wordpair)
+            logging.info(f'Словникова пара "{wordpair}" пройшла перевірку')
         else:
-            formatted_errors: str = validator.format_errors()  # Відформатований список помилок
-            msg_wordpair_created: str = f'У словникової пари "{wordpair}" є помилки:\n{formatted_errors}'
+            # Якщо пара не валідна, зберігаємо помилки
+            formatted_errors: str = validator.format_errors()
+            invalid_wordpairs_lst.append({
+                'wordpair': wordpair,
+                'errors': ', '.join(validator.errors_lst)
+            })
 
-            # Форматуємо повідомлення з відповідною інформацією
-            msg_wordpair: str = format_message(vocab_name=vocab_name,
-                                            vocab_note=vocab_note,
-                                            content=msg_wordpair_created)
+    # Формуємо повідомлення для валідних словникових пар
+    if valid_wordpairs_lst:
+        valid_msg = "✅ Додані словникові пари:\n" + "\n".join([f"- {wp}" for wp in valid_wordpairs_lst])
+    else:
+        valid_msg = "⚠️ Немає валідних словникових пар."
 
-        # Виводимо результат користувачу
-        await message.answer(text=msg_wordpair, reply_markup=kb)
+    # Формуємо повідомлення для невалідних словникових пар
+    if invalid_wordpairs_lst:
+        invalid_msg_parts = [
+            f"❌ {invalid['wordpair']}: {invalid['errors']}"
+            for invalid in invalid_wordpairs_lst
+        ]
+        invalid_msg = "❌ Не додані словникові пари:\n" + "\n".join(invalid_msg_parts)
+    else:
+        invalid_msg = "🎉 Немає помилок серед введених пар!"
+
+    # Загальне повідомлення з результатами перевірки
+    final_message = f"{valid_msg}\n\n{invalid_msg}"
+
+    # Відправляємо повідомлення користувачеві
+    await message.answer(text=final_message, reply_markup=kb)
 
 
     # Ви можете зберігати або обробляти валідні пари тут, залежно від подальшої логіки.
