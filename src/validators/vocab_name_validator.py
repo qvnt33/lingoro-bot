@@ -9,8 +9,12 @@ from src.filters.length_filter import LengthFilter
 
 
 class VocabNameValidator(ValidatorBase):
-    def __init__(self, vocab_name: str, user_id: int, db_session: sqlalchemy.orm.session.Session) -> None:
-        super().__init__()
+    def __init__(self,
+                 vocab_name: str,
+                 user_id: int,
+                 db_session: sqlalchemy.orm.session.Session,
+                 errors_lst: list = None) -> None:
+        super().__init__(errors_lst)
         self.name: str = vocab_name  # Назва словника
         self.user_id: int = user_id  # ID користувача
         self.db_session: sqlalchemy.orm.session.Session = db_session  # БД сесія
