@@ -19,7 +19,7 @@ from src.keyboards.create_vocab_kb import (
 )
 from src.validators.vocab_name_validator import VocabNameValidator
 from src.validators.vocab_note_validator import VocabNoteValidator
-from src.validators.wordpair_validator import WordPairValidator
+from src.validators.wordpair.wordpair_validator import WordPairValidator
 
 # from tools.escape_markdown import escape_markdown
 from tools.read_data import app_data
@@ -198,11 +198,13 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
 
     # Проходимо через кожну словникову пару та перевіряємо її
     for wordpair in wordpairs_lst:
-        wordpair: str = wordpair.strip()  # Видаляємо зайві пробіли
+        wordpair: str = wordpair
         validator = WordPairValidator(wordpair=wordpair, vocab_name=vocab_name)
-
+        validator.is_valid()
+        print(validator.validated_data, end='\n\n')
+        return
         if validator.is_valid():
-            print(validator.extract_data())
+
             # Якщо пара валідна, додаємо її до списку валідних
             valid_wordpairs_lst.append(wordpair)
             logging.info(f'Словникова пара "{wordpair}" пройшла перевірку')
