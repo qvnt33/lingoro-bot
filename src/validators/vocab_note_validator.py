@@ -6,8 +6,7 @@ from src.filters.length_filter import LengthFilter
 
 class VocabNoteValidator(ValidatorBase):
     def __init__(self, note: str, errors_lst: list = None) -> None:
-        super().__init__(errors_lst)  # Виклик конструктора базового класу
-
+        super().__init__(errors_lst)
         self.note: str = note  # Примітка до словника
 
     def check_valid_length(self) -> bool:

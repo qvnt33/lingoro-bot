@@ -198,10 +198,11 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
 
     # Проходимо через кожну словникову пару та перевіряємо її
     for wordpair in wordpairs_lst:
-        wordpair = wordpair.strip()  # Видаляємо зайві пробіли
+        wordpair: str = wordpair.strip()  # Видаляємо зайві пробіли
         validator = WordPairValidator(wordpair=wordpair, vocab_name=vocab_name)
 
         if validator.is_valid():
+            print(validator.extract_data())
             # Якщо пара валідна, додаємо її до списку валідних
             valid_wordpairs_lst.append(wordpair)
             logging.info(f'Словникова пара "{wordpair}" пройшла перевірку')

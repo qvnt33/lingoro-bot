@@ -34,3 +34,6 @@ MAX_LENGTH_WORD_WORDPAIR = 3  # Максимальна кількість сим
 # Довжина анотації в словниковій парі
 MIN_LENGTH_ANNOTATION_WORDPAIR = 1  # Мінімальна кількість символів
 MAX_LENGTH_ANNOTATION_WORDPAIR = 30  # Максимальна кількість символів
+
+# Регулярні функції
+TRANSLITERATION_REGEX = r'^([^\[\]]+)\s*\[([^\[\]]+)\]?$'  # Регекс для слова з транскрипцією

@@ -9,7 +9,7 @@ class ValidatorBase:
             self.errors_lst: list = errors_lst
 
     def add_validator_error(self, error_text: str) -> None:
-        """Додає помилку та виводить логування"""
+        """Додає помилку валідатора до бази"""
         self.errors_lst.append(error_text)  # Додавання помилки
 
     def format_errors(self) -> str:
