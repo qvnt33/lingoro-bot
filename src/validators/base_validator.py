@@ -2,7 +2,7 @@ class ValidatorBase:
     """Базовий клас для загальних перевірок"""
 
     def __init__(self, errors_lst: list = None) -> None:
-        # Використовуємо спільний список помилок, якщо він переданий
+        # Спільний список помилок, якщо він переданий
         if errors_lst is None:
             self.errors_lst: list = []
         else:

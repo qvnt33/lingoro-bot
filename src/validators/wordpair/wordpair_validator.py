@@ -30,8 +30,7 @@ class WordPairValidator(ValidatorBase):
 
     def check_valid_wordpair_format(self) -> bool:
         """Перевіряє, що коректний формат словникової пари"""
-        logging.info('ПОЧАТОК ПЕРЕВІРКИ: "Коректний формат словникової пари". '
-                     f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}".')
+        logging.info('ПОЧАТОК ПЕРЕВІРКИ: "Коректний формат словникової пари".')
 
         count_parts: int = len(self.wordpair_parts)  # Кількість словникових пар
 
@@ -52,8 +51,7 @@ class WordPairValidator(ValidatorBase):
 
     def check_not_empty_parts(self) -> bool:
         """Перевіряє, що всі частини словникової пари не є порожніми"""
-        logging.info('ПОЧАТОК ПЕРЕВІРКИ: "Всі частини словникової пари не є порожніми". '
-                     f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}".')
+        logging.info('ПОЧАТОК ПЕРЕВІРКИ: "Всі частини словникової пари не є порожніми".')
 
         if not self.not_empty_filter.apply(self.part_of_words):
             logging.warning('Слово словникової пари порожнє')

@@ -1,3 +1,5 @@
+import logging
+
 from .base_validator import ValidatorBase
 
 from config import MAX_LENGTH_VOCAB_NOTE, MIN_LENGTH_VOCAB_NOTE
@@ -7,25 +9,31 @@ from src.filters.length_filter import LengthFilter
 class VocabNoteValidator(ValidatorBase):
     def __init__(self, note: str, errors_lst: list = None) -> None:
         super().__init__(errors_lst)
+
         self.note: str = note  # Примітка до словника
 
-    def check_valid_length(self) -> bool:
-        """Перевіряє, що коректна довжини"""
-        length_vocab_note: int = len(self.note)  # Довжина назви словника
+        # Фільтри
+        self.length_filter = LengthFilter(min_length=MIN_LENGTH_VOCAB_NOTE, max_length=MAX_LENGTH_VOCAB_NOTE)
 
-        length_filter = LengthFilter(min_length=MIN_LENGTH_VOCAB_NOTE, max_length=MAX_LENGTH_VOCAB_NOTE)
-        if not length_filter.apply(value=self.note):
-            error_text: str = (
-                f'Назва словника має містити від {MIN_LENGTH_VOCAB_NOTE} до {MAX_LENGTH_VOCAB_NOTE} символів.')
-            log_text: str = (
-                f'Примітка до словника "{self.note}" не відповідає вимогам по довжині: '
-                f'довжина {length_vocab_note} символів. '
-                f'Допустима довжина: від {MIN_LENGTH_VOCAB_NOTE} до {MAX_LENGTH_VOCAB_NOTE}')
-            self.add_error_with_log(error_text, log_text)  # Додавання помилок та виведення логування
+    def check_valid_length(self) -> bool:
+        """Перевіряє, що довжина примітки до словника коректна"""
+        logging.info('ПОЧАТОК ПЕРЕВІРКИ: "Довжина примітки до словника коректна"')
+
+        is_valid_length: bool = self.length_filter.apply(self.note)  # Чи коректна довжина
+
+        if not is_valid_length:
+            logging.warning(f'Некоректна кількість символів у примітці до словника "{self.note}"')
+            self.add_validator_error(
+                'Довжина примітки до словника має бути від '
+                f'{MIN_LENGTH_VOCAB_NOTE} до {MAX_LENGTH_VOCAB_NOTE} символів.')
             return False
         return True
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
-        checks: list[bool] = [self.check_valid_length()]
-        return all(checks)
+        if self.check_valid_length():
+            logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Довжина примітки до словника коректна"')
+        else:
+            logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Довжина примітки до словника коректна"')
+            return False
+        return True

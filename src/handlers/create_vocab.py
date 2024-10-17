@@ -84,7 +84,7 @@ async def process_vocab_name(message: Message, state: FSMContext) -> None:
 
     with Session() as db:
         validator = VocabNameValidator(
-            vocab_name=vocab_name,
+            name=vocab_name,
             user_id=user_id,
             db_session=db)
 
