@@ -44,9 +44,6 @@ def get_kb_confirm_cancel(previous_stage: StopIteration) -> InlineKeyboardMarkup
     return kb.as_markup()
 
 
-
-
-
 def get_kb_create_vocab_note() -> InlineKeyboardMarkup:
     """Повертає клавіатуру з кнопкою скасування процесу створення словника, кнопкою зміни назви словника
     та пропуску додавання примітки.
