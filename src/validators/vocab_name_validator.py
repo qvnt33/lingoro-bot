@@ -67,7 +67,7 @@ class VocabNameValidator(ValidatorBase):
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
-        is_valid_flag = True
+        is_valid_flag: bool = True  # Флаг, чи коректні перевірки
 
         if self.check_valid_length():
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Довжина назви словника коректна"')

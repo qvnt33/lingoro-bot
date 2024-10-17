@@ -31,9 +31,11 @@ class VocabNoteValidator(ValidatorBase):
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
+        is_valid_flag: bool = True  # Флаг, чи коректні перевірки
+
         if self.check_valid_length():
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Довжина примітки до словника коректна"')
         else:
             logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Довжина примітки до словника коректна"')
-            return False
-        return True
+            is_valid_flag = False
+        return is_valid_flag
