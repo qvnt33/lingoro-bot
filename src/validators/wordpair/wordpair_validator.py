@@ -15,6 +15,7 @@ class WordPairValidator(ValidatorBase):
 
         self.wordpair: str = wordpair.strip()  # Словникова пара без зайвих пробілів
         self.vocab_name: str = vocab_name  # Назва словника
+
         # Коректні дані словникової пари
         self.validated_data: list = {'words': [], 'translations': [], 'annotation': ''}
 

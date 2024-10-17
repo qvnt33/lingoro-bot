@@ -67,23 +67,25 @@ class VocabNameValidator(ValidatorBase):
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
+        is_valid_flag = True
+
         if self.check_valid_length():
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Довжина назви словника коректна"')
         else:
             logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Довжина назви словника коректна"')
-            return False
+            is_valid_flag = False
 
         if self.check_valid_characters():
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Назва словника містить лише дозволені символі"')
         else:
             logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Назва словника містить лише дозволені символі"')
-            return False
+            is_valid_flag = False
 
         if self.check_unique_name_per_user():
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Назва словника унікальна серед словників користувача"')
         else:
             logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Назва словника унікальна серед словників користувача"')
-            return False
+            is_valid_flag = False
 
         logging.info('ПЕРЕВІРКА НАЗВИ СЛОВНИКА УСПІШНО ПРОЙДЕНА')
-        return True
+        return is_valid_flag
