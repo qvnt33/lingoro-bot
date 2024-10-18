@@ -64,9 +64,10 @@ def get_kb_create_vocab_note() -> InlineKeyboardMarkup:
     return kb.as_markup()
 
 
-def get_kb_create_wordpairs() -> InlineKeyboardMarkup:
+def get_kb_create_wordpairs(is_keep_status: bool = True) -> InlineKeyboardMarkup:
     """Повертає клавіатуру з кнопкою скасування процесу створення словника,
     кнопкою збереження готового словника у БД та перевіркою поточного статусу.
+    З флагом, чи додавати кнопку статусу.
     """
     kb = InlineKeyboardBuilder()
     btn_back_to_vocab_name = InlineKeyboardButton(text='Зберегти',
@@ -76,9 +77,14 @@ def get_kb_create_wordpairs() -> InlineKeyboardMarkup:
     btn_cancel_add = InlineKeyboardButton(text='Скасувати',
                                           callback_data='cancel_create_from_wordpairs')
 
-    kb.row(btn_back_to_vocab_name,
-           btn_status,
-           btn_cancel_add,
-           width=1)
+    if is_keep_status:
+        kb.row(btn_back_to_vocab_name,
+               btn_status,
+               btn_cancel_add,
+               width=1)
+    else:
+        kb.row(btn_back_to_vocab_name,
+               btn_cancel_add,
+               width=1)
 
     return kb.as_markup()

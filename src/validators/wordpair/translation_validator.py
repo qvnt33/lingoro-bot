@@ -47,31 +47,37 @@ class TranslationValidator(WordPairValidator):
         logging.info('ПОЧАТОК ПЕРЕВІРКИ: "Всі переклади словникової пари коректні"')
 
         for translation in self.translations_lst:
-            is_valid_translation: bool = self._check_valid_translation(translation)  # Чи коректний переклад
+            # Слово та його транскрипція
+            translation, transcription = self.split_item_and_transcription(translation)
 
-            if is_valid_translation:
-                self.validated_data['translations'].append(translation)  # Додавання до валідної бази
-                logging.info(f'Переклад "{translation}" пройшов перевірку та був доданий до валідної бази')
-            else:
+            # Чи коректний переклад та транскрипція
+            is_valid_translation: bool = self._check_valid_translation(translation)
+            is_valid_transcription: bool = self.check_valid_transcription(translation, transcription)
+
+            if not is_valid_translation:
+                self.validated_data['translations'].append((translation, transcription))
                 return False
+            if not is_valid_transcription:
+                self.validated_data['translations'].append((translation, transcription))
+                return False
+            self.validated_data['translations'].append((translation, transcription))
         return True
 
     def _check_valid_translation(self, translation: str) -> bool:
-        """Перевіряє переклад словникової пари"""
+        """Перевіряє переклад"""
         is_valid_length: bool = self.length_filter.apply(translation)  # Чи коректна довжина
-        is_valid_allowed_chars: bool = self.allowed_character_filter.apply(translation)  # Чи коректні символі
+        is_valid_allowed_chars: bool = self.allowed_character_filter.apply(translation)  # Чи коректні символи
 
         if not is_valid_length:
             logging.warning(f'Некоректна кількість символів у перекладі "{translation}"')
             self.add_validator_error(
-                'Довжина перекладу має бути від '
-                f'{MIN_LENGTH_WORD_WORDPAIR} до {MAX_LENGTH_WORD_WORDPAIR} символів.')
+                f'Довжина перекладу має бути від {MIN_LENGTH_WORD_WORDPAIR} до {MAX_LENGTH_WORD_WORDPAIR} символів.')
             return False
 
+        # Перевірка символів у слові
         if not is_valid_allowed_chars:
             logging.warning(f'Некоректні символи у перекладі: "{translation}"')
-            self.add_validator_error(
-                f'Переклад до словникової пари може містити лише літери, цифри та символи: "{ALLOWED_CHARACTERS}".')
+            self.add_validator_error(f'Переклад може містити лише літери, цифри та символи: "{ALLOWED_CHARACTERS}".')
             return False
         return True
 

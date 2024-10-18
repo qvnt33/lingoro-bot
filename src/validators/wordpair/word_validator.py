@@ -50,11 +50,11 @@ class WordsValidator(WordPairValidator):
 
         for word in self.words_lst:
             # Слово та його транскрипція
-            word, transcription = self._split_word_and_transcription(word)
+            word, transcription = self.split_item_and_transcription(word)
 
             # Чи валідне слово та транскрипція
             is_valid_word: bool = self._check_valid_word(word)
-            is_valid_transcription: bool = self._check_valid_transcription(word, transcription)
+            is_valid_transcription: bool = self.check_valid_transcription(word, transcription)
 
             if not is_valid_word:
                 self.validated_data['words'].append((word, transcription))  # Додавання до валідної бази слово
@@ -82,37 +82,6 @@ class WordsValidator(WordPairValidator):
             self.add_validator_error(f'Слово може містити лише літери, цифри та символи: "{ALLOWED_CHARACTERS}".')
             return False
         return True
-
-    def _check_valid_transcription(self, word: str, transcription: str) -> bool:
-        """Перевіряє транскрипцію"""
-        if transcription is None:
-            return True
-
-        is_valid_length: bool = self.length_filter.apply(transcription)  # Чи коректна довжина
-        is_valid_allowed_chars: bool = self.allowed_character_filter.apply(transcription)  # Чи коректні символи
-
-        if not is_valid_length:
-            logging.warning(f'Некоректна кількість символів у транскрипції "{transcription}" до слова "{word}"')
-            self.add_validator_error(
-                f'Довжина транскрипції до слова "{word}" має бути від {MIN_LENGTH_WORD_WORDPAIR} до '
-                f'{MAX_LENGTH_WORD_WORDPAIR} символів')
-            return False
-
-        if not is_valid_allowed_chars:
-            logging.warning(f'Некоректні символи у транскрипції: "{transcription}" до слова "{word}"')
-            self.add_validator_error(
-                f'Транскрипція може містити лише літери, цифри та символи: "{ALLOWED_CHARACTERS}".')
-            return False
-        return True
-
-    def _split_word_and_transcription(self, word: str) -> tuple[str, str | None]:
-        """Виділяє слово та транскрипцію у форматі REGEX.
-        Якщо транскрипції немає, повертається слово та None
-        """
-        parts: list[str] = word.split(sep=TRANSCRIPTION_SEPARATOR, maxsplit=1)  # Розділене слово
-        word_only: str = parts[0].strip()  # Слово (без зайвих пробілів)
-        transcription: str | None = parts[1].strip() if len(parts) > 1 else None  # Транскрипція (якщо є)
-        return word_only, transcription
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""

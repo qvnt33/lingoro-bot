@@ -2,6 +2,9 @@ import logging
 
 from config import (
     ALLOWED_CHARACTERS,
+    MAX_LENGTH_WORD_WORDPAIR,
+    MIN_LENGTH_WORD_WORDPAIR,
+    TRANSCRIPTION_SEPARATOR,
     WORDPAIR_SEPARATOR,
 )
 from src.filters.allowed_chars_filter import AllowedCharactersFilter
@@ -64,6 +67,37 @@ class WordPairValidator(ValidatorBase):
             self.add_validator_error('Переклад словникової пари не може бути порожнім.')
             return False
         return True
+
+    def check_valid_transcription(self, item: str, transcription: str) -> bool:
+        """Перевіряє транскрипцію"""
+        if transcription is None:
+            return True
+
+        is_valid_length: bool = self.length_filter.apply(transcription)  # Чи коректна довжина
+        is_valid_allowed_chars: bool = self.allowed_character_filter.apply(transcription)  # Чи коректні символи
+
+        if not is_valid_length:
+            logging.warning(f'Некоректна кількість символів у транскрипції "{transcription}" до "{item}"')
+            self.add_validator_error(
+                f'Довжина транскрипції до "{item}" має бути від {MIN_LENGTH_WORD_WORDPAIR} до '
+                f'{MAX_LENGTH_WORD_WORDPAIR} символів')
+            return False
+
+        if not is_valid_allowed_chars:
+            logging.warning(f'Некоректні символи у транскрипції: "{transcription}" до "{item}"')
+            self.add_validator_error(
+                f'Транскрипція може містити лише літери, цифри та символи: "{ALLOWED_CHARACTERS}".')
+            return False
+        return True
+
+    def split_item_and_transcription(self, item: str) -> tuple[str, str | None]:
+        """Виділяє частину словникової пари (слово або переклад) та її транскрипцію, розділені TRANSCRIPTION_SEPARATOR.
+        Якщо транскрипції немає, повертається сама частина (слово або переклад) та None.
+        """
+        parts: list[str] = item.split(sep=TRANSCRIPTION_SEPARATOR, maxsplit=1)  # Розділений елемент
+        item_only: str = parts[0].strip()  # Елемент (без зайвих пробілів)
+        transcription: str | None = parts[1].strip() if len(parts) > 1 else None  # Транскрипція (якщо є)
+        return item_only, transcription
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""

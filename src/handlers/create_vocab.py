@@ -191,14 +191,15 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
     else:
         valid_msg = '⚠️ Немає валідних словникових пар.'
 
-    await state.update_data(validated_data_wordpairs=validated_data_wordpairs)  # Збереження даних пар в кеш FSM
+    # Збереження всіх даних словникових пар в FSM-кеш
+    await state.update_data(validated_data_wordpairs=validated_data_wordpairs)
 
     # Якщо є не валідні словникові пар
     if invalid_wordpairs_lst:
         invalid_msg_parts_lst: list = []
         for wordpair in invalid_wordpairs_lst:
             # Кожна словникова пара та помилки
-            sep_invalid_wordpair: str = f'- {wordpair["wordpair"]}:\n{wordpair["errors"]}'
+            sep_invalid_wordpair: str = f'- {wordpair["wordpair"]}\n{wordpair["errors"]}'
 
             invalid_msg_parts_lst.append(sep_invalid_wordpair)
 
@@ -207,9 +208,12 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
     else:
         invalid_msg: str = '🎉 Немає помилок серед введених пар!'
 
+    msg_content = ('Введіть "словникові пари" у форматі:\n'
+                   'w1 | tr1 , w2 | tr2 : t1, t2 : a')
+
     msg_finally: str = create_vocab_message(vocab_name=vocab_name,
                                             vocab_note=vocab_note,
-                                            content=f'{valid_msg}\n\n{invalid_msg}')
+                                            content=f'{valid_msg}\n\n{invalid_msg}\n\n{msg_content}')
 
     await message.answer(text=msg_finally, reply_markup=kb)
 
@@ -244,27 +248,29 @@ async def process_create_wordpairs_status(callback: CallbackQuery, state: FSMCon
 
     data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
 
-    vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
-    validated_data_wordpairs: Any | None = data_fsm.get('validated_data_wordpairs')  # Всі дані словникових пар
+    vocab_name: str = data_fsm.get('vocab_name')
+    vocab_note: str = data_fsm.get('vocab_note')
+    validated_data_wordpairs: Any | None = data_fsm.get('validated_data_wordpairs')[0]  # Всі дані словникових пар
+    print(validated_data_wordpairs)
+    words_data_lst: list = validated_data_wordpairs['words']  # Список кортежів слів та їх анотацій
+    translations_data_lst: list = validated_data_wordpairs['translations']  # Список кортежів перекладів та їх анотацій
+    annotation: str = validated_data_wordpairs['annotation'] or 'Відсутня'
 
-    for wordpair_data in validated_data_wordpairs:
-        word = wordpair_data['words'][0][0]
-        word_transcription = wordpair_data['words'][0][1]
-        translation = wordpair_data['translations'][0]
-        annotation = wordpair_data['annotation']
+    print(words_data_lst)
+    print(translations_data_lst)
+    print(annotation)
+    formatted_words_lst = []  # Відформатовані словникові пари
+    formatted_translations_lst = []  # Відформатовані словникові пари
 
-        print(word, word_transcription, translation, annotation)
-    msg_finally: str = create_vocab_message(vocab_name=vocab_name, content=MSG_ENTER_NEW_VOCAB_NAME)
 
-    # Клавіатура для створення назви словника з кнопкою "Залишити поточну назву"
-    kb: InlineKeyboardMarkup = get_kb_create_vocab_name(is_keep_old_vocab_name=True)
+    msg_finally: str = create_vocab_message(vocab_name=vocab_name,
+                                            vocab_note=vocab_note,
+                                            content='formatted_wordpairs_lst')
 
-    fsm_state: State = VocabCreation.waiting_for_vocab_name  # FSM стан очікування назви
+    # Клавіатура для створення словникових пар без кнопки "Статус"
+    kb: InlineKeyboardMarkup = get_kb_create_wordpairs(is_keep_status=False)
 
     await callback.message.edit_text(text=msg_finally, reply_markup=kb)
-
-    await state.set_state(fsm_state)  # Стан очікування назви словника
-    logging.info(f'FSM стан змінено на "{fsm_state}"')
 
 
 @router.callback_query(F.data == 'keep_old_vocab_name')
