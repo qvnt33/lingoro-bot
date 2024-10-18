@@ -78,20 +78,28 @@ class WordPairValidator(ValidatorBase):
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Коректний формат словникової пари"')
         else:
             logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Коректний формат словникової пари"')
+            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
+                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
             return False
 
         if self.check_not_empty_parts():
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Всі частини словникової пари не є порожніми"')
         else:
             logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Всі частини словникової пари не є порожніми"')
+            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
+                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
             return False
 
         # Перевірка валідності слів
         if not WordsValidator(self.wordpair, self.vocab_name, self.errors_lst, self.validated_data).is_valid():
+            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
+                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
             return False
 
         # Перевірка валідності перекладу
         if not TranslationValidator(self.wordpair, self.vocab_name, self.errors_lst, self.validated_data).is_valid():
+            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
+                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
             return False
 
         # Перевірка валідності анотації (якщо вона є)
@@ -99,9 +107,10 @@ class WordPairValidator(ValidatorBase):
                                                                            self.vocab_name,
                                                                            self.errors_lst,
                                                                            self.validated_data).is_valid():
+            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
+                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
             return False
 
-        logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ УСПІШНО ПРОЙДЕНА. '
-                     f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
-
+        logging.info('ВСІ ПЕРЕВІРКИ СЛОВНИКОВОЇ ПАРИ УСПІШНО ПРОЙДЕНІ. '
+                    f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
         return True

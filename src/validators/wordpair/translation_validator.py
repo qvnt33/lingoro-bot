@@ -77,17 +77,23 @@ class TranslationValidator(WordPairValidator):
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
+        is_valid_flag: bool = True  # Флаг, чи коректні перевірки
+
         if self.check_valid_count_translations():
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: Коректна кількість перекладів словникової пари"')
         else:
             logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Коректна кількість перекладів словникової пари"')
-            return False
+            is_valid_flag = False
 
         if self.check_valid_all_translations():
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Всі переклади словникової пари коректні"')
         else:
             logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Всі переклади словникової пари коректні"')
-            return False
+            is_valid_flag = False
 
-        logging.info('ПЕРЕВІРКА ПЕРЕКЛАДІВ УСПІШНО ПРОЙДЕНА')
-        return True
+        if is_valid_flag:
+            logging.info('ВСІ ПЕРЕВІРКИ ПЕРЕКЛАДІВ УСПІШНО ПРОЙДЕНІ')
+        else:
+            logging.info('ПЕРЕВІРКА ПЕРЕКЛАДІВ НЕ БУЛА ПРОЙДЕНА')
+
+        return is_valid_flag

@@ -41,15 +41,20 @@ class AnnotationValidator(WordPairValidator):
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
+        is_valid_flag = True
+
         if self.check_valid_length_annotation():
             logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Кількість символів у анотації коректна"')
         else:
             logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Кількість символів у анотації коректна"')
-            return False
+            is_valid_flag = False
 
-        logging.info('ПЕРЕВІРКА АНОТАЦІЙ УСПІШНО ПРОЙДЕНА')
+        if is_valid_flag:
+            logging.info('ВСІ ПЕРЕВІРКИ АНОТАЦІЇ УСПІШНО ПРОЙДЕНІ')
+        else:
+            logging.info('ПЕРЕВІРКА АНОТАЦІЇ НЕ БУЛА ПРОЙДЕНА')
 
         self.validated_data['annotation'] = self.annotation  # Додавання до бази валідної анотації
         logging.info(f'Анотація "{self.annotation}" була додана до валідної бази')
 
-        return True
+        return is_valid_flag
