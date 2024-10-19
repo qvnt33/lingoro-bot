@@ -3,16 +3,15 @@ from typing import Any
 import sqlalchemy
 from .callback_data import PaginationCallback
 from aiogram import F, Router
-from aiogram.filters import Command
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from sqlalchemy import Column
 from sqlalchemy.orm.query import Query
 
 from db.database import Session
 from db.models import Translation, Vocabulary, Word, WordPair, WordPairTranslation, WordPairWord
-from src.keyboards.vocab_base_kb import get_inline_kb_vocab_base, get_inline_kb_add_vocab
-from tools.read_data import app_data
+from text_data import MSG_ENTER_VOCAB, MSG_ERROR_VOCAB_BASE_EMPTY
+from src.keyboards.vocab_base_kb import get_inline_kb_vocab_base
 
 router = Router(name='vocab_base')
 
@@ -27,26 +26,23 @@ async def process_vocab_base(callback: CallbackQuery, callback_data: PaginationC
     current_page: int = callback_data.page  # Поточна сторінка
     limit: int = callback_data.limit  # Ліміт словників на сторінці
 
-    vocab_lst: list = []  # Список всіх словників
+    vocabs_lst: list = []  # Список всіх словників
 
     with Session() as db:
-        # Отримання всіх словників користувача
         user_vocabs: Query[Vocabulary] = db.query(Vocabulary).filter(Vocabulary.user_id == user_id)
 
-        # Перевірка, чи порожня база словників
         is_vocab_base_empty: bool = user_vocabs.first() is None
 
-        # Якщо база порожня, повідомлення для порожньої бази
         if is_vocab_base_empty:
-            msg_vocab_base: str = "app_data['vocab_base']['vocab_base_is_empty']"
+            msg_finally: str = MSG_ERROR_VOCAB_BASE_EMPTY
         else:
-            msg_vocab_base: str = "app_data['vocab_base']['msg_select_vocab']"
+            msg_finally: str = MSG_ENTER_VOCAB
 
         for vocab in user_vocabs:
             vocab_id: Column[int] = vocab.id
 
-            vocab_dict: dict = get_vocabulary_dict(vocab_id, db)  # Словник (dict) із словниковими парами
-            vocab_lst.append(vocab_dict)  # Додавання до списку словників словник (dict)
+            vocabs_dct: dict = get_vocabs_dict(vocab_id, db)  # Словник із словниковими парами
+            vocabs_lst.append(vocabs_dct)  # Додавання словника до списку словників
 
     total_vocabs: int = user_vocabs.count()  # Кількість всіх словників
     total_pages_pagination: int = (total_vocabs + limit - 1) // limit  # Кількість всіх можливих сторінок пагінації
@@ -61,7 +57,7 @@ async def process_vocab_base(callback: CallbackQuery, callback_data: PaginationC
     end_offset: int = min(start_offset + limit, total_vocabs)  # Кінцевий індекс для відображення словників
 
     # Клавіатура для відображення словників із пагінацією
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_base(vocab_lst,
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_base(vocabs_lst,
                                                         start_offset,
                                                         end_offset,
                                                         current_page,
@@ -69,10 +65,10 @@ async def process_vocab_base(callback: CallbackQuery, callback_data: PaginationC
                                                         limit,
                                                         is_vocab_base_empty)
 
-    await callback.message.edit_text(text=msg_vocab_base, reply_markup=kb)
+    await callback.message.edit_text(text=msg_finally, reply_markup=kb)
 
 
-def get_vocabulary_dict(vocab_id: int, db: sqlalchemy.orm.session.Session) -> dict:
+def get_vocabs_dict(vocab_id: int, db: sqlalchemy.orm.session.Session) -> dict:
     """Повертає згенерований словник (dict) для одного словника з словниковими парами"""
     vocab: Query[Vocabulary] | None = db.query(Vocabulary).filter(Vocabulary.id == vocab_id).first()
 
@@ -81,7 +77,7 @@ def get_vocabulary_dict(vocab_id: int, db: sqlalchemy.orm.session.Session) -> di
         return {}
 
     # Структура для зберігання даних словника
-    vocab_dict: dict[str, Any] = {
+    vocabs_dct: dict[str, Any] = {
         'id': vocab.id,
         'name': vocab.name,
         'wordpairs': []}
@@ -90,27 +86,25 @@ def get_vocabulary_dict(vocab_id: int, db: sqlalchemy.orm.session.Session) -> di
     wordpairs: list = db.query(WordPair).filter(WordPair.vocabulary_id == vocab.id).all()
 
     for pair in wordpairs:
-        # Слова всіх словникових пар словника
-        words: list[tuple] | list = db.query(Word.word).join(
+        # Слова з транскрипціями
+        words: list[tuple] | list = db.query(Word.word, Word.transcription).join(
             WordPairWord, Word.id == WordPairWord.word_id).filter(
-                WordPairWord.wordpair_id == pair.id).all()
+            WordPairWord.wordpair_id == pair.id).all()
 
-        # Переклади всіх словникових пар словника
-        translations: list[tuple] | list = db.query(Translation.translation).join(
+        # Переклади з транскрипціями
+        translations: list[tuple] | list = db.query(Translation.translation, Translation.transcription).join(
             WordPairTranslation, Translation.id == WordPairTranslation.translation_id).filter(
-                WordPairTranslation.wordpair_id == pair.id).all()
+            WordPairTranslation.wordpair_id == pair.id).all()
 
-        # Структура пари слів
+        # Структура пари слів з транскрипціями
         wordpair_dict: dict[str[tuple | None]] = {
-            'word': words[0] if words else None,  # Якщо немає слова, то None
-            'translation': translations[0] if translations else None,  # Якщо немає перекладу, то None
-        }
+            'word': words[0][0] if words else None,
+            'word_transcription': words[0][1] if words and words[0][1] else None,
+            'translation': translations[0][0] if translations else None,
+            'translation_transcription': translations[0][1] if translations and translations[0][1] else None}
 
-        # Додавання анотації, якщо вона є
         if pair.annotation:
             wordpair_dict['annotation'] = pair.annotation
 
-        # Додавання словникову пару до списку wordpairs у словнику (dict)
-        vocab_dict['wordpairs'].append(wordpair_dict)
-
-    return vocab_dict
+        vocabs_dct['wordpairs'].append(wordpair_dict)
+    return vocabs_dct

@@ -12,7 +12,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from config import DEFAULT_VOCAB_NOTE
 from db.database import Session
-from messages import (
+from text_data import (
     MSG_CONFIRM_CANCEL_CREATE_VOCAB,
     MSG_ENTER_NEW_VOCAB_NAME,
     MSG_ENTER_VOCAB_NAME,

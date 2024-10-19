@@ -5,11 +5,11 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from db.crud import create_user
+from db.crud import create_user, get_user_by_user_id
 from db.database import Session
 from db.models import User
-from messages import MSG_MENU, MSG_MENU_FOR_NEW_USER
 from src.keyboards.menu_kb import get_inline_kb_menu
+from text_data import MSG_MENU, MSG_MENU_FOR_NEW_USER
 
 router = Router(name='menu')
 
@@ -34,7 +34,7 @@ async def cmd_menu(message: Message) -> None:
 
     with Session() as db:
         # Чи є користувач у БД
-        is_user_exists: bool = db.query(User).filter(User.user_id == telegram_user.id).first() is not None
+        is_user_exists: bool = get_user_by_user_id(db, user_id=telegram_user.id) is not None
 
         if is_user_exists:
             title_menu: str = MSG_MENU
@@ -59,7 +59,7 @@ async def process_btn_back_to_menu(callback: CallbackQuery) -> None:
 
     with Session() as db:
         # Чи є користувач у БД
-        is_user_exists: bool = db.query(User).filter(User.user_id == telegram_user.id).first() is not None
+        is_user_exists: bool = get_user_by_user_id(db, user_id=telegram_user.id) is not None
 
         if is_user_exists:
             title_menu: str = MSG_MENU
