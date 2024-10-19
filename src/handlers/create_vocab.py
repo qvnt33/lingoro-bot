@@ -166,7 +166,7 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
     valid_wordpairs_lst: list[str] = []  # Список коректних словникових пар
     invalid_wordpairs_lst: list[dict] = []  # Список не коректних словникових пар
 
-    validated_data_wordpairs: Any | None = data_fsm.get('validated_data_wordpairs') or []  # Всі дані словникових пар
+    validated_data_wordpairs: Any | list = data_fsm.get('validated_data_wordpairs') or []  # Всі дані словникових пар
 
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для створення словникових пар
 
@@ -254,34 +254,37 @@ async def process_create_wordpairs_status(callback: CallbackQuery, state: FSMCon
 
     vocab_name: str = data_fsm.get('vocab_name')
     vocab_note: str = data_fsm.get('vocab_note')
-    validated_data_wordpairs: Any | None = data_fsm.get('validated_data_wordpairs')  # Всі дані словникових пар
-    if validated_data_wordpairs:
-        pass
-
-    formatted_wordpairs_lst = []
-
-    for valid_data in validated_data_wordpairs:
-        words_data_lst: list = valid_data['words']  # Список кортежів слів та їх анотацій
-        translations_data_lst: list = valid_data['translations']  # Список кортежів перекладів та їх анотацій
-        annotation: str = valid_data['annotation'] or 'Відсутня'
-
-        formatted_words: list[str] = ', '.join([f'{word} [{transcription or 'Відсутня'}]' for
-                                                word, transcription in words_data_lst])
-        formatted_translations: list[str] = ', '.join([f'{translation} [{transcription or 'Відсутня'}]' for
-                                                       translation, transcription in translations_data_lst])
-        formatted_wordpair = f'{formatted_words} : {formatted_translations} : {annotation}'
-        formatted_wordpairs_lst.append(formatted_wordpair)
-
-    joined_wordpairs: str = '\n'.join([f'{num}. {i}' for num, i in enumerate(start=1,
-                                                                             iterable=formatted_wordpairs_lst)])
-
-    finally_msg: str = f'Додані словникові пари:\n{joined_wordpairs}\n\n{MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS}'
-    msg_finally: str = create_vocab_message(vocab_name=vocab_name,
-                                            vocab_note=vocab_note,
-                                            content=finally_msg)
+    validated_data_wordpairs: Any | list = data_fsm.get('validated_data_wordpairs')  # Всі дані словникових пар
 
     # Клавіатура для створення словникових пар без кнопки "Статус"
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs(is_keep_status=False)
+
+    if not validated_data_wordpairs:
+        content_msg = f'Немає доданих словникових пар.\n\n{MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS}'
+    else:
+        formatted_wordpairs_lst = []
+
+        for valid_data in validated_data_wordpairs:
+            words_data_lst: list = valid_data['words']  # Список кортежів слів та їх анотацій
+            translations_data_lst: list = valid_data['translations']  # Список кортежів перекладів та їх анотацій
+            annotation: str = valid_data['annotation'] or '–'
+
+            formatted_words: list[str] = ', '.join([f'{word} [{transcription or '–'}]' for
+                                                    word, transcription in words_data_lst])
+            formatted_translations: list[str] = ', '.join([f'{translation} [{transcription or '–'}]' for
+                                                        translation, transcription in translations_data_lst])
+            formatted_wordpair = f'{formatted_words} : {formatted_translations} : {annotation}'
+            formatted_wordpairs_lst.append(formatted_wordpair)
+
+        joined_wordpairs: str = '\n'.join([f'{num}. {i}' for num, i in enumerate(start=1,
+                                                                                iterable=formatted_wordpairs_lst)])
+
+        content_msg: str = (
+            f'Додані словникові пари:\n{joined_wordpairs}\n\n{MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS}')
+    msg_finally: str = create_vocab_message(vocab_name=vocab_name,
+                                            vocab_note=vocab_note,
+                                            content=content_msg)
+
     await callback.message.edit_text(text=msg_finally, reply_markup=kb)
 
 
@@ -330,7 +333,6 @@ async def process_cancel_create(callback: CallbackQuery, state: FSMContext) -> N
 async def process_back_to(callback: CallbackQuery, state: FSMContext) -> None:
     """Обробляє натискання на кнопку 'Ні' та повертає користувача до процесу з якого натиснув кнопку 'Скасувати'"""
     stage: str = callback.data.split('back_to_')[1]  # Процес, з якого було натиснута кнопка "Скасувати
-    print(stage)
     logging.info(
         f'Користувач натиснув на кнопку "Ні" при підтвердженні скасування створення словника у процесі {state}')
 
