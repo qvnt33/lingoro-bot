@@ -8,10 +8,11 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from sqlalchemy import Column
 from sqlalchemy.orm.query import Query
 
+from db.crud import get_user_vocabs_by_user_id, get_user_vocabs_by_vocab_id
 from db.database import Session
 from db.models import Translation, Vocabulary, Word, WordPair, WordPairTranslation, WordPairWord
-from text_data import MSG_ENTER_VOCAB, MSG_ERROR_VOCAB_BASE_EMPTY
 from src.keyboards.vocab_base_kb import get_inline_kb_vocab_base
+from text_data import MSG_ENTER_VOCAB, MSG_ERROR_VOCAB_BASE_EMPTY
 
 router = Router(name='vocab_base')
 
@@ -29,7 +30,7 @@ async def process_vocab_base(callback: CallbackQuery, callback_data: PaginationC
     vocabs_lst: list = []  # Список всіх словників
 
     with Session() as db:
-        user_vocabs: Query[Vocabulary] = db.query(Vocabulary).filter(Vocabulary.user_id == user_id)
+        user_vocabs: Query[Vocabulary] = get_user_vocabs_by_user_id(db, user_id)  # Словники користувача
 
         is_vocab_base_empty: bool = user_vocabs.first() is None
 
@@ -69,8 +70,8 @@ async def process_vocab_base(callback: CallbackQuery, callback_data: PaginationC
 
 
 def get_vocabs_dict(vocab_id: int, db: sqlalchemy.orm.session.Session) -> dict:
-    """Повертає згенерований словник (dict) для одного словника з словниковими парами"""
-    vocab: Query[Vocabulary] | None = db.query(Vocabulary).filter(Vocabulary.id == vocab_id).first()
+    """Повертає згенерований словник для одного словника з словниковими парами"""
+    vocab: Query[Vocabulary] | None = get_user_vocabs_by_vocab_id(db, vocab_id)
 
     # Перевірка, чи існує словник
     if not vocab:
