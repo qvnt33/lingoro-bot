@@ -68,6 +68,7 @@ class Word(Base):
 
     id = Column(Integer, primary_key=True)
     word = Column(String(50), nullable=False)  # Слово
+    transcription = Column(String(50), nullable=True)  # Транскрипція (опціонально)
 
 
 class WordPairTranslation(Base):
@@ -87,6 +88,7 @@ class Translation(Base):
 
     id = Column(Integer, primary_key=True)
     translation = Column(String(50), nullable=False)  # Переклад
+    transcription = Column(String(50), nullable=True)  # Транскрипція (опціонально)
 
 
 class TrainingSession(Base):

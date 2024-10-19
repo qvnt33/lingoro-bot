@@ -251,21 +251,18 @@ async def process_create_wordpairs_status(callback: CallbackQuery, state: FSMCon
     vocab_name: str = data_fsm.get('vocab_name')
     vocab_note: str = data_fsm.get('vocab_note')
     validated_data_wordpairs: Any | None = data_fsm.get('validated_data_wordpairs')[0]  # Всі дані словникових пар
-    print(validated_data_wordpairs)
+
     words_data_lst: list = validated_data_wordpairs['words']  # Список кортежів слів та їх анотацій
     translations_data_lst: list = validated_data_wordpairs['translations']  # Список кортежів перекладів та їх анотацій
     annotation: str = validated_data_wordpairs['annotation'] or 'Відсутня'
 
-    print(words_data_lst)
-    print(translations_data_lst)
-    print(annotation)
-    formatted_words_lst = []  # Відформатовані словникові пари
-    formatted_translations_lst = []  # Відформатовані словникові пари
-
+    formatted_words: list[str] = [f'{word} [{transcription}]' for word, transcription in words_data_lst]
+    formatted_translations: list[str] = [f'{translation} [{transcription}]' for translation, transcription in translations_data_lst]
+    formatted_wordpair = f'{formatted_words} : {formatted_translations} : {annotation}'
 
     msg_finally: str = create_vocab_message(vocab_name=vocab_name,
                                             vocab_note=vocab_note,
-                                            content='formatted_wordpairs_lst')
+                                            content=formatted_wordpair)
 
     # Клавіатура для створення словникових пар без кнопки "Статус"
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs(is_keep_status=False)
