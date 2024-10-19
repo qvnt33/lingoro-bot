@@ -5,10 +5,9 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
+from db.crud import create_user
 from db.database import Session
 from db.models import User
-from db.crud import create_user
-
 from messages import MSG_MENU, MSG_MENU_FOR_NEW_USER
 from src.keyboards.menu_kb import get_inline_kb_menu
 
@@ -41,8 +40,7 @@ async def cmd_menu(message: Message) -> None:
             title_menu: str = MSG_MENU
         else:
             title_menu: str = MSG_MENU_FOR_NEW_USER
-            # Додавання користувача до БД
-            create_user(db, telegram_user)
+            create_user(db, telegram_user)  # Додавання користувача до БД
             db.commit()
 
     await message.answer(text=title_menu, reply_markup=kb)
@@ -55,26 +53,19 @@ async def process_btn_back_to_menu(callback: CallbackQuery) -> None:
     """
     logging.info('Користувач натиснув кнопку для переходу до головного меню')
 
-    tg_user: User | None = callback.from_user
+    telegram_user: User | None = callback.from_user
 
     kb: InlineKeyboardMarkup = get_inline_kb_menu()
 
     with Session() as db:
         # Чи є користувач у БД
-        is_user_exists: bool = db.query(User).filter(User.user_id == tg_user.id).first() is not None
+        is_user_exists: bool = db.query(User).filter(User.user_id == telegram_user.id).first() is not None
 
         if is_user_exists:
             title_menu: str = MSG_MENU
         else:
             title_menu: str = MSG_MENU_FOR_NEW_USER
-            # Додавання користувача до БД
-            user = User(user_id=tg_user.id,
-                        username=tg_user.username,
-                        first_name=tg_user.first_name,
-                        last_name=tg_user.last_name)
-            db.add(user)
-
-            logging.info(f'Був доданий до БД користувач: {tg_user.id}')
+            create_user(db, telegram_user)  # Додавання користувача до БД
 
             db.commit()
 
