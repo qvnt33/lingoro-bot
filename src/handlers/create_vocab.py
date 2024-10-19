@@ -13,15 +13,20 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from config import DEFAULT_VOCAB_NOTE
 from db.database import Session
 from text_data import (
+    MSG_ADDED_WORDPAIRS,
     MSG_CONFIRM_CANCEL_CREATE_VOCAB,
     MSG_ENTER_NEW_VOCAB_NAME,
     MSG_ENTER_VOCAB_NAME,
+    MSG_ERROR_NO_VALID_WORDPAIRS,
     MSG_ERROR_VOCAB_SAME_NAME,
+    MSG_NO_ADDED_WORDPAIRS,
+    MSG_NO_ERRORS_WORDPAIRS,
     MSG_SUCCESS_VOCAB_NAME_CREATED,
     MSG_SUCCESS_VOCAB_NOTE_CREATED,
     MSG_VOCAB_NAME_ERRORS,
     MSG_VOCAB_NOTE_ERRORS,
     MSG_VOCAB_WORDPAIRS_SAVED_INSTRUCTIONS,
+    MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS,
 )
 from src.fsm.states import VocabCreation
 from src.keyboards.create_vocab_kb import (
@@ -161,7 +166,7 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
     valid_wordpairs_lst: list[str] = []  # Список коректних словникових пар
     invalid_wordpairs_lst: list[dict] = []  # Список не коректних словникових пар
 
-    validated_data_wordpairs: list = []  # Список всіх даних коректних словникових пар
+    validated_data_wordpairs: Any | None = data_fsm.get('validated_data_wordpairs') or []  # Всі дані словникових пар
 
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для створення словникових пар
 
@@ -187,9 +192,9 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
     # Якщо є валідні словникові пар
     if valid_wordpairs_lst:
         joined_valid_wordpairs: str = '\n'.join([f'- {wordpair}' for wordpair in valid_wordpairs_lst])
-        valid_msg: str = f'✅ Додані словникові пари:\n{joined_valid_wordpairs}'
+        valid_msg: str = MSG_ADDED_WORDPAIRS.format(wordpairs=joined_valid_wordpairs)
     else:
-        valid_msg = '⚠️ Немає валідних словникових пар.'
+        valid_msg = MSG_ERROR_NO_VALID_WORDPAIRS
 
     # Збереження всіх даних словникових пар в FSM-кеш
     await state.update_data(validated_data_wordpairs=validated_data_wordpairs)
@@ -200,20 +205,19 @@ async def process_wordpairs(message: Message, state: FSMContext) -> None:
         for wordpair in invalid_wordpairs_lst:
             # Кожна словникова пара та помилки
             sep_invalid_wordpair: str = f'- {wordpair["wordpair"]}\n{wordpair["errors"]}'
-
             invalid_msg_parts_lst.append(sep_invalid_wordpair)
 
         joined_invalid_wordpairs: str = '\n'.join(invalid_msg_parts_lst)
-        invalid_msg: str = f'❌ Не додані словникові пари:\n{joined_invalid_wordpairs}'
+        invalid_msg: str = MSG_NO_ADDED_WORDPAIRS.format(wordpairs=joined_invalid_wordpairs)
     else:
-        invalid_msg: str = '🎉 Немає помилок серед введених пар!'
+        invalid_msg: str = MSG_NO_ERRORS_WORDPAIRS
 
-    msg_content = ('Введіть "словникові пари" у форматі:\n'
-                   'w1 | tr1 , w2 | tr2 : t1, t2 : a')
+    msg_content = MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS
+    msg_for_status = '\n\n'.join((valid_msg, invalid_msg, msg_content))
 
     msg_finally: str = create_vocab_message(vocab_name=vocab_name,
                                             vocab_note=vocab_note,
-                                            content=f'{valid_msg}\n\n{invalid_msg}\n\n{msg_content}')
+                                            content=msg_for_status)
 
     await message.answer(text=msg_finally, reply_markup=kb)
 
@@ -250,23 +254,34 @@ async def process_create_wordpairs_status(callback: CallbackQuery, state: FSMCon
 
     vocab_name: str = data_fsm.get('vocab_name')
     vocab_note: str = data_fsm.get('vocab_note')
-    validated_data_wordpairs: Any | None = data_fsm.get('validated_data_wordpairs')[0]  # Всі дані словникових пар
+    validated_data_wordpairs: Any | None = data_fsm.get('validated_data_wordpairs')  # Всі дані словникових пар
+    if validated_data_wordpairs:
+        pass
 
-    words_data_lst: list = validated_data_wordpairs['words']  # Список кортежів слів та їх анотацій
-    translations_data_lst: list = validated_data_wordpairs['translations']  # Список кортежів перекладів та їх анотацій
-    annotation: str = validated_data_wordpairs['annotation'] or 'Відсутня'
+    formatted_wordpairs_lst = []
 
-    formatted_words: list[str] = [f'{word} [{transcription}]' for word, transcription in words_data_lst]
-    formatted_translations: list[str] = [f'{translation} [{transcription}]' for translation, transcription in translations_data_lst]
-    formatted_wordpair = f'{formatted_words} : {formatted_translations} : {annotation}'
+    for valid_data in validated_data_wordpairs:
+        words_data_lst: list = valid_data['words']  # Список кортежів слів та їх анотацій
+        translations_data_lst: list = valid_data['translations']  # Список кортежів перекладів та їх анотацій
+        annotation: str = valid_data['annotation'] or 'Відсутня'
 
+        formatted_words: list[str] = ', '.join([f'{word} [{transcription or 'Відсутня'}]' for
+                                                word, transcription in words_data_lst])
+        formatted_translations: list[str] = ', '.join([f'{translation} [{transcription or 'Відсутня'}]' for
+                                                       translation, transcription in translations_data_lst])
+        formatted_wordpair = f'{formatted_words} : {formatted_translations} : {annotation}'
+        formatted_wordpairs_lst.append(formatted_wordpair)
+
+    joined_wordpairs: str = '\n'.join([f'{num}. {i}' for num, i in enumerate(start=1,
+                                                                             iterable=formatted_wordpairs_lst)])
+
+    finally_msg: str = f'Додані словникові пари:\n{joined_wordpairs}\n\n{MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS}'
     msg_finally: str = create_vocab_message(vocab_name=vocab_name,
                                             vocab_note=vocab_note,
-                                            content=formatted_wordpair)
+                                            content=finally_msg)
 
     # Клавіатура для створення словникових пар без кнопки "Статус"
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs(is_keep_status=False)
-
     await callback.message.edit_text(text=msg_finally, reply_markup=kb)
 
 
