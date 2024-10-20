@@ -70,20 +70,20 @@ def get_kb_create_wordpairs(is_keep_status: bool = True) -> InlineKeyboardMarkup
     З флагом, чи додавати кнопку статусу.
     """
     kb = InlineKeyboardBuilder()
-    btn_back_to_vocab_name = InlineKeyboardButton(text='Зберегти',
-                                                  callback_data='back_to_vocab_name')
+    btn_save_vocab = InlineKeyboardButton(text='Зберегти',
+                                          callback_data='save_vocab')
     btn_status = InlineKeyboardButton(text='Статус',
                                       callback_data='create_wordpairs_status')
     btn_cancel_add = InlineKeyboardButton(text='Скасувати',
                                           callback_data='cancel_create_from_wordpairs')
 
     if is_keep_status:
-        kb.row(btn_back_to_vocab_name,
+        kb.row(btn_save_vocab,
                btn_status,
                btn_cancel_add,
                width=1)
     else:
-        kb.row(btn_back_to_vocab_name,
+        kb.row(btn_save_vocab,
                btn_cancel_add,
                width=1)
 
