@@ -30,7 +30,8 @@ MSG_ADDED_WORDPAIRS = '✅ Додані словникові пари:\n{wordpai
 MSG_NO_ADDED_WORDPAIRS = '❌ Не додані словникові пари:\n{wordpairs}'
 MSG_NO_ERRORS_WORDPAIRS = '🎉 Немає помилок серед введених пар!'
 MSG_ERROR_NO_VALID_WORDPAIRS = '⚠️ Немає валідних словникових пар.'
-
+MSG_SUCCESS_VOCAB_SAVED_TO_DB: str = 'Словник "{vocab_name}" успішно збережено до бази словників!\n\n{MSG_MENU}'
+MSG_ERROR_NO_ADD_WORDPAIRS = 'Немає доданих словникових пар.\n\n{MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS}'
 
 # handlers/menu.py
 MSG_MENU = 'Головне меню'

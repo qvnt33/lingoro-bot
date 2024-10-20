@@ -1,34 +1,15 @@
 import logging
 from typing import Any, Dict
 
-from .vocab_base import process_vocab_base
 from aiogram import F, Router
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
+from aiogram.fsm.state import State
+from aiogram.types import CallbackQuery, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from config import DEFAULT_VOCAB_NOTE
+from db.crud import add_vocab_to_db
 from db.database import Session
-from text_data import (
-    MSG_ADDED_WORDPAIRS,
-    MSG_CONFIRM_CANCEL_CREATE_VOCAB,
-    MSG_ENTER_NEW_VOCAB_NAME,
-    MSG_ENTER_VOCAB_NAME,
-    MSG_ERROR_NO_VALID_WORDPAIRS,
-    MSG_ERROR_VOCAB_SAME_NAME,
-    MSG_MENU,
-    MSG_NO_ADDED_WORDPAIRS,
-    MSG_NO_ERRORS_WORDPAIRS,
-    MSG_SUCCESS_VOCAB_NAME_CREATED,
-    MSG_SUCCESS_VOCAB_NOTE_CREATED,
-    MSG_VOCAB_NAME_ERRORS,
-    MSG_VOCAB_NOTE_ERRORS,
-    MSG_VOCAB_WORDPAIRS_SAVED_INSTRUCTIONS,
-    MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS,
-)
 from src.fsm.states import VocabCreation
 from src.keyboards.create_vocab_kb import (
     get_kb_confirm_cancel,
@@ -40,8 +21,25 @@ from src.keyboards.menu_kb import get_inline_kb_menu
 from src.validators.vocab_name_validator import VocabNameValidator
 from src.validators.vocab_note_validator import VocabNoteValidator
 from src.validators.wordpair.wordpair_validator import WordPairValidator
+from text_data import (
+    MSG_ADDED_WORDPAIRS,
+    MSG_CONFIRM_CANCEL_CREATE_VOCAB,
+    MSG_ENTER_NEW_VOCAB_NAME,
+    MSG_ENTER_VOCAB_NAME,
+    MSG_ERROR_NO_ADD_WORDPAIRS,
+    MSG_ERROR_NO_VALID_WORDPAIRS,
+    MSG_ERROR_VOCAB_SAME_NAME,
+    MSG_NO_ADDED_WORDPAIRS,
+    MSG_NO_ERRORS_WORDPAIRS,
+    MSG_SUCCESS_VOCAB_NAME_CREATED,
+    MSG_SUCCESS_VOCAB_NOTE_CREATED,
+    MSG_SUCCESS_VOCAB_SAVED_TO_DB,
+    MSG_VOCAB_NAME_ERRORS,
+    MSG_VOCAB_NOTE_ERRORS,
+    MSG_VOCAB_WORDPAIRS_SAVED_INSTRUCTIONS,
+    MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS,
+)
 from tools.message_formatter import create_vocab_message
-from db.crud import add_vocab_to_db, add_vocab_to_db
 
 router = Router(name='create_vocab')
 
@@ -311,7 +309,7 @@ async def process_save_vocab(callback: CallbackQuery, state: FSMContext) -> None
     if not validated_data_wordpairs:
         logging.info('Користувач не додав словникових пар')
 
-        content_msg = f'Немає доданих словникових пар.\n\n{MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS}'
+        content_msg = MSG_ERROR_NO_ADD_WORDPAIRS
         # Клавіатура для створення словникових пар без кнопки "Статус"
         kb: InlineKeyboardMarkup = get_kb_create_wordpairs(is_keep_status=False)
     else:
@@ -320,7 +318,7 @@ async def process_save_vocab(callback: CallbackQuery, state: FSMContext) -> None
 
         with Session() as db:
             add_vocab_to_db(db, user_id, vocab_name, vocab_note, validated_data_wordpairs)
-        content_msg: str = f'Словник "{vocab_name}" успішно збережено до бази словників!\n\n{MSG_MENU}'
+        content_msg: str = MSG_SUCCESS_VOCAB_SAVED_TO_DB.format(vocab_name=vocab_name)
 
         # Клавіатура головного меню
         kb: InlineKeyboardMarkup = get_inline_kb_menu()
@@ -397,7 +395,8 @@ async def process_back_to(callback: CallbackQuery, state: FSMContext) -> None:
         logging.info(f'FSM стан змінено на "{fsm_state}"')
     elif stage == 'vocab_note':
         # Процес введення примітки до словника
-        msg_vocab_note: str = create_vocab_message(vocab_name=vocab_name, content=MSG_VOCAB_WORDPAIRS_SAVED_INSTRUCTIONS)
+        msg_vocab_note: str = create_vocab_message(vocab_name=vocab_name,
+                                                   content=MSG_VOCAB_WORDPAIRS_SAVED_INSTRUCTIONS)
         kb: InlineKeyboardMarkup = get_kb_create_vocab_note()
 
         fsm_state = VocabCreation.waiting_for_vocab_note
@@ -408,7 +407,8 @@ async def process_back_to(callback: CallbackQuery, state: FSMContext) -> None:
     elif stage == 'wordpairs':
         # Процес введення примітки до словника
         kb: InlineKeyboardMarkup = get_kb_create_wordpairs()
-        msg_wordpairs: str = create_vocab_message(vocab_name=vocab_name, content=MSG_VOCAB_WORDPAIRS_SAVED_INSTRUCTIONS)
+        msg_wordpairs: str = create_vocab_message(vocab_name=vocab_name,
+                                                  content=MSG_VOCAB_WORDPAIRS_SAVED_INSTRUCTIONS)
 
         fsm_state = VocabCreation.waiting_for_wordpairs
 
@@ -430,8 +430,10 @@ async def process_skip_creation_note(callback: CallbackQuery, state: FSMContext)
 
     await state.update_data(vocab_note=vocab_note)  # Збереження примітки до словника в кеш FSM
 
-    msg_vocab_note: str = f'Назва словника: {vocab_name}\nПримітка до словника: {vocab_note}\n\nВідправте словникові пари для цього словника у форматі:\n_word1, word2 : translation1, translation2 : annotation_\n- word2, translation2 та annotation — необов\'язкові поля.'
+    msg_finally: str = create_vocab_message(vocab_name=vocab_name,
+                                            content=MSG_VOCAB_WORDPAIRS_SAVED_INSTRUCTIONS)
+
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для введення назви
     await state.set_state(VocabCreation.waiting_for_wordpairs)
 
-    await callback.message.edit_text(text=msg_vocab_note, reply_markup=kb)
+    await callback.message.edit_text(text=msg_finally, reply_markup=kb)

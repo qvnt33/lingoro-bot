@@ -41,6 +41,7 @@ def add_vocab_to_db(db: Session, user_id: int, vocab_name: str, vocab_note: str,
         db.add(wordpair)
         db.commit()
 
+
         # Додавання слів
         for word, transcription in words_lst:
             word_entry = Word(word=word, transcription=transcription)
