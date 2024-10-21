@@ -17,7 +17,7 @@ from src.keyboards.create_vocab_kb import (
     get_kb_create_vocab_note,
     get_kb_create_wordpairs,
 )
-from src.keyboards.menu_kb import get_inline_kb_menu
+from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons
 from src.validators.vocab_name_validator import VocabNameValidator
 from src.validators.vocab_note_validator import VocabNoteValidator
 from src.validators.wordpair.wordpair_validator import WordPairValidator
@@ -29,6 +29,7 @@ from text_data import (
     MSG_ERROR_NO_ADD_WORDPAIRS,
     MSG_ERROR_NO_VALID_WORDPAIRS,
     MSG_ERROR_VOCAB_SAME_NAME,
+    MSG_MENU,
     MSG_NO_ADDED_WORDPAIRS,
     MSG_NO_ERRORS_WORDPAIRS,
     MSG_SUCCESS_VOCAB_NAME_CREATED,
@@ -318,10 +319,9 @@ async def process_save_vocab(callback: CallbackQuery, state: FSMContext) -> None
 
         with Session() as db:
             add_vocab_to_db(db, user_id, vocab_name, vocab_note, validated_data_wordpairs)
-        content_msg: str = MSG_SUCCESS_VOCAB_SAVED_TO_DB.format(vocab_name=vocab_name)
+        content_msg: str = MSG_SUCCESS_VOCAB_SAVED_TO_DB.format(vocab_name=vocab_name, menu=MSG_MENU)
 
-        # Клавіатура головного меню
-        kb: InlineKeyboardMarkup = get_inline_kb_menu()
+        kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons()
 
     msg_finally: str = create_vocab_message(vocab_name=vocab_name,
                                             vocab_note=vocab_note,

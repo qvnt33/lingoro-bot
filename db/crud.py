@@ -41,7 +41,6 @@ def add_vocab_to_db(db: Session, user_id: int, vocab_name: str, vocab_note: str,
         db.add(wordpair)
         db.commit()
 
-
         # Додавання слів
         for word, transcription in words_lst:
             word_entry = Word(word=word, transcription=transcription)
@@ -71,11 +70,15 @@ def get_user_by_user_id(db: Session, user_id: int) -> User | None:
     return db.query(User).filter(User.user_id == user_id).first()
 
 
-def get_user_vocabs_by_user_id(db: Session, user_id: int) -> User | None:
+def get_user_vocab_by_user_id(db: Session, user_id: int, is_all: bool = False) -> User | None:
     """Повертає словник користувача за його user_id"""
-    return db.query(Vocabulary).filter(Vocabulary.user_id == user_id)
+    if is_all:
+        return db.query(Vocabulary).filter(Vocabulary.user_id == user_id).all()
+    return db.query(Vocabulary).filter(Vocabulary.user_id == user_id).first()
 
 
-def get_user_vocabs_by_vocab_id(db: Session, vocab_id: int) -> User | None:
+def get_user_vocab_by_vocab_id(db: Session, vocab_id: int, is_all: bool = False) -> User | None:
     """Повертає словник користувача за vocab_id"""
+    if is_all:
+        return db.query(Vocabulary).filter(Vocabulary.id == vocab_id).all()
     return db.query(Vocabulary).filter(Vocabulary.id == vocab_id).first()

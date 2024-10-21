@@ -5,12 +5,13 @@ from sqlalchemy.orm.query import Query
 
 from db.database import Session
 from db.models import User, Vocabulary, WordPair
-from src.keyboards.vocab_base_kb import get_inline_kb_vocab_base
+from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons
 from src.keyboards.vocab_trainer_kb import get_inline_kb_all_training
 from tools.read_data import app_data
 
 
 router = Router()
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 @router.callback_query(F.data == 'vocab_trainer')
@@ -21,12 +22,11 @@ async def process_btn_vocab_trainer(callback: CallbackQuery) -> None:
     with Session as db:
         # Отримання всіх словників, фільтруючи по user_id користувача
         user_vocabs: Query[Vocabulary] = db.query(Vocabulary).filter(User.id == Vocabulary.user_id)
-
+        vocabs_lst = []
         # Флаг, чи порожня база словників користувача
         is_vocab_base_empty: bool = user_vocabs.count() == 0
 
-        kb: InlineKeyboardMarkup = get_inline_kb_vocab_base(user_vocabs,
-                                                             is_with_add_btn=False)
+        kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(vocabs_lst)
         db.commit()
 
     # Якщо база словників порожня

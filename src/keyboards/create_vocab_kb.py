@@ -2,9 +2,6 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from config import VOCAB_PAGINATION_LIMIT
-from src.handlers.callback_data import PaginationCallback
-
 
 def get_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyboardMarkup:
     """Повертає клавіатуру з кнопкою скасування процесу створення словника та, за потреби,
@@ -32,9 +29,7 @@ def get_kb_confirm_cancel(previous_stage: StopIteration) -> InlineKeyboardMarkup
     kb = InlineKeyboardBuilder()
 
     btn_agree = InlineKeyboardButton(text='✅ Так',
-                                     callback_data=PaginationCallback(name='vocab_base',
-                                                                      page=1,
-                                                                      limit=VOCAB_PAGINATION_LIMIT).pack())
+                                     callback_data='vocab_base')
     btn_cancel = InlineKeyboardButton(text='❌ Ні',
                                       callback_data=f'back_to_{previous_stage}')
 
