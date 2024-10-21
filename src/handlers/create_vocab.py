@@ -17,6 +17,7 @@ from src.keyboards.create_vocab_kb import (
     get_kb_create_vocab_note,
     get_kb_create_wordpairs,
 )
+from src.keyboards.menu_kb import get_inline_kb_menu
 from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons
 from src.validators.vocab_name_validator import VocabNameValidator
 from src.validators.vocab_note_validator import VocabNoteValidator
@@ -321,7 +322,7 @@ async def process_save_vocab(callback: CallbackQuery, state: FSMContext) -> None
             add_vocab_to_db(db, user_id, vocab_name, vocab_note, validated_data_wordpairs)
         content_msg: str = MSG_SUCCESS_VOCAB_SAVED_TO_DB.format(vocab_name=vocab_name, menu=MSG_MENU)
 
-        kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons()
+        kb: InlineKeyboardMarkup = get_inline_kb_menu()
 
     msg_finally: str = create_vocab_message(vocab_name=vocab_name,
                                             vocab_note=vocab_note,

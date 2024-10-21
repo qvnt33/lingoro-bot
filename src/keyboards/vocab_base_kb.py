@@ -13,7 +13,7 @@ def get_inline_kb_vocab_buttons(vocabularies: list, is_with_create_vocab: bool =
         kb.add(button)
 
     btn_add_vocab = InlineKeyboardButton(text='Додати словник', callback_data='create_vocab')
-    btn_cancel = InlineKeyboardButton(text='Скасувати', callback_data='menu')
+    btn_cancel = InlineKeyboardButton(text='Головне меню', callback_data='menu')
 
     if is_with_create_vocab:
         kb.add(btn_add_vocab)
@@ -22,3 +22,19 @@ def get_inline_kb_vocab_buttons(vocabularies: list, is_with_create_vocab: bool =
     kb.adjust(1)
 
     return kb.as_markup()
+
+
+def get_inline_kb_vocab_options() -> InlineKeyboardMarkup:
+    """Клавіатура з кнопками головного меню"""
+    inline_builder = InlineKeyboardBuilder()
+
+    btn_delete_vocab = InlineKeyboardButton(text='Видалити словник', callback_data='delete_vocab')
+    btn_to_back = InlineKeyboardButton(text='Назад', callback_data='vocab_base')
+    btn_menu = InlineKeyboardButton(text='Головне меню', callback_data='menu')
+
+    inline_builder.row(btn_delete_vocab,
+                       btn_to_back,
+                       btn_menu,
+                       width=1)
+
+    return inline_builder.as_markup()

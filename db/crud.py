@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from sqlalchemy import Column
 
@@ -82,3 +83,51 @@ def get_user_vocab_by_vocab_id(db: Session, vocab_id: int, is_all: bool = False)
     if is_all:
         return db.query(Vocabulary).filter(Vocabulary.id == vocab_id).all()
     return db.query(Vocabulary).filter(Vocabulary.id == vocab_id).first()
+
+
+def get_vocab_details_by_vocab_id(db: Session, vocab_id: int) -> dict:
+    """Повертає назву та примітку словника за vocab_id"""
+    vocab = db.query(Vocabulary).filter(Vocabulary.id == vocab_id).first()
+    return {'name': vocab.name, 'note': vocab.description}
+
+
+def get_vocab_details_by_user_id(db: Session, user_id: int) -> dict:
+    """Повертає назву та примітку словника за vocab_id"""
+    vocab = db.query(Vocabulary).filter(Vocabulary.user_id == user_id).first()
+    return {'name': vocab.name, 'note': vocab.description}
+
+
+def get_wordpairs_by_vocab_id(db: Session, vocab_id: int) -> list[dict]:
+    """Повертає всі словникові пари за vocab_id"""
+    result = []
+
+    wordpair_query = db.query(WordPair).filter(WordPair.vocabulary_id == vocab_id).all()
+
+    for wordpair in wordpair_query:
+        words_lst = []  # Список з кортежами слів та транскрипцій
+        translations_lst = []  # Список з кортежами перекладів та транскрипцій
+        annotation = wordpair.annotation  # Анотація
+
+        # Всі слова словникової пари
+        wordpair_word_query: List[WordPairWord] = db.query(WordPairWord).filter(
+            WordPairWord.wordpair_id == wordpair.id).all()
+        for wordpair_word in wordpair_word_query:
+            word_query: Word | None = db.query(Word).filter(Word.id == wordpair_word.word_id).first()
+            words_lst.append((word_query.word, word_query.transcription))
+
+        # Всі переклади словникової пари
+        wordpair_translation_query: List[WordPairTranslation] = db.query(WordPairTranslation).filter(
+            WordPairTranslation.wordpair_id == wordpair.id).all()
+        for wordpair_translation in wordpair_translation_query:
+            translation_query: Translation | None = db.query(Translation).filter(
+                Translation.id == wordpair_translation.translation_id).first()
+            translations_lst.append((translation_query.translation, translation_query.transcription))
+
+        # Додаємо дані про словникову пару до результату
+        wordpair_data = {
+            'words': words_lst,
+            'translations': translations_lst,
+            'annotation': annotation}
+
+        result.append(wordpair_data)
+    return result

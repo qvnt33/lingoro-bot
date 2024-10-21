@@ -3,7 +3,7 @@ from aiogram.types import CallbackQuery
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from sqlalchemy.orm.query import Query
 
-from db.crud import get_user_vocab_by_user_id
+from db.crud import get_user_vocab_by_user_id, get_vocab_details_by_user_id
 from db.database import Session
 from db.models import User, Vocabulary, WordPair
 from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons
@@ -14,7 +14,8 @@ from aiogram.fsm.context import FSMContext
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-router = Router('vocab_trainer')
+
+router = Router(name='vocab_trainer')
 
 
 @router.callback_query(F.data == 'vocab_trainer')
@@ -23,16 +24,19 @@ async def process_vocab(callback: CallbackQuery, state: FSMContext) -> None:
     Відправляє користувачу словники у вигляді кнопок.
     """
     user_id: int = callback.from_user.id
-
     with Session() as db:
+        vocab_details: dict = get_vocab_details_by_user_id(db, user_id)
         user_vocabs: User | None = get_user_vocab_by_user_id(db, user_id, is_all=True)  # Словники користувача
 
         is_vocab_base_empty: bool = get_user_vocab_by_user_id(db, user_id) is None
 
-        if is_vocab_base_empty:
-            msg_finally: str = MSG_ERROR_VOCAB_BASE_EMPTY
-        else:
-            msg_finally: str = MSG_ENTER_VOCAB
+    vocab_name: str = vocab_details['name']
+    vocab_note: str = vocab_details['note']
+
+    if is_vocab_base_empty:
+        msg_finally: str = MSG_ERROR_VOCAB_BASE_EMPTY
+    else:
+        msg_finally: str = f'Ви обрали словник: {vocab_name}\nОберіть тип, будь-ласка, тип тренування.'
 
     # Клавіатура для відображення словників
     kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(user_vocabs, is_with_create_vocab=False)
