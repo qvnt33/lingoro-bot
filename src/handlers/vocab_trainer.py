@@ -3,64 +3,45 @@ from aiogram.types import CallbackQuery
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from sqlalchemy.orm.query import Query
 
+from db.crud import get_user_vocab_by_user_id
 from db.database import Session
 from db.models import User, Vocabulary, WordPair
 from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons
 from src.keyboards.vocab_trainer_kb import get_inline_kb_all_training
+from text_data import MSG_ENTER_VOCAB, MSG_ERROR_VOCAB_BASE_EMPTY
 from tools.read_data import app_data
+from aiogram.fsm.context import FSMContext
 
-
-router = Router()
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+router = Router('vocab_trainer')
 
 
 @router.callback_query(F.data == 'vocab_trainer')
-async def process_btn_vocab_trainer(callback: CallbackQuery) -> None:
-    """Відстежує натискання на кнопку словникових тренувань.
-    Відправляє користувачу список його словників.
+async def process_vocab(callback: CallbackQuery, state: FSMContext) -> None:
+    """Відстежує натискання на кнопку "База словників".
+    Відправляє користувачу словники у вигляді кнопок.
     """
-    with Session as db:
-        # Отримання всіх словників, фільтруючи по user_id користувача
-        user_vocabs: Query[Vocabulary] = db.query(Vocabulary).filter(User.id == Vocabulary.user_id)
-        vocabs_lst = []
-        # Флаг, чи порожня база словників користувача
-        is_vocab_base_empty: bool = user_vocabs.count() == 0
+    user_id: int = callback.from_user.id
 
-        kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(vocabs_lst)
-        db.commit()
+    with Session() as db:
+        user_vocabs: User | None = get_user_vocab_by_user_id(db, user_id, is_all=True)  # Словники користувача
 
-    # Якщо база словників порожня
-    if is_vocab_base_empty:
-        msg_vocab_trainer: str = app_data['vocab_trainer']['vocab_base_is_empty']
-    else:
-        msg_vocab_trainer: str = app_data['vocab_trainer']['msg_select_vocab']
+        is_vocab_base_empty: bool = get_user_vocab_by_user_id(db, user_id) is None
 
-    await callback.message.edit_text(text=msg_vocab_trainer,
-                                     reply_markup=kb)
+        if is_vocab_base_empty:
+            msg_finally: str = MSG_ERROR_VOCAB_BASE_EMPTY
+        else:
+            msg_finally: str = MSG_ENTER_VOCAB
 
+    # Клавіатура для відображення словників
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(user_vocabs, is_with_create_vocab=False)
 
-@router.callback_query(F.data.split('_')[0] == 'vocab_id')
-async def process_btn_user_vocab(callback: CallbackQuery) -> None:
-    """Відстежує натискання на кнопку конкретного словника.
-    Відправляє користувачу список типів тренування.
-    """
-    vocab_id = int(callback.data.split('_')[1])  # ID обраного словника
+    current_state = 'VocabTrainState'  # Стан FSM
+    await state.update_data(current_state=current_state)  # Збереження поточного стану FSM
 
-    with Session as db:
-        # Отримання назви обраного словника із БД, виходячи з його ID
-        vocab_name: str = (db.query(Vocabulary.dictionary_name).filter(Vocabulary.id == vocab_id))[0][0]
-        msg_training_type: str = app_data['handlers']['vocab_trainer']['msg_select_training_type'].format(
-            vocab_name=vocab_name)
+    await callback.message.edit_text(text=msg_finally, reply_markup=kb)
 
-        # Отримання всіх словникових пар обраного словника із БД
-        vocab_wordpairs: Query[WordPair] = db.query(WordPair).filter(
-            WordPair.vocab_id == vocab_id)
-
-        kb: InlineKeyboardMarkup = get_inline_kb_all_training()
-        db.commit()
-
-    await callback.message.edit_text(text=msg_training_type,
-                                     reply_markup=kb)
 
 
 """

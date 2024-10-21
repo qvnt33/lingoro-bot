@@ -69,4 +69,4 @@ async def process_btn_back_to_menu(callback: CallbackQuery) -> None:
 
             db.commit()
 
-    await callback.message.answer(text=title_menu, reply_markup=kb)
+    await callback.message.edit_text(text=title_menu, reply_markup=kb)
