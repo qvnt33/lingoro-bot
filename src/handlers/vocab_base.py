@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Dict, List, Tuple
 
 from aiogram import F, Router
@@ -62,10 +61,10 @@ async def process_vocab_selection(callback: CallbackQuery, state: FSMContext) ->
     if current_state == 'VocabBaseState':
         kb: InlineKeyboardMarkup = get_inline_kb_vocab_options()
         msg_finally: str = (
-        f'Назва словника: {vocab_name}\n'
-        f'Примітка: {vocab_note or 'Відсутня'}\n'
-        f'Кількість словникових пар: {len(vocab_details)}\n\n'
-        f'Словникові пари:\n')
+            f'Назва словника: {vocab_name}\n'
+            f'Примітка: {vocab_note or 'Відсутня'}\n'
+            f'Кількість словникових пар: {len(vocab_details)}\n\n'
+            f'Словникові пари:\n')
 
         for idx, wordpairs_data in enumerate(vocab_details, start=1):
             words_lst: List[Tuple[str, str]] = wordpairs_data['words']
@@ -82,7 +81,7 @@ async def process_vocab_selection(callback: CallbackQuery, state: FSMContext) ->
             msg_finally += f'{idx}. {words_part} : {translations_part} : {annotation}\n'
     # Якщо був викликаний список словників з розділу тренування
     elif current_state == 'VocabTrainState':
-        msg_finally: str = f'Ви обрали словник: {vocab_name}\nОберіть тип, будь-ласка, тип тренування.'
+        msg_finally: str = f'Ви обрали словник: {vocab_name}\nОберіть, будь-ласка, тип тренування.'
         kb: InlineKeyboardMarkup = get_inline_kb_all_training()
 
     await callback.message.edit_text(text=msg_finally, reply_markup=kb)

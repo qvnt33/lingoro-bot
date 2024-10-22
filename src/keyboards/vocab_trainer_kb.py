@@ -35,18 +35,3 @@ def get_inline_kb_process_training() -> InlineKeyboardMarkup:
     inline_builder.row(btn_cancel)
 
     return inline_builder.as_markup()
-
-
-def get_kb_confirm_cancel(previous_stage: StopIteration) -> InlineKeyboardMarkup:
-    """Повертає клавіатуру з підтвердженням або відміною скасування тренування"""
-    kb = InlineKeyboardBuilder()
-
-    btn_agree = InlineKeyboardButton(text='✅ Так',
-                                     callback_data='vocab_trainer')
-    btn_cancel = InlineKeyboardButton(text='❌ Ні',
-                                      callback_data=f'back_to_{previous_stage}')
-
-    kb.row(btn_agree,
-           btn_cancel,
-           width=1)
-    return kb.as_markup()
