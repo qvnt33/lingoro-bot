@@ -4,6 +4,7 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
+from aiogram.fsm.context import FSMContext
 
 from db.crud import create_user, get_user_by_user_id
 from db.database import Session

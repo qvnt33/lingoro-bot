@@ -91,12 +91,6 @@ def get_vocab_details_by_vocab_id(db: Session, vocab_id: int) -> dict:
     return {'name': vocab.name, 'note': vocab.description}
 
 
-def get_vocab_details_by_user_id(db: Session, user_id: int) -> dict:
-    """Повертає назву та примітку словника за vocab_id"""
-    vocab = db.query(Vocabulary).filter(Vocabulary.user_id == user_id).first()
-    return {'name': vocab.name, 'note': vocab.description}
-
-
 def get_wordpairs_by_vocab_id(db: Session, vocab_id: int) -> list[dict]:
     """Повертає всі словникові пари за vocab_id"""
     result = []

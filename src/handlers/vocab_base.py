@@ -1,22 +1,17 @@
-from typing import Any, Dict
+import logging
+from typing import Any, Dict, List, Tuple
 
-import sqlalchemy
 from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
-from sqlalchemy import Column
-from sqlalchemy.orm.query import Query
 
-from db.crud import get_user_vocab_by_user_id, get_user_vocab_by_vocab_id, get_vocab_details_by_vocab_id, get_wordpairs_by_vocab_id
+from db.crud import get_user_vocab_by_user_id, get_user_vocab_by_vocab_id, get_wordpairs_by_vocab_id
 from db.database import Session
-from db.models import Translation, User, Vocabulary, Word, WordPair, WordPairTranslation, WordPairWord
+from db.models import User
 from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons, get_inline_kb_vocab_options
 from src.keyboards.vocab_trainer_kb import get_inline_kb_all_training
 from text_data import MSG_ENTER_VOCAB, MSG_ERROR_VOCAB_BASE_EMPTY
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State
-from typing import List, Tuple
-
 
 router = Router(name='vocab_base')
 
@@ -49,16 +44,17 @@ async def process_vocab(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(F.data.startswith('select_vocab_'))
 async def process_vocab_selection(callback: CallbackQuery, state: FSMContext) -> None:
     """Обробляє вибір словника"""
-    data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
+    data_fsm: Dict[str, Any] = await state.get_data()
 
     vocab_id = int(callback.data.split('select_vocab_')[1])
+    await state.update_data(vocab_id=vocab_id)  # Додавання ID обраного словника
 
     with Session() as db:
-        all_wordpairs_data: List[Dict] = get_wordpairs_by_vocab_id(db, vocab_id)
-        vocab_details: dict = get_vocab_details_by_vocab_id(db, vocab_id)
+        vocab_details: List[Dict] = get_wordpairs_by_vocab_id(db, vocab_id)
+        user_vocab: dict = get_user_vocab_by_vocab_id(db, vocab_id)
 
-    vocab_name: str = vocab_details['name']
-    vocab_note: str = vocab_details['note']
+    vocab_name: str = user_vocab.name
+    vocab_note: str = user_vocab.description
 
     current_state: Any | None = data_fsm.get('current_state')  # Поточний стан FSM
 
@@ -68,10 +64,10 @@ async def process_vocab_selection(callback: CallbackQuery, state: FSMContext) ->
         msg_finally: str = (
         f'Назва словника: {vocab_name}\n'
         f'Примітка: {vocab_note or 'Відсутня'}\n'
-        f'Кількість словникових пар: {len(all_wordpairs_data)}\n\n'
+        f'Кількість словникових пар: {len(vocab_details)}\n\n'
         f'Словникові пари:\n')
 
-        for idx, wordpairs_data in enumerate(all_wordpairs_data, start=1):
+        for idx, wordpairs_data in enumerate(vocab_details, start=1):
             words_lst: List[Tuple[str, str]] = wordpairs_data['words']
             translations_lst: List[Tuple[str, str]] = wordpairs_data['translations']
             annotation: str = wordpairs_data['annotation'] or 'Немає анотації'
@@ -88,8 +84,5 @@ async def process_vocab_selection(callback: CallbackQuery, state: FSMContext) ->
     elif current_state == 'VocabTrainState':
         msg_finally: str = f'Ви обрали словник: {vocab_name}\nОберіть тип, будь-ласка, тип тренування.'
         kb: InlineKeyboardMarkup = get_inline_kb_all_training()
-
-    # ID обраного словника у FSM стані
-    await state.update_data(vocab_id=vocab_id)
 
     await callback.message.edit_text(text=msg_finally, reply_markup=kb)
