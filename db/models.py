@@ -10,55 +10,67 @@ class User(Base):
     __tablename__: str = 'users'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, unique=True, nullable=False)  # Унікальний ID користувача в Telegram
+    user_id = Column(Integer, unique=True, nullable=False)
 
     username = Column(String(50))
     first_name = Column(String(50))
     last_name = Column(String(50))
 
     created_at = Column(DateTime(timezone=True),
-                        default=datetime.now())  # Дата додавання користувача до БД
+                        default=datetime.now())
 
 
 class Vocabulary(Base):
-    """Таблиця словників користувачів"""
+    """Таблиця словників"""
 
     __tablename__: str = 'vocabularies'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False)  # Назва словника
-    description = Column(String(100))  # Опис словника
-    vocabulary_errors = Column(Integer, default=0)  # Кількість помилок у словнику
+    name = Column(String(50), nullable=False)
+    description = Column(String(100))
+    number_errors = Column(Integer, default=0)
 
     created_at = Column(DateTime(timezone=True),
-                        default=datetime.now())  # Дата створення словника
+                        default=datetime.now())
 
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # Зв'язок з користувачем
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
 
-class WordPair(Base):
-    """Таблиця словникових пар"""
+class Wordpair(Base):
+    """Таблиця словникових пар словника"""
 
     __tablename__: str = 'wordpairs'
 
     id = Column(Integer, primary_key=True)
-    annotation = Column(String(50))  # Анотація до словникової пари
-    wordpair_errors = Column(Integer, default=0)  # Кількість помилок у цій словниковій парі
+    annotation = Column(String(50))
+    number_errors = Column(Integer, default=0)
 
     created_at = Column(DateTime(timezone=True),
-                        default=datetime.now())  # Дата створення словникової пари
+                        default=datetime.now())
 
-    vocabulary_id = Column(Integer, ForeignKey('vocabularies.id'), nullable=False)  # Зв'язок зі словником
+    vocabulary_id = Column(Integer, ForeignKey('vocabularies.id'), nullable=False)
 
 
-class WordPairWord(Base):
+class WordpairWord(Base):
     """Таблиця зв'язків між словниковими парами та словами"""
 
     __tablename__: str = 'wordpair_words'
 
     id = Column(Integer, primary_key=True)
-    word_id = Column(Integer, ForeignKey('words.id'), nullable=False)  # Зв'язок з таблицею слів
-    wordpair_id = Column(Integer, ForeignKey('wordpairs.id'), nullable=False)  # Зв'язок зі словниковою парою
+    word_id = Column(Integer, ForeignKey('words.id'), nullable=False)
+
+    wordpair_id = Column(Integer, ForeignKey('wordpairs.id'), nullable=False)
+
+
+class WordpairTranslation(Base):
+    """Таблиця зв'язків між словниковими парами та перекладами"""
+
+    __tablename__: str = 'wordpair_translations'
+
+    id = Column(Integer, primary_key=True)
+    translation_id = Column(Integer, ForeignKey('translations.id'), nullable=False)
+
+    wordpair_id = Column(Integer, ForeignKey('wordpairs.id'), nullable=False)
 
 
 class Word(Base):
@@ -67,18 +79,8 @@ class Word(Base):
     __tablename__: str = 'words'
 
     id = Column(Integer, primary_key=True)
-    word = Column(String(50), nullable=False)  # Слово
-    transcription = Column(String(50), nullable=True)  # Транскрипція (опціонально)
-
-
-class WordPairTranslation(Base):
-    """Таблиця зв'язків між словниковими парами та перекладами"""
-
-    __tablename__: str = 'wordpair_translations'
-
-    id = Column(Integer, primary_key=True)
-    translation_id = Column(Integer, ForeignKey('translations.id'), nullable=False)  # Зв'язок з таблицею перекладів
-    wordpair_id = Column(Integer, ForeignKey('wordpairs.id'), nullable=False)  # Зв'язок зі словниковою парою
+    word = Column(String(50), nullable=False)
+    transcription = Column(String(50))
 
 
 class Translation(Base):
@@ -87,8 +89,8 @@ class Translation(Base):
     __tablename__: str = 'translations'
 
     id = Column(Integer, primary_key=True)
-    translation = Column(String(50), nullable=False)  # Переклад
-    transcription = Column(String(50), nullable=True)  # Транскрипція (опціонально)
+    translation = Column(String(50), nullable=False)
+    transcription = Column(String(50))
 
 
 class TrainingSession(Base):
@@ -97,18 +99,18 @@ class TrainingSession(Base):
     __tablename__: str = 'training_sessions'
 
     id = Column(Integer, primary_key=True)
-    training_mode = Column(String(50))  # Режим тренування
+    training_mode = Column(String(50))
 
-    start_time = Column(DateTime(timezone=True))  # Час початку тренування
-    end_time = Column(DateTime(timezone=True), nullable=True)  # Час завершення тренування (NULL, якщо не завершене)
+    start_time = Column(DateTime(timezone=True))
+    end_time = Column(DateTime(timezone=True))
 
-    correct_answers = Column(Integer, default=0)  # Кількість правильних відповідей
-    wrong_answers = Column(Integer, default=0)  # Кількість неправильних відповідей
+    number_correct_answers = Column(Integer, default=0)
+    number_wrong_answers = Column(Integer, default=0)
 
-    is_completed = Column(Boolean, default=False)  # Чи було завершено тренування
+    is_completed = Column(Boolean, default=False)
 
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # Зв'язок з користувачем
-    vocabulary_id = Column(Integer, ForeignKey('vocabularies.id'), nullable=False)  # Зв'язок зі словником
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    vocabulary_id = Column(Integer, ForeignKey('vocabularies.id'), nullable=False)
 
 
 def create_tables() -> None:
