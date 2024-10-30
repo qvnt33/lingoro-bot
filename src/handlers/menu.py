@@ -4,7 +4,6 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
-from aiogram.fsm.context import FSMContext
 
 from db.crud import create_user, get_user_by_user_id
 from db.database import Session
@@ -13,13 +12,6 @@ from src.keyboards.menu_kb import get_inline_kb_menu
 from text_data import MSG_MENU, MSG_MENU_FOR_NEW_USER
 
 router = Router(name='menu')
-
-
-@router.callback_query(F.data == 'neutral_call')
-async def process_neutral_call(callback: CallbackQuery) -> None:
-    """Заглушка для callback"""
-    # Відповідаємо на callback-запит без відправлення повідомлення
-    await callback.answer()
 
 
 @router.message(Command(commands=['start', 'menu']))
