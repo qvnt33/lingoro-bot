@@ -4,8 +4,8 @@ from sqlalchemy import Engine, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = 'sqlite:///database.db'
+from config import DATABASE_URL
 
-engine: Engine = create_engine(DATABASE_URL)  # Підключення до БД sqlite
-Base: Any = declarative_base()  # Створення базового класу для моделей
+engine: Engine = create_engine(DATABASE_URL)
+Base: Any = declarative_base()
 Session = sessionmaker(engine)

@@ -5,6 +5,7 @@ from dotenv import find_dotenv, load_dotenv
 load_dotenv(find_dotenv())
 
 TOKEN = os.getenv('TOKEN')  # Токен API Telegram
+DATABASE_URL = 'sqlite:///database.db'
 
 # Налаштування словника
 DEFAULT_VOCAB_NOTE = 'Немає'  # Стандартна назва примітки до словника
