@@ -9,3 +9,8 @@ from config import DATABASE_URL
 engine: Engine = create_engine(DATABASE_URL)
 Base: Any = declarative_base()
 Session = sessionmaker(engine)
+
+
+def create_database_tables() -> None:
+    """Створює всі таблиці у БД"""
+    Base.metadata.create_all(bind=engine)
