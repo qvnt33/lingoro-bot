@@ -1,9 +1,9 @@
 import logging
 
-from .base_validator import ValidatorBase
+from ..base_validator import ValidatorBase
 
 from config import MAX_LENGTH_VOCAB_NOTE, MIN_LENGTH_VOCAB_NOTE
-from src.filters.length_filter import LengthFilter
+from src.filters.valid_length_filter import ValidLengthFilter
 
 
 class VocabNoteValidator(ValidatorBase):
@@ -13,7 +13,7 @@ class VocabNoteValidator(ValidatorBase):
         self.note: str = note  # Примітка до словника
 
         # Фільтри
-        self.length_filter = LengthFilter(min_length=MIN_LENGTH_VOCAB_NOTE, max_length=MAX_LENGTH_VOCAB_NOTE)
+        self.length_filter = ValidLengthFilter(min_length=MIN_LENGTH_VOCAB_NOTE, max_length=MAX_LENGTH_VOCAB_NOTE)
 
     def check_valid_length(self) -> bool:
         """Перевіряє, що довжина примітки до словника коректна"""

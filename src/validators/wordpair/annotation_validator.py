@@ -8,7 +8,7 @@ from config import (
     MIN_LENGTH_ANNOTATION_WORDPAIR,
     MIN_LENGTH_WORD_WORDPAIR,
 )
-from src.filters.length_filter import LengthFilter
+from src.filters.valid_length_filter import LengthFilter
 
 
 class AnnotationValidator(WordPairValidator):

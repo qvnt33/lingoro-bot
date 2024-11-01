@@ -1,13 +1,13 @@
 import logging
 
 from config import (
-    ALLOWED_CHARACTERS,
+    ALLOWED_CHARS,
     MAX_LENGTH_WORD_WORDPAIR,
     MIN_LENGTH_WORD_WORDPAIR,
     TRANSCRIPTION_SEPARATOR,
     WORDPAIR_SEPARATOR,
 )
-from src.filters.allowed_chars_filter import AllowedCharactersFilter
+from src.filters.allowed_chars_filter import AllowedCharsFilter
 from src.filters.not_empty_filters import NotEmptyFilter
 from src.validators.base_validator import ValidatorBase
 
@@ -29,7 +29,7 @@ class WordPairValidator(ValidatorBase):
         self.part_of_annotation: str = self.wordpair_parts[2] if len(self.wordpair_parts) == 3 else None
 
         # Фільтри
-        self.allowed_character_filter = AllowedCharactersFilter(ALLOWED_CHARACTERS)
+        self.allowed_character_filter = AllowedCharsFilter(ALLOWED_CHARS)
         self.not_empty_filter = NotEmptyFilter()
 
     def check_valid_wordpair_format(self) -> bool:
@@ -86,7 +86,7 @@ class WordPairValidator(ValidatorBase):
         if not is_valid_allowed_chars:
             logging.warning(f'Некоректні символи у транскрипції: "{transcription}" до "{item}"')
             self.add_validator_error(
-                f'Транскрипція може містити лише літери, цифри та символи: "{ALLOWED_CHARACTERS}".')
+                f'Транскрипція може містити лише літери, цифри та символи: "{ALLOWED_CHARS}".')
             return False
         return True
 

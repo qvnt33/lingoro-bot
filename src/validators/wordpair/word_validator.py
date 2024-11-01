@@ -12,7 +12,7 @@ from config import (
     TRANSCRIPTION_SEPARATOR,
 )
 from src.filters.count_filter import CountFilter
-from src.filters.length_filter import LengthFilter
+from src.filters.valid_length_filter import LengthFilter
 
 
 class WordsValidator(WordPairValidator):

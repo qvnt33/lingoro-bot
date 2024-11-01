@@ -1,25 +1,12 @@
 class ValidatorBase:
-    """Базовий клас для загальних перевірок"""
+    def __init__(self, errors: list = None) -> None:
+        self.errors: list = errors if errors is not None else []
 
-    def __init__(self, errors_lst: list = None) -> None:
-        # Спільний список помилок, якщо він переданий
-        if errors_lst is None:
-            self.errors_lst: list = []
-        else:
-            self.errors_lst: list = errors_lst
-
-    def add_validator_error(self, error_text: str) -> None:
-        """Додає помилку валідатора до бази"""
-        self.errors_lst.append(error_text)  # Додавання помилки
+    def add_error(self, error_text: str) -> None:
+        """Додає повідомлення про помилку до загального списку помилок"""
+        self.errors.append(error_text)
 
     def format_errors(self) -> str:
         """Форматує список помилок у нумерований рядок"""
-        formatted_errors_lst: list = []  # Список всіх відформатованих помилок
-
-        for num, error in enumerate(iterable=self.errors_lst, start=1):
-            # Форматування кожного рядка з номером і помилкою
-            formatted_error: str = f'{num}. {error}'
-            formatted_errors_lst.append(formatted_error)
-
-        joined_errors: str = '\n'.join(formatted_errors_lst)
-        return joined_errors
+        formatted_errors: list[str] = [f'{num}. {error}' for num, error in enumerate(self.errors, start=1)]
+        return '\n'.join(formatted_errors)
