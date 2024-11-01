@@ -1,13 +1,13 @@
-def create_vocab_message(vocab_name: str = None, vocab_note: str = None, content: str = '') -> str:
-    """Створює форматоване повідомлення, яке включає назву словника, примітку та основний контент"""
-    # Якщо vocab_name або vocab_note порожні, використовується значення за замовчуванням
+def add_vocab_data_to_message(vocab_name: str = None,
+                              vocab_description: str = None,
+                              message: str = '') -> str:
+    """Додає до повідомлення назву та опис словника"""
     vocab_name = vocab_name or 'Відсутня'
-    vocab_note = vocab_note or 'Відсутня'
+    vocab_description = vocab_description or 'Відсутня'
 
-    # Форматуємо повідомлення
     formatted_message: str = (
         f'Назва: {vocab_name}\n'
-        f'Примітка: {vocab_note}\n\n'
-        f'{content}'
+        f'Опис: {vocab_description}\n\n'
+        f'{message}'
     )
     return formatted_message
