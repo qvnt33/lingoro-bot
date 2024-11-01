@@ -1,13 +1,14 @@
-# /validators/filters/translation_filter.py
 from .base_filter import BaseFilter
 
 
-class AllowedCharactersFilter(BaseFilter):
-    """Фільтр для перевірки коректності символів"""
+class AllowedCharsFilter(BaseFilter):
+    """Фільтр для перевірки, щоб всі символи значення були коректні (складалися тільки з букв та цифр,
+    або входили до дозволених символів)
+    """
 
-    def __init__(self, allowed_characters: str) -> None:
-        self.allowed_characters: int = allowed_characters
+    def __init__(self, allowed_chars: list[str]) -> None:
+        self.allowed_chars: list[str] = allowed_chars
 
     def apply(self, value: str) -> bool:
-        is_valid: bool = all(char.isalnum() or char in self.allowed_characters for char in value)
+        is_valid: bool = all(char.isalnum() or char in self.allowed_chars for char in value)
         return is_valid
