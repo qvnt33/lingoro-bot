@@ -2,8 +2,6 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
 
 from config import TOKEN
 from db.database import create_database_tables
@@ -15,8 +13,7 @@ async def main() -> None:
     setup_logging()
     create_database_tables()
 
-    bot = Bot(token=TOKEN,
-              default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
+    bot = Bot(token=TOKEN)
     dp = Dispatcher()
 
     register_handlers(dp)
