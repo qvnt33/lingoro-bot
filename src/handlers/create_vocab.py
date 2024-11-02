@@ -44,8 +44,13 @@ from tools.message_formatter import add_vocab_data_to_message
 router = Router(name='create_vocab')
 
 
-async def update_data_and_set_state(state: FSMContext, new_state: FSMContext):
-    pass
+async def save_current_fsm_state(state: FSMContext, new_state: State) -> None:
+    """Зберігає поточний стан FSM та оновлює FSM-Cache зі значенням нового стану"""
+    await state.set_state(new_state)
+    logging.info(f'FSM стан змінено на "{new_state}"')
+
+    await state.update_data(current_stage=new_state)
+    logging.info(f'FSM стан "{new_state}" збережений у FSM-Cache, як поточний стан')
 
 
 @router.callback_query(F.data == 'create_vocab')
@@ -58,12 +63,7 @@ async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext)
     kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name()
     msg_text: str = add_vocab_data_to_message(message=MSG_ENTER_VOCAB_NAME)
 
-    new_fsm_state: State = VocabCreation.waiting_for_vocab_name
-    await state.set_state(new_fsm_state)
-    logging.info(f'FSM стан змінено на "{new_fsm_state}"')
-
-    await state.update_data(current_stage=new_fsm_state)
-    logging.info(f'FSM стан "{new_fsm_state}" збережений у FSM-Cache, як поточний стан')
+    await save_current_fsm_state(state, VocabCreation.waiting_for_vocab_name)
 
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
@@ -84,9 +84,9 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
 
         # Клавіатура для створення назви словника з кнопкою зберігання назви
         kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
-        msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name_old, message=MSG_ERROR_VOCAB_SAME_NAME)
+        msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name_old, message=MSG_ERROR_VOCAB_SAME_NAME)
 
-        await message.answer(text=msg_final, reply_markup=kb)
+        await message.answer(text=msg_text, reply_markup=kb)
         return  # Завершення подальшої обробки
 
     with Session() as session:
@@ -94,23 +94,20 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
 
     if validator_vocab_name.is_valid():
         kb: InlineKeyboardMarkup = get_kb_create_vocab_description()  # Клавіатура для створення примітки
-        msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ENTER_VOCAB_DESCRIPTION)
+        msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ENTER_VOCAB_DESCRIPTION)
 
-        new_fsm_state: State = VocabCreation.waiting_for_vocab_description  # FSM стан очікування примітки до словника
-        await state.set_state(new_fsm_state)
-        logging.info(f'FSM стан змінено на "{new_fsm_state}"')
-
-        await state.update_data(vocab_name=vocab_name, current_stage=new_fsm_state)
+        await state.update_data(vocab_name=vocab_name)
         logging.info(f'Назва словника "{vocab_name}" збережена у FSM-Cache')
-        logging.info(f'FSM стан "{new_fsm_state}" словника "{vocab_name}" збережений у FSM-Cache, як поточний стан')
+
+        await save_current_fsm_state(state, VocabCreation.waiting_for_vocab_description)
     else:
         formatted_errors: str = validator_vocab_name.format_errors()
 
         kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name()
-        msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name_old,
+        msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name_old,
                                                    message=MSG_VOCAB_NAME_ERRORS.format(vocab_name=vocab_name,
                                                                                         errors=formatted_errors))
-    await message.answer(text=msg_final, reply_markup=kb)
+    await message.answer(text=msg_text, reply_markup=kb)
 
 
 @router.message(VocabCreation.waiting_for_vocab_description)
@@ -138,15 +135,11 @@ async def process_vocab_description(message: types.Message, state: FSMContext) -
         await state.update_data(vocab_description=vocab_description)  # Збереження примітки в кеш FSM
         logging.info(f'Примітка "{vocab_description}" до словника "{vocab_name}" збережена у FSM-кеш')
 
-        new_fsm_state: State = VocabCreation.waiting_for_wordpairs  # FSM стан очікування словникових пар
-        await state.set_state(new_fsm_state)  # Переведення у новий FSM стан
-        logging.info(f'FSM стан змінено на "{new_fsm_state}"')
-
-        await state.update_data(current_stage=new_fsm_state)
+        await save_current_fsm_state(state, VocabCreation.waiting_for_wordpairs)
     else:
         formatted_errors: str = validator_note.format_errors()  # Відформатований список помилок
         msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name,
-                                                message=MSG_VOCAB_DESCRIPTION_ERRORS.format(vocab_description=vocab_description,
+                                                   message=MSG_VOCAB_DESCRIPTION_ERRORS.format(vocab_description=vocab_description,
                                                                                      vocab_name=vocab_name,
                                                                                      errors=formatted_errors))
     await message.answer(text=msg_final, reply_markup=kb)
@@ -239,12 +232,9 @@ async def process_change_vocab_name(callback: types.CallbackQuery, state: FSMCon
     # Клавіатура для створення назви словника з кнопкою "Залишити поточну назву"
     kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
 
-    new_fsm_state: State = VocabCreation.waiting_for_vocab_name  # FSM стан очікування назви
+    await save_current_fsm_state(state, VocabCreation.waiting_for_vocab_name)
 
     await callback.message.edit_text(text=msg_final, reply_markup=kb)
-
-    await state.set_state(new_fsm_state)  # Стан очікування назви словника
-    logging.info(f'FSM стан змінено на "{new_fsm_state}"')
 
 
 @router.callback_query(F.data == 'create_wordpairs_status')
@@ -345,12 +335,9 @@ async def process_keep_old_vocab_name(callback: types.CallbackQuery, state: FSMC
 
     msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ENTER_NEW_VOCAB_NAME)
 
-    new_fsm_state: State = VocabCreation.waiting_for_vocab_not  # FSM стан очікування примітки
+    await save_current_fsm_state(state, VocabCreation.waiting_for_vocab_description)
 
     await callback.message.edit_text(text=msg_final, reply_markup=kb)
-
-    await state.set_state(new_fsm_state)
-    logging.info(f'FSM стан змінено на "{new_fsm_state}"')
 
 
 @router.callback_query(F.data == 'cancel_create_vocab')
@@ -414,10 +401,11 @@ async def process_skip_creation_note(callback: types.CallbackQuery, state: FSMCo
 
     await state.update_data(vocab_description=vocab_description)  # Збереження примітки до словника в кеш FSM
 
-    msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name,
+    msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                             message=MSG_ENTER_WORDPAIRS)
 
     kb: InlineKeyboardMarkup = get_kb_create_wordpairs()  # Клавіатура для введення назви
-    await state.set_state(VocabCreation.waiting_for_wordpairs)
 
-    await callback.message.edit_text(text=msg_final, reply_markup=kb)
+    await save_current_fsm_state(state, VocabCreation.waiting_for_wordpairs)
+
+    await callback.message.edit_text(text=msg_text, reply_markup=kb)
