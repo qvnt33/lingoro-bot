@@ -24,7 +24,7 @@ def get_inline_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> Inl
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_kb_confirm_cancel(previous_stage: StopIteration) -> InlineKeyboardMarkup:
+def get_kb_confirm_cancel() -> InlineKeyboardMarkup:
     """Повертає клавіатуру з підтвердженням або відміною скасування створення словника.
     Якщо користувач скасовує операцію, повертається до попереднього етапу, з якого був викликаний хендлер.
     При підтвердженні користувач переходить до етапу бази словників.
@@ -42,7 +42,7 @@ def get_kb_confirm_cancel(previous_stage: StopIteration) -> InlineKeyboardMarkup
     return kb.as_markup()
 
 
-def get_kb_create_vocab_note() -> InlineKeyboardMarkup:
+def get_inline_kb_create_vocab_description() -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='Пропустити', callback_data='skip_creation_note')],
         [InlineKeyboardButton(text='Змінити назву словника', callback_data='change_vocab_name')],

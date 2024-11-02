@@ -91,27 +91,15 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
     vocab_name_old: Any | None = data_fsm.get('vocab_name')  # Поточна назва словника (якщо є)
     logging.info(f'Користувач ввів назву словника: "{vocab_name}"')
 
-    # Використання функції перевірки на дублікат
-    is_duplicate = await check_vocab_name_duplicate(message, vocab_name, vocab_name_old)
+    is_duplicate: bool = await check_vocab_name_duplicate(message, vocab_name, vocab_name_old)
     if is_duplicate:
         return  # Завершення обробки, якщо назва збігається
-
-    # Якщо введена назва словника збігається з поточною
-    if vocab_name_old is not None and vocab_name.lower() == vocab_name_old.lower():
-        logging.warning(f'Назва до словника "{vocab_name}" збігається з поточною')
-
-        # Клавіатура для створення назви словника з кнопкою зберігання поточної назви
-        kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
-        msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name_old, message=MSG_ERROR_VOCAB_SAME_NAME)
-
-        await message.answer(text=msg_text, reply_markup=kb)
-        return  # Завершення подальшої обробки
 
     with Session() as session:
         validator_vocab_name = VocabNameValidator(name=vocab_name, user_id=message.from_user.id, db_session=session)
 
     if validator_vocab_name.is_valid():
-        kb: InlineKeyboardMarkup = get_kb_create_vocab_description()  # Клавіатура для створення примітки
+        kb: InlineKeyboardMarkup = get_kb_create_vocab_description()
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ENTER_VOCAB_DESCRIPTION)
 
         await state.update_data(vocab_name=vocab_name)
@@ -123,8 +111,8 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
 
         kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name()
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name_old,
-                                                   message=MSG_VOCAB_NAME_ERRORS.format(vocab_name=vocab_name,
-                                                                                        errors=formatted_errors))
+                                                  message=MSG_VOCAB_NAME_ERRORS.format(vocab_name=vocab_name,
+                                                                                       errors=formatted_errors))
     await message.answer(text=msg_text, reply_markup=kb)
 
 
