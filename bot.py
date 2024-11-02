@@ -18,7 +18,7 @@ async def main() -> None:
 
     register_handlers(dp)
 
-    logging.info('Запуск бота')
+    logging.info('BOT START')
     await dp.start_polling(bot)
 
 
