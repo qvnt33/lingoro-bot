@@ -35,7 +35,6 @@ from text_data import (
     MSG_INFO_NO_ADDED_WORDPAIRS,
     MSG_MENU,
     MSG_SUCCESS_ALL_WORDPAIRS_IS_VALID,
-    MSG_SUCCESS_VOCAB_DESCRIPTION_CREATED,
     MSG_SUCCESS_VOCAB_SAVED_TO_DB,
     MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS,
 )
@@ -113,36 +112,33 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
 
 @router.message(VocabCreation.waiting_for_vocab_description)
 async def process_create_vocab_description(message: types.Message, state: FSMContext) -> None:
-    """Обробляє примітку до словника, яку ввів користувач"""
-    data_fsm: dict = await state.get_data()  # Дані з FSM
+    """Обробляє опис словника, який ввів користувач"""
+    data_fsm: dict = await state.get_data()
 
     vocab_name: str | None = data_fsm.get('vocab_name')
-    vocab_description: str = message.text.strip()  # Примітка до словника, введена користувачем (без зайвих пробілів)
+    vocab_description: str = message.text.strip()  # Опис словника, введений користувачем (без зайвих пробілів)
 
-    logging.info(f'Користувач ввів примітку "{vocab_description}" до словника "{vocab_name}"')
+    logging.info(f'Користувач ввів опис словника "{vocab_description}" до словника: "{vocab_name}"')
 
-    kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs()  # Клавіатура для створення примітки
+    kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs()
 
-    validator_description = VocabDescriptionValidator(note=vocab_description)
-
-    # Якщо примітка коректна
+    validator_description = VocabDescriptionValidator(description=vocab_description)
     if validator_description.is_valid():
-        message_msg: str = '\n\n'.join([MSG_SUCCESS_VOCAB_DESCRIPTION_CREATED, MSG_ENTER_WORDPAIRS])
-
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
-                                                vocab_description=vocab_description,
-                                                message=message_msg)
+                                                  vocab_description=vocab_description,
+                                                  message=MSG_ENTER_WORDPAIRS)
 
-        await state.update_data(vocab_description=vocab_description)  # Збереження примітки в кеш FSM
-        logging.info(f'Примітка "{vocab_description}" до словника "{vocab_name}" збережена у FSM-кеш')
+        await state.update_data(vocab_description=vocab_description)
+        logging.info(f'Опис словника "{vocab_description}" до словника "{vocab_name}" збережений у FSM-Cache')
 
         await save_current_fsm_state(state, VocabCreation.waiting_for_wordpairs)  # Зберегти та оновити FSM стан
     else:
-        formatted_errors: str = validator_description.format_errors()  # Відформатований список помилок
+        formatted_errors: str = validator_description.format_errors()
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
-                                                   message=MSG_ERROR_VOCAB_DESCRIPTION_IS_WRONG.format(vocab_description=vocab_description,
-                                                                                     vocab_name=vocab_name,
-                                                                                     errors=formatted_errors))
+                                                  message=MSG_ERROR_VOCAB_DESCRIPTION_IS_WRONG.format(
+                                                      description=vocab_description,
+                                                      vocab_name=vocab_name,
+                                                      errors=formatted_errors))
     await message.answer(text=msg_text, reply_markup=kb)
 
 
