@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional
 
 from ..base_validator import ValidatorBase
 from sqlalchemy.orm import Session
@@ -12,16 +11,16 @@ from text_data import MSG_ERROR_ALLOWED_CHARS_VOCAB_NAME, MSG_ERROR_LENGTH_VOCAB
 
 
 class VocabNameValidator(ValidatorBase):
-    def __init__(self, name: str, user_id: int, db_session: Session, errors: Optional[List[str]] = None) -> None:
-        super().__init__(errors=errors)
+    def __init__(self, name: str, user_id: int, db_session: Session, errors: list = None) -> None:
+        super().__init__(errors)
 
-        self.name: str = name
+        self._name: str = name
         self.user_id: int = user_id
         self.db_session: Session = db_session
 
         # Фільтри для перевірки
         self.allowed_chars_filter = AllowedCharsFilter(ALLOWED_CHARS)
-        self.correct_length_filter = ValidLengthFilter(min_length=MIN_LENGTH_VOCAB_NAME,
+        self.valid_length_filter = ValidLengthFilter(min_length=MIN_LENGTH_VOCAB_NAME,
                                                        max_length=MAX_LENGTH_VOCAB_NAME)
 
     def check_unique_name_per_user(self) -> bool:
@@ -30,21 +29,21 @@ class VocabNameValidator(ValidatorBase):
 
         existing_vocab: Vocabulary | None = (
             self.db_session.query(Vocabulary)
-            .filter(Vocabulary.name.ilike(self.name), Vocabulary.user_id == self.user_id)
+            .filter(Vocabulary.name.ilike(self._name), Vocabulary.user_id == self.user_id)
             .first())
 
         if existing_vocab:
-            logging.warning(f'Назва словника "{self.name}" вже використовується в базі словників користувача')
-            self.add_error(MSG_ERROR_UNIQUE_VOCAB_NAME.format(name=self.name))
+            logging.warning(f'Назва словника "{self._name}" вже використовується в базі словників користувача')
+            self.add_error(MSG_ERROR_UNIQUE_VOCAB_NAME.format(name=self._name))
             return False
         return True
 
     def check_valid_length(self) -> bool:
-        """Перевіряє, що довжина назви словника коректна"""
-        logging.info('VALIDATOR START: "Перевірка довжини назви словника"')
+        """Перевіряє, що кількість символів у назві словника валідна"""
+        logging.info('VALIDATOR START: "Перевірка кількості символів у назві словника"')
 
-        if not self.correct_length_filter.apply(self.name):
-            logging.warning(f'Некоректна довжина назви словника "{self.name}"')
+        if not self.valid_length_filter.apply(self._name):
+            logging.warning(f'Не валідна кількість символів у назві словника "{self._name}"')
             self.add_error(MSG_ERROR_LENGTH_VOCAB_NAME.format(min_len=MIN_LENGTH_VOCAB_NAME,
                                                               max_len=MAX_LENGTH_VOCAB_NAME))
             return False
@@ -54,15 +53,15 @@ class VocabNameValidator(ValidatorBase):
         """Перевіряє, що назва словника містить лише дозволені символи"""
         logging.info('VALIDATOR START: "Перевірка символів у назві словника"')
 
-        if not self.allowed_chars_filter.apply(self.name):
-            logging.warning(f'Назва словника "{self.name}" містить некоректні символи')
+        if not self.allowed_chars_filter.apply(self._name):
+            logging.warning(f'Назва словника "{self._name}" містить некоректні символи')
             self.add_error(MSG_ERROR_ALLOWED_CHARS_VOCAB_NAME.format(allowed_chars=''.join(ALLOWED_CHARS)))
             return False
         return True
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки й повертає True, якщо всі пройдені"""
-        logging.info(f'VALIDATOR START: "Перевірка валідності назви словника {self.name}"')
+        logging.info(f'VALIDATOR START: "Перевірка валідності назви словника {self._name}"')
 
         is_unique_name_per_user: bool = self.check_unique_name_per_user()
         is_valid_length: bool = self.check_valid_length()
@@ -70,5 +69,5 @@ class VocabNameValidator(ValidatorBase):
 
         is_valid: bool = is_unique_name_per_user and is_valid_length and is_valid_chars
 
-        logging.info(f'VALIDATOR FINAL: Назва словника {"КОРЕКТНА" if is_valid else "НЕ КОРЕКТНА"}')
+        logging.info(f'VALIDATOR FINAL: Назва словника {"ВАЛІДНА" if is_valid else "НЕ ВАЛІДНА"}')
         return is_valid
