@@ -10,9 +10,6 @@ router = Router()
 
 @router.callback_query(F.data == 'help')
 async def process_btn_help(callback: CallbackQuery) -> None:
-    """Відстежує натискання на кнопку допомоги".
-    Відправляє користувачу повідомлення з допомогою.
-    """
     title_help: str = MSG_HELP
     kb: InlineKeyboardMarkup = get_inline_kb_help()
 
