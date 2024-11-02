@@ -1,24 +1,25 @@
 import logging
 from typing import List
 
+from .models import Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
 from sqlalchemy import Column
-
-from .models import Translation, User, Vocabulary, Word, WordPair, WordPairTranslation, WordPairWord
 from sqlalchemy.orm import Session
 
 
-def create_user(db: Session, telegram_user: User | None) -> None:
+def is_user_exists_in_db(session: Session, user_id: int) -> bool:
+    """Перевіряє, чи є користувач у БД"""
+    return session.query(User).filter(User.user_id == user_id).first() is not None
+
+
+def create_user_in_db(session: Session, tg_user_data: User | None) -> None:
     """Створює нового користувача в БД"""
-    user_id: Column[int] = telegram_user.id
+    user_id: Column[int] = tg_user_data.id
     user = User(user_id=user_id,
-                username=telegram_user.username,
-                first_name=telegram_user.first_name,
-                last_name=telegram_user.last_name)
-    db.add(user)
-
-    logging.info(f'Був доданий до БД користувач: {user_id}')
-
-    db.commit()
+                username=tg_user_data.username,
+                first_name=tg_user_data.first_name,
+                last_name=tg_user_data.last_name)
+    session.add(user)
+    session.commit()
 
 
 def add_vocab_to_db(db: Session, user_id: int, vocab_name: str, vocab_note: str, wordpairs_data: list) -> None:
@@ -38,7 +39,7 @@ def add_vocab_to_db(db: Session, user_id: int, vocab_name: str, vocab_note: str,
         translations_lst: list = wordpair_data['translations']  # Список кортежів перекладів і їх транскрипцій
         annotation: str = wordpair_data['annotation'] or '–'  # Анотація (якщо є)
 
-        wordpair = WordPair(annotation=annotation, vocabulary_id=vocab.id)  # Словникова пара
+        wordpair = Wordpair(annotation=annotation, vocabulary_id=vocab.id)  # Словникова пара
         db.add(wordpair)
         db.commit()
 
@@ -49,7 +50,7 @@ def add_vocab_to_db(db: Session, user_id: int, vocab_name: str, vocab_note: str,
             db.commit()
 
             # Звʼязування слова та словникової пари
-            wordpair_word = WordPairWord(word_id=word_entry.id, wordpair_id=wordpair.id)
+            wordpair_word = WordpairWord(word_id=word_entry.id, wordpair_id=wordpair.id)
             db.add(wordpair_word)
 
         # Додавання перекладів
@@ -59,11 +60,14 @@ def add_vocab_to_db(db: Session, user_id: int, vocab_name: str, vocab_note: str,
             db.commit()
 
             # Звʼязування перекладу та словникової пари
-            wordpair_translation = WordPairTranslation(translation_id=translation_entry.id, wordpair_id=wordpair.id)
+            wordpair_translation = WordpairTranslation(translation_id=translation_entry.id, wordpair_id=wordpair.id)
             db.add(wordpair_translation)
 
     logging.info(f'Був доданий до БД словник "{vocab}". Користувач: {user_id}')
     db.commit()
+
+
+
 
 
 def get_user_by_user_id(db: Session, user_id: int) -> User | None:
@@ -95,7 +99,7 @@ def get_wordpairs_by_vocab_id(db: Session, vocab_id: int) -> list[dict]:
     """Повертає всі словникові пари за vocab_id"""
     result = []
 
-    wordpair_query = db.query(WordPair).filter(WordPair.vocabulary_id == vocab_id).all()
+    wordpair_query = db.query(Wordpair).filter(Wordpair.vocabulary_id == vocab_id).all()
 
     for wordpair in wordpair_query:
         words_lst = []  # Список з кортежами слів та транскрипцій
@@ -103,15 +107,15 @@ def get_wordpairs_by_vocab_id(db: Session, vocab_id: int) -> list[dict]:
         annotation = wordpair.annotation  # Анотація
 
         # Всі слова словникової пари
-        wordpair_word_query: List[WordPairWord] = db.query(WordPairWord).filter(
-            WordPairWord.wordpair_id == wordpair.id).all()
+        wordpair_word_query: List[WordpairWord] = db.query(WordpairWord).filter(
+            WordpairWord.wordpair_id == wordpair.id).all()
         for wordpair_word in wordpair_word_query:
             word_query: Word | None = db.query(Word).filter(Word.id == wordpair_word.word_id).first()
             words_lst.append((word_query.word, word_query.transcription))
 
         # Всі переклади словникової пари
-        wordpair_translation_query: List[WordPairTranslation] = db.query(WordPairTranslation).filter(
-            WordPairTranslation.wordpair_id == wordpair.id).all()
+        wordpair_translation_query: List[WordpairTranslation] = db.query(WordpairTranslation).filter(
+            WordpairTranslation.wordpair_id == wordpair.id).all()
         for wordpair_translation in wordpair_translation_query:
             translation_query: Translation | None = db.query(Translation).filter(
                 Translation.id == wordpair_translation.translation_id).first()

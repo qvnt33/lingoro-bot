@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from .database import Base, engine
+from .database import Base
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 
 
@@ -111,8 +111,3 @@ class TrainingSession(Base):
 
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     vocabulary_id = Column(Integer, ForeignKey('vocabularies.id'), nullable=False)
-
-
-def create_tables() -> None:
-    """Створює всі таблиці у БД"""
-    Base.metadata.create_all(bind=engine)
