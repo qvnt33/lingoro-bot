@@ -30,11 +30,12 @@ class VocabDescriptionValidator(ValidatorBase):
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
-        logging.info(f'VALIDATOR START: "Перевірка валідності опису словника: {self._description}"')
+        logging.info('VALIDATOR START: "Перевірка валідності опису словника"')
 
         is_valid_length: bool = self.check_valid_length()
 
         is_valid: bool = is_valid_length
 
-        logging.info(f'VALIDATOR FINAL: Опис словника {"ВАЛІДНИЙ" if is_valid else "НЕ ВАЛІДНИЙ"}')
+        logging.info(f'VALIDATOR FINAL: Опис словника "{self._description}" -- '
+                     f'{"ВАЛІДНИЙ" if is_valid else "НЕ ВАЛІДНИЙ"}')
         return is_valid

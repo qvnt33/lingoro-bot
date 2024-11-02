@@ -61,7 +61,7 @@ class VocabNameValidator(ValidatorBase):
 
     def is_valid(self) -> bool:
         """Запускає всі перевірки й повертає True, якщо всі пройдені"""
-        logging.info(f'VALIDATOR START: "Перевірка валідності назви словника {self._name}"')
+        logging.info('VALIDATOR START: "Перевірка валідності назви словника"')
 
         is_unique_name_per_user: bool = self.check_unique_name_per_user()
         is_valid_length: bool = self.check_valid_length()
@@ -69,5 +69,5 @@ class VocabNameValidator(ValidatorBase):
 
         is_valid: bool = is_unique_name_per_user and is_valid_length and is_valid_chars
 
-        logging.info(f'VALIDATOR FINAL: Назва словника {"ВАЛІДНА" if is_valid else "НЕ ВАЛІДНА"}')
+        logging.info(f'VALIDATOR FINAL: Назва словника "{self._name}" -- {"ВАЛІДНА" if is_valid else "НЕ ВАЛІДНА"}')
         return is_valid
