@@ -330,11 +330,11 @@ async def process_keep_old_vocab_name(callback: types.CallbackQuery, state: FSMC
 
     vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
 
-    msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ENTER_NEW_VOCAB_NAME)
+    msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ENTER_VOCAB_NAME)
 
     await save_current_fsm_state(state, VocabCreation.waiting_for_vocab_description)  # Зберегти та оновити FSM стан
 
-    await callback.message.edit_text(text=msg_final, reply_markup=kb)
+    await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
 @router.callback_query(F.data.startswith('skip_creation_note'))
@@ -384,8 +384,8 @@ async def process_back_to_previous_stage(callback: types.CallbackQuery, state: F
     data_fsm: Dict[str, Any] = await state.get_data()
     previous_stage: Any | None = data_fsm.get('current_stage')
 
-    logging.info('Користувач натиснув на кнопку "Ні" для підтвердження скасування. '
-                 f'Повернення на етап "{previous_stage}"')
+    logging.info('Користувач натиснув на кнопку "Ні" під час підтвердження скасування створення словника')
+    logging.info('Повернення на етап "{previous_stage}"')
 
     await state.set_state(previous_stage)
     logging.info(f'FSM стан змінено на "{previous_stage}"')
