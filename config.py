@@ -8,7 +8,6 @@ TOKEN = os.getenv('TOKEN')  # Токен API Telegram
 DATABASE_URL = 'sqlite:///database.db'
 
 # Налаштування словника
-DEFAULT_VOCAB_DESCRIPTION = 'Немає'  # Стандартна назва примітки до словника
 WORDPAIR_SEPARATOR = ':'  # Символ, який використовується для розділення словникових пар
 ITEM_SEPARATOR = ','  # Символ, який використовується для розділення елементів (слів або перекладів)
 TRANSCRIPTION_SEPARATOR = '|'  # Символ, який використовується для розділення слова та транскрипції
