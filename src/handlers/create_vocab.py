@@ -53,6 +53,20 @@ async def save_current_fsm_state(state: FSMContext, new_state: State) -> None:
     logging.info(f'FSM стан "{new_state}" збережений у FSM-Cache, як поточний стан')
 
 
+async def check_vocab_name_duplicate(message: types.Message, vocab_name: str, vocab_name_old: str) -> bool:
+    """Перевіряє, чи збігається нова назва словника з поточною, та надсилає відповідне повідомлення"""
+    if vocab_name_old is not None and vocab_name.lower() == vocab_name_old.lower():
+        logging.warning(f'Назва до словника "{vocab_name}" збігається з поточною')
+
+        # Отримання клавіатури та формування повідомлення
+        kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
+        msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name_old, message=MSG_ERROR_VOCAB_SAME_NAME)
+
+        await message.answer(text=msg_text, reply_markup=kb)
+        return True
+    return False
+
+
 @router.callback_query(F.data == 'create_vocab')
 async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext) -> None:
     logging.info(f'START: Створення словника. USER_ID: {callback.from_user.id}')
@@ -71,18 +85,22 @@ async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext)
 @router.message(VocabCreation.waiting_for_vocab_name)
 async def process_create_vocab_name(message: types.Message, state: FSMContext) -> None:
     """Обробляє назву словника, яку ввів користувач"""
-    data_fsm: dict = await state.get_data()  # Дані з FSM
+    data_fsm: Dict[str, Any] = await state.get_data()
 
     vocab_name: str = message.text.strip()  # Введена назва словника (без зайвих пробілів)
-    vocab_name_old: str | None = data_fsm.get('vocab_name')  # Поточна назва словника (якщо є)
+    vocab_name_old: Any | None = data_fsm.get('vocab_name')  # Поточна назва словника (якщо є)
+    logging.info(f'Користувач ввів назву словника: "{vocab_name}"')
 
-    logging.info(f'Користувач ввів назву до словника: "{vocab_name}"')
+    # Використання функції перевірки на дублікат
+    is_duplicate = await check_vocab_name_duplicate(message, vocab_name, vocab_name_old)
+    if is_duplicate:
+        return  # Завершення обробки, якщо назва збігається
 
     # Якщо введена назва словника збігається з поточною
     if vocab_name_old is not None and vocab_name.lower() == vocab_name_old.lower():
         logging.warning(f'Назва до словника "{vocab_name}" збігається з поточною')
 
-        # Клавіатура для створення назви словника з кнопкою зберігання назви
+        # Клавіатура для створення назви словника з кнопкою зберігання поточної назви
         kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name_old, message=MSG_ERROR_VOCAB_SAME_NAME)
 
@@ -345,10 +363,9 @@ async def process_cancel_create_vocab(callback: types.CallbackQuery, state: FSMC
     """Відстежує натискання на кнопку "Скасувати" на всіх етапах створення словника.
     Залишає поточну назву та переводить стан FSM у очікування.
     """
-    data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
-    stage: str = data_fsm['current_stage']  # Процес, з якого було натиснута кнопка "Скасувати"
-
-    logging.info(f'Була натиснута кнопка "Скасувати" при створенні словника, на етапі "{stage}"')
+    data_fsm = await state.get_data()
+    current_stage = data_fsm.get('current_stage')
+    logging.info(f'Була натиснута кнопка "Скасувати" при створенні словника, на етапі "{current_stage}"')
 
     await state.set_state()  # FSM у очікування
 
@@ -361,9 +378,9 @@ async def process_cancel_create_vocab(callback: types.CallbackQuery, state: FSMC
 
 @router.callback_query(F.data == 'cancel_no')
 async def process_back_to_previous_stage(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Повертає користувача на попередній етап, з якого було натиснуто "Скасувати"."""
+    """Повертає користувача на попередній етап, на якому користувач натиснув кнопку 'Скасувати'"""
     data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
-    previous_stage = data_fsm.get('current_stage')  # Отримуємо збережений попередній етап
+    previous_stage = data_fsm.get('current_stage')
 
     logging.info('Користувач натиснув на кнопку "Ні" для підтвердження скасування. '
                  f'Повернення на етап "{previous_stage}"')
