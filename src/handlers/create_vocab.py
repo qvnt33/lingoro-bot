@@ -6,7 +6,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from config import DEFAULT_VOCAB_DESCRIPTION
 from db.crud import add_vocab_to_db
 from db.database import Session
 from src.fsm.states import VocabCreation
@@ -65,7 +64,7 @@ async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext)
     logging.info('FSM стан та FSM-Cache очищено')
 
     kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name()
-    msg_text: str = add_vocab_data_to_message(message=MSG_ENTER_VOCAB_NAME)
+    msg_text: str = add_vocab_data_to_message(message_text=MSG_ENTER_VOCAB_NAME)
 
     await save_current_fsm_state(state, VocabCreation.waiting_for_vocab_name)  # Зберегти та оновити FSM стан
 
@@ -83,9 +82,9 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
     logging.info(f'Користувач ввів назву словника: "{vocab_name}"')
 
     if check_vocab_name_duplicate(vocab_name, vocab_name_old):
-        logging.warning(f'Назва до словника "{vocab_name}" збігається з поточною')
+        logging.warning('Назва до словника збігається з поточною')
         kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
-        msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ERROR_VOCAB_NAME_DUPLICATE)
+        msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message_text=MSG_ERROR_VOCAB_NAME_DUPLICATE)
         await message.answer(text=msg_text, reply_markup=kb)
         return  # Завершення обробки, якщо назва збігається
 
@@ -94,10 +93,10 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
 
     if validator_vocab_name.is_valid():
         kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_description()
-        msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ENTER_VOCAB_DESCRIPTION)
+        msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message_text=MSG_ENTER_VOCAB_DESCRIPTION)
 
         await state.update_data(vocab_name=vocab_name)
-        logging.info(f'Назва словника "{vocab_name}" збережена у FSM-Cache')
+        logging.info('Назва словника збережена у FSM-Cache')
 
         await save_current_fsm_state(state, VocabCreation.waiting_for_vocab_description)  # Зберегти та оновити FSM стан
     else:
@@ -105,9 +104,25 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
 
         kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name()
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name_old,
-                                                  message=MSG_ERROR_VOCAB_NAME_IS_WRONG.format(vocab_name=vocab_name,
-                                                                                               errors=formatted_errors))
+                                                  message_text=MSG_ERROR_VOCAB_NAME_IS_WRONG.format(
+                                                      vocab_name=vocab_name,
+                                                      errors=formatted_errors))
     await message.answer(text=msg_text, reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith('skip_create_vocab_description'))
+async def process_skip_create_vocab_description(callback: types.CallbackQuery, state: FSMContext) -> None:
+    """Відстежує натискання на кнопку "Пропустити" під час створення примітки до словника"""
+    logging.info('Користувач натиснув на кнопку "Пропустити" під час створення примітки до словника')
+
+    data_fsm: Dict[str, Any] = await state.get_data()
+    vocab_name: str | None = data_fsm.get('vocab_name')
+
+    kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs()
+    msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message_text=MSG_ENTER_WORDPAIRS)
+
+    await save_current_fsm_state(state, VocabCreation.waiting_for_wordpairs)  # Зберегти та оновити FSM стан
+    await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
 @router.message(VocabCreation.waiting_for_vocab_description)
@@ -126,16 +141,16 @@ async def process_create_vocab_description(message: types.Message, state: FSMCon
     if validator_description.is_valid():
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                                   vocab_description=vocab_description,
-                                                  message=MSG_ENTER_WORDPAIRS)
+                                                  message_text=MSG_ENTER_WORDPAIRS)
 
         await state.update_data(vocab_description=vocab_description)
-        logging.info(f'Опис словника "{vocab_description}" до словника "{vocab_name}" збережений у FSM-Cache')
+        logging.info('Опис словника збережений у FSM-Cache')
 
         await save_current_fsm_state(state, VocabCreation.waiting_for_wordpairs)  # Зберегти та оновити FSM стан
     else:
         formatted_errors: str = validator_description.format_errors()
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
-                                                  message=MSG_ERROR_VOCAB_DESCRIPTION_IS_WRONG.format(
+                                                  message_text=MSG_ERROR_VOCAB_DESCRIPTION_IS_WRONG.format(
                                                       description=vocab_description,
                                                       vocab_name=vocab_name,
                                                       errors=formatted_errors))
@@ -143,7 +158,7 @@ async def process_create_vocab_description(message: types.Message, state: FSMCon
 
 
 @router.message(VocabCreation.waiting_for_wordpairs)
-async def process_wordpairs(message: types.Message, state: FSMContext) -> None:
+async def process_create_wordpairs(message: types.Message, state: FSMContext) -> None:
     """Обробляє словникові пари, введені користувачем"""
     data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
 
@@ -167,14 +182,14 @@ async def process_wordpairs(message: types.Message, state: FSMContext) -> None:
         is_valid_wordpair: bool = validator_wordpair.is_valid()  # Чи коректна словникова пара
 
         if is_valid_wordpair:
-            logging.info(f'Словникова пара "{wordpair}" коректна')
+            logging.info(f'Словникова пара "{wordpair}" ВАЛІДНА')
 
             valid_wordpairs_lst.append(wordpair)
 
             validated_data: dict = validator_wordpair.validated_data  # Словник з даними словникової пари
             validated_data_wordpairs.append(validated_data)
         else:
-            logging.warning(f'Словникова пара "{wordpair}" некоректна')
+            logging.warning(f'Словникова пара "{wordpair}" НЕ ВАЛІДНА')
 
             formatted_errors: str = validator_wordpair.format_errors()
             invalid_wordpairs_lst.append({
@@ -209,7 +224,7 @@ async def process_wordpairs(message: types.Message, state: FSMContext) -> None:
 
     msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                             vocab_description=vocab_description,
-                                            message=msg_for_status)
+                                            message_text=msg_for_status)
 
     await message.answer(text=msg_final, reply_markup=kb)
 
@@ -224,7 +239,7 @@ async def process_change_vocab_name(callback: types.CallbackQuery, state: FSMCon
     data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
     vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
 
-    msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ENTER_NEW_VOCAB_NAME)
+    msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name, message_text=MSG_ENTER_NEW_VOCAB_NAME)
 
     # Клавіатура для створення назви словника з кнопкою "Залишити поточну назву"
     kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
@@ -274,7 +289,7 @@ async def process_create_wordpairs_status(callback: types.CallbackQuery, state: 
             f'Додані словникові пари:\n{joined_wordpairs}\n\n{MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS}')
     msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                             vocab_description=vocab_description,
-                                            message=message_msg)
+                                            message_text=message_msg)
 
     await callback.message.edit_text(text=msg_final, reply_markup=kb)
 
@@ -312,49 +327,23 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
 
     msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                             vocab_description=vocab_description,
-                                            message=message_msg)
+                                            message_text=message_msg)
 
     await callback.message.edit_text(text=msg_final, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'keep_old_vocab_name')
 async def process_keep_old_vocab_name(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Залишити поточну назву" під час зміни назви словника.
-    Залишає поточну назву та переводить стан FSM у очікування примітки до словника.
-    """
-    logging.info('Користувач натиснув на кнопку "Залишити поточну назву" '
-                 'під час зміни назви словника')
+    logging.info('Користувач натиснув на кнопку "Залишити поточну назву" під час зміни назви словника')
 
-    data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
-    kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_description()  # Клавіатура для примітки
+    data_fsm: Dict[str, Any] = await state.get_data()
+    kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_description()
 
-    vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
+    vocab_name: str | None = data_fsm.get('vocab_name')
 
-    msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message=MSG_ENTER_VOCAB_NAME)
+    msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name, message_text=MSG_ENTER_VOCAB_NAME)
 
     await save_current_fsm_state(state, VocabCreation.waiting_for_vocab_description)  # Зберегти та оновити FSM стан
-
-    await callback.message.edit_text(text=msg_text, reply_markup=kb)
-
-
-@router.callback_query(F.data.startswith('skip_creation_note'))
-async def process_skip_creation_note(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Пропустити" під час створення примітки до словника"""
-    logging.info('Користувач натиснув на кнопку "Пропустити" під час створення примітки до словника')
-
-    data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
-
-    vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
-    vocab_description = DEFAULT_VOCAB_DESCRIPTION
-
-    await state.update_data(vocab_description=vocab_description)  # Збереження примітки до словника в кеш FSM
-
-    msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
-                                            message=MSG_ENTER_WORDPAIRS)
-
-    kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs()  # Клавіатура для введення назви
-
-    await save_current_fsm_state(state, VocabCreation.waiting_for_wordpairs)  # Зберегти та оновити FSM стан
 
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
