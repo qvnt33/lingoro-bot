@@ -26,7 +26,7 @@ class ComponentValidator(ValidatorBase):
                                 f'Зараз {current_length}, '
                                 f'має містити від {MIN_LENGTH_WORDPAIR_COMPONENT} до {MAX_LENGTH_WORDPAIR_COMPONENT}')
 
-            self.add_error(MSG_ERROR_COMPONENT_INVALID_LENGTH.filter(min_length=MIN_LENGTH_WORDPAIR_COMPONENT,
+            self.add_error(MSG_ERROR_COMPONENT_INVALID_LENGTH.format(min_length=MIN_LENGTH_WORDPAIR_COMPONENT,
                                                                      max_length=MAX_LENGTH_WORDPAIR_COMPONENT))
             return False
         return True
@@ -37,7 +37,7 @@ class ComponentValidator(ValidatorBase):
             return True
 
         self.logger.warning('Компонент містить некоректні символи')
-        self.add_error(MSG_ERROR_COMPONENT_INVALID_CHARS.filter(allowed_chars=ALLOWED_CHARS))
+        self.add_error(MSG_ERROR_COMPONENT_INVALID_CHARS.format(allowed_chars=ALLOWED_CHARS))
 
         return False
 

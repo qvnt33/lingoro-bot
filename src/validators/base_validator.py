@@ -8,5 +8,5 @@ class ValidatorBase:
 
     def format_errors(self) -> str:
         """Форматує список помилок у нумерований рядок"""
-        formatted_errors: list[str] = [f'{num}. {error}' for num, error in enumerate(self.errors, start=1)]
+        formatted_errors: list[str] = [f'- {error}' for error in self.errors]
         return '\n'.join(formatted_errors)
