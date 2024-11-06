@@ -1,150 +1,81 @@
 import logging
 
-from config import (
-    ALLOWED_CHARS,
-    MAX_LENGTH_WORD_WORDPAIR,
-    MIN_LENGTH_WORD_WORDPAIR,
-    TRANSCRIPTION_SEPARATOR,
-    WORDPAIR_SEPARATOR,
-)
-from src.filters.allowed_chars_filter import AllowedCharsFilter
-from src.filters.not_empty_filters import NotEmptyFilter
+from config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR
 from src.validators.base_validator import ValidatorBase
+from src.validators.wordpair.component_validator import ComponentValidator
+from src.validators.wordpair.item_validator import ItemValidator
+from text_data import MSG_ERROR_WORDPAIR_MAX_REQUIREMENT, MSG_ERROR_WORDPAIR_MIN_REQUIREMENT
 
 
-class WordPairValidator(ValidatorBase):
-    def __init__(self, wordpair: str, vocab_name: str, errors_lst: list = None) -> None:
-        super().__init__(errors_lst)
+class WordpairValidator(ValidatorBase):
+    def __init__(self, wordpair: str, errors: list | None = None) -> None:
+        super().__init__(errors)
+        self.logger: logging.Logger = logging.getLogger(f'{__name__}.{self.__class__.__name__}')
 
-        self.wordpair: str = wordpair.strip()  # Словникова пара без зайвих пробілів
-        self.vocab_name: str = vocab_name  # Назва словника
+        self._wordpair: str = wordpair
+        self.wordpair_parts: list[str] = self._wordpair.split(WORDPAIR_SEPARATOR)
 
-        # Коректні дані словникової пари
-        self.validated_data: list = {'words': [], 'translations': [], 'annotation': ''}
+    def _check_valid_count(self) -> bool:
+        count_wordpair_parts: int = len(self.wordpair_parts)
 
-        # Частини словникової пари
-        self.wordpair_parts: list[str] = self.wordpair.split(WORDPAIR_SEPARATOR)
-        self.part_of_words: str = self.wordpair_parts[0]
-        self.part_of_translation: str = self.wordpair_parts[1] if len(self.wordpair_parts) >= 2 else None
-        self.part_of_annotation: str = self.wordpair_parts[2] if len(self.wordpair_parts) == 3 else None
-
-        # Фільтри
-        self.allowed_character_filter = AllowedCharsFilter(ALLOWED_CHARS)
-        self.not_empty_filter = NotEmptyFilter()
-
-    def check_valid_wordpair_format(self) -> bool:
-        """Перевіряє, що коректний формат словникової пари"""
-        logging.info('ПОЧАТОК ПЕРЕВІРКИ: "Коректний формат словникової пари".')
-
-        count_parts: int = len(self.wordpair_parts)  # Кількість словникових пар
-
-        # Якшо немає слова та перекладу
-        if count_parts < 2:
-            self.add_validator_error('Словникова пара повинна містити щонайменше одне слово та один переклад, '
-                                     f'розділені символом "{WORDPAIR_SEPARATOR}".')
-            logging.warning('Словникова пара не містить перекладу')
+        if count_wordpair_parts < 2:
+            self.logger.warning('Словникова пара не містить слова або перекладу (частин менше 2)')
+            self.add_error(MSG_ERROR_WORDPAIR_MIN_REQUIREMENT.format(separator=WORDPAIR_SEPARATOR))
             return False
 
-        # Якщо словникова пара має більше 3 частин
-        if count_parts > 3:
-            self.add_validator_error('Максимальна кількість частин у словниковій пари - три '
-                                     '(слова, переклади, анотація).')
-            logging.warning('Словникова пара міє більше 3 частин')
+        if count_wordpair_parts > 3:
+            self.logger.warning('Словникова пара містить більше 3 частин')
+            self.add_error(MSG_ERROR_WORDPAIR_MAX_REQUIREMENT)
             return False
         return True
 
-    def check_not_empty_parts(self) -> bool:
-        """Перевіряє, що всі частини словникової пари не є порожніми"""
-        logging.info('ПОЧАТОК ПЕРЕВІРКИ: "Всі частини словникової пари не є порожніми".')
+    def _check_valid_annotation(self) -> bool:
+        part_of_annotation: str = self.wordpair_parts[2] if len(self.wordpair_parts) >= 3 else None
 
-        if not self.not_empty_filter.apply(self.part_of_words):
-            logging.warning('Слово словникової пари порожнє')
-            self.add_validator_error('Слово словникової пари не може бути порожнім.')
-            return False
-
-        if not self.not_empty_filter.apply(self.part_of_translation):
-            logging.warning('Переклад словникової пари порожній')
-            self.add_validator_error('Переклад словникової пари не може бути порожнім.')
-            return False
-        return True
-
-    def check_valid_transcription(self, item: str, transcription: str) -> bool:
-        """Перевіряє транскрипцію"""
-        if transcription is None:
+        # Якщо словникової пари немає (вона не обовʼязкова)
+        if part_of_annotation is None:
             return True
 
-        is_valid_length: bool = self.length_filter.apply(transcription)  # Чи коректна довжина
-        is_valid_allowed_chars: bool = self.allowed_character_filter.apply(transcription)  # Чи коректні символи
+        is_valid_annotation: bool = ComponentValidator(component=part_of_annotation,
+                                                       errors=self.errors).is_valid()
+        return is_valid_annotation
 
-        if not is_valid_length:
-            logging.warning(f'Некоректна кількість символів у транскрипції "{transcription}" до "{item}"')
-            self.add_validator_error(
-                f'Довжина транскрипції до "{item}" має бути від {MIN_LENGTH_WORD_WORDPAIR} до '
-                f'{MAX_LENGTH_WORD_WORDPAIR} символів')
-            return False
+    def _check_valid_all_words(self) -> bool:
+        part_of_words: str = self.wordpair_parts[0]
 
-        if not is_valid_allowed_chars:
-            logging.warning(f'Некоректні символи у транскрипції: "{transcription}" до "{item}"')
-            self.add_validator_error(
-                f'Транскрипція може містити лише літери, цифри та символи: "{ALLOWED_CHARS}".')
-            return False
+        for item in part_of_words.split(WORDPAIR_ITEM_SEPARATOR):
+            if not ItemValidator(item=item,
+                                 errors=self.errors).is_valid():
+                return False
         return True
 
-    def split_item_and_transcription(self, item: str) -> tuple[str, str | None]:
-        """Виділяє частину словникової пари (слово або переклад) та її транскрипцію, розділені TRANSCRIPTION_SEPARATOR.
-        Якщо транскрипції немає, повертається сама частина (слово або переклад) та None.
-        """
-        parts: list[str] = item.split(sep=TRANSCRIPTION_SEPARATOR, maxsplit=1)  # Розділений елемент
-        item_only: str = parts[0].strip()  # Елемент (без зайвих пробілів)
-        transcription: str | None = parts[1].strip() if len(parts) > 1 else None  # Транскрипція (якщо є)
-        return item_only, transcription
+    def _check_valid_all_translations(self) -> bool:
+        part_of_translation: str = self.wordpair_parts[1] if len(self.wordpair_parts) >= 2 else None
+
+        # Якщо перекладу немає
+        if part_of_translation is None:
+            return False
+
+        for item in part_of_translation.split(WORDPAIR_ITEM_SEPARATOR):
+            if not ItemValidator(item=item, errors=self.errors).is_valid():
+                return False
+        return True
 
     def is_valid(self) -> bool:
-        """Запускає всі перевірки і повертає True, якщо всі вони пройдені"""
-        logging.info('ПОЧАТОК ВСІХ ПЕРЕВІРОК СЛОВНИКОВОЇ ПАРИ. '
-                     f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
+        self.logger.info(f'[START-VALIDATOR] Перевірка словникової пари: {self._wordpair}')
 
-        from .annotation_validator import AnnotationValidator
-        from .translation_validator import TranslationValidator
-        from .word_validator import WordsValidator
+        is_valid_count_parts: bool = self._check_valid_count()
+        is_valid_annotation: bool = self._check_valid_annotation()
 
-        if self.check_valid_wordpair_format():
-            logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Коректний формат словникової пари"')
+        # Перевіряє слова та переклади лише якщо кількість частин та анотація коректна
+        if is_valid_count_parts and is_valid_annotation:
+            is_valid_words: bool = self._check_valid_all_words()
+            is_valid_translations: bool = self._check_valid_all_translations()
+
+            is_valid: bool = is_valid_words and is_valid_translations and is_valid_annotation
         else:
-            logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Коректний формат словникової пари"')
-            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
-                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
-            return False
+            is_valid = False
 
-        if self.check_not_empty_parts():
-            logging.info('ПЕРЕВІРКА ПРОЙДЕНА: "Всі частини словникової пари не є порожніми"')
-        else:
-            logging.warning('ПЕРЕВІРКА НЕ ПРОЙДЕНА: "Всі частини словникової пари не є порожніми"')
-            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
-                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
-            return False
-
-        # Перевірка валідності слів
-        if not WordsValidator(self.wordpair, self.vocab_name, self.errors_lst, self.validated_data).is_valid():
-            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
-                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
-            return False
-
-        # Перевірка валідності перекладу
-        if not TranslationValidator(self.wordpair, self.vocab_name, self.errors_lst, self.validated_data).is_valid():
-            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
-                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
-            return False
-
-        # Перевірка валідності анотації (якщо вона є)
-        if self.part_of_annotation is not None and not AnnotationValidator(self.wordpair,
-                                                                           self.vocab_name,
-                                                                           self.errors_lst,
-                                                                           self.validated_data).is_valid():
-            logging.info('ПЕРЕВІРКА СЛОВНИКОВОЇ ПАРИ НЕ БУЛА ПРОЙДЕНА. '
-                        f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
-            return False
-
-        logging.info('ВСІ ПЕРЕВІРКИ СЛОВНИКОВОЇ ПАРИ УСПІШНО ПРОЙДЕНІ. '
-                    f'Словникова пара: "{self.wordpair}"; Словник: "{self.vocab_name}"')
-        return True
+        self.logger.info(f'[END-VALIDATOR] Перевірка словникової пари: {self._wordpair}. '
+                         f'Словникова пара {"ВАЛІДНА" if is_valid else "НЕ ВАЛІДНА"}')
+        return is_valid
