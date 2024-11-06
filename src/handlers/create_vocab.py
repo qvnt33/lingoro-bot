@@ -25,6 +25,7 @@ from text_data import (
     MSG_ENTER_VOCAB_DESCRIPTION,
     MSG_ENTER_VOCAB_NAME,
     MSG_ENTER_WORDPAIRS,
+    MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS,
     MSG_ERROR_VOCAB_DESCRIPTION_INVALID,
     MSG_ERROR_VOCAB_NAME_DUPLICATE,
     MSG_ERROR_VOCAB_NAME_INVALID,
@@ -151,7 +152,7 @@ async def process_skip_create_vocab_description(callback: types.CallbackQuery, s
 @router.message(VocabCreation.waiting_for_vocab_description)
 async def process_create_vocab_description(message: types.Message, state: FSMContext) -> None:
     """Обробляє опис словника, який ввів користувач"""
-    data_fsm: dict = await state.get_data()
+    data_fsm: Dict[str, Any] = await state.get_data()
 
     vocab_name: str | None = data_fsm.get('vocab_name')
     vocab_description: str = message.text.strip()
@@ -191,7 +192,8 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
     wordpairs: str = message.text.strip()
     logger.info(f'Користувач ввів словникові пари: {wordpairs}')
 
-    valid_wordpairs, invalid_wordpairs = [], []  # ?
+    valid_wordpairs = []  # Коректні словникові пари
+    invalid_wordpairs = []  # Не коректні словникові пари
 
     validated_data_wordpairs: Any | list = data_fsm.get('validated_data_wordpairs') or []  # ? Всі дані словникових пар
 
@@ -204,9 +206,6 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
             logger.info(f'Словникова пара "{wordpair}" ВАЛІДНА')
 
             valid_wordpairs.append(wordpair)
-
-            validated_data: dict = validator_wordpair.validated_data  # Словник з даними словникової пари
-            validated_data_wordpairs.append(validated_data)
         else:
             logger.warning(f'Словникова пара "{wordpair}" НЕ ВАЛІДНА')
 
@@ -216,39 +215,36 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
                 'errors': formatted_errors})
 
     # Якщо є валідні словникові пар
-    if valid_wordpairs:
-        joined_valid_wordpairs: str = '\n'.join([f'- {wordpair}' for wordpair in valid_wordpairs])
-        valid_msg: str = MSG_INFO_ADDED_WORDPAIRS.format(wordpairs=joined_valid_wordpairs)
+    if len(valid_wordpairs) != 0:
+        joined_valid_wordpairs: str = '\n'.join([f'{num}. {wordpair}' for num, wordpair in enumerate(valid_wordpairs,
+                                                                                                     start=1)])
+        valid_wordpairs_msg: str = MSG_INFO_ADDED_WORDPAIRS.format(wordpairs=joined_valid_wordpairs)
     else:
-        valid_msg = MSG_ERROR_WORDPAIRS_NO_VALID
+        valid_wordpairs_msg = MSG_ERROR_WORDPAIRS_NO_VALID
 
-    # Збереження всіх даних словникових пар в FSM-кеш
-    await state.update_data(validated_data_wordpairs=validated_data_wordpairs)
+    # ? await state.update_data(validated_data_wordpairs=validated_data_wordpairs)
 
     # Якщо є не валідні словникові пар
-    if invalid_wordpairs:
+    if len(invalid_wordpairs) != 0:
         invalid_msg_parts_lst: list = []
-        for wordpair in invalid_wordpairs:
+        for num, wordpair in enumerate(invalid_wordpairs, start=1):
             # Кожна словникова пара та помилки
-            sep_invalid_wordpair: str = f'- {wordpair["wordpair"]}\n{wordpair["errors"]}'
+            sep_invalid_wordpair: str = (f'{num}. {wordpair['wordpair']}\n'
+                                         f'{wordpair['errors']}')
             invalid_msg_parts_lst.append(sep_invalid_wordpair)
 
-        joined_invalid_wordpairs: str = '\n'.join(invalid_msg_parts_lst)
-        invalid_msg: str = MSG_INFO_NO_ADDED_WORDPAIRS.format(wordpairs=joined_invalid_wordpairs)
+        joined_invalid_wordpairs: str = '\n\n'.join(invalid_msg_parts_lst)
+        invalid_wordpairs_msg: str = MSG_INFO_NO_ADDED_WORDPAIRS.format(wordpairs=joined_invalid_wordpairs)
     else:
-        invalid_msg: str = MSG_SUCCESS_ALL_WORDPAIRS_VALID
+        invalid_wordpairs_msg: str = MSG_SUCCESS_ALL_WORDPAIRS_VALID
 
-    msg_message = 'MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS'
-    msg_for_status: str = '\n\n'.join((valid_msg, invalid_msg, msg_message))
+    joined_msg: str = '\n\n'.join((valid_wordpairs_msg, invalid_wordpairs_msg, MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS))
 
-    msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name,
+    msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                             vocab_description=vocab_description,
-                                            message_text=msg_for_status)
+                                            message_text=joined_msg)
 
-    await message.answer(text=msg_final, reply_markup=kb)
-
-
-
+    await message.answer(text=msg_text, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'create_wordpairs_status')
