@@ -114,6 +114,24 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
     await message.answer(text=msg_text, reply_markup=kb)
 
 
+@router.callback_query(F.data == 'change_vocab_name')
+async def process_change_vocab_name(callback: types.CallbackQuery, state: FSMContext) -> None:
+    """Відстежує натискання на кнопку "Змінити назву словника" під час створення словника"""
+    logger.info('Користувач натиснув на кнопку "Змінити назву словника" при його створенні')
+
+    data_fsm: Dict[str, Any] = await state.get_data()
+    vocab_name: str | None = data_fsm.get('vocab_name')
+
+    msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
+                                              message_text=MSG_ENTER_NEW_VOCAB_NAME)
+
+    kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
+
+    await save_current_fsm_state(state, new_state=VocabCreation.waiting_for_vocab_name)
+
+    await callback.message.edit_text(text=msg_text, reply_markup=kb)
+
+
 @router.callback_query(F.data == 'skip_create_vocab_description')
 async def process_skip_create_vocab_description(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Пропустити" під час створення примітки до словника"""
@@ -230,24 +248,7 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
     await message.answer(text=msg_final, reply_markup=kb)
 
 
-@router.callback_query(F.data == 'change_vocab_name')
-async def process_change_vocab_name(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Змінити назву словника" під час створення словника.
-    Переводить стан FSM у очікування назви словника.
-    """
-    logger.info('Користувач натиснув на кнопку "Змінити назву словника" при його створенні')
 
-    data_fsm: Dict[str, Any] = await state.get_data()  # Дані з FSM
-    vocab_name: Any | None = data_fsm.get('vocab_name')  # Назва словника
-
-    msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name, message_text=MSG_ENTER_NEW_VOCAB_NAME)
-
-    # Клавіатура для створення назви словника з кнопкою "Залишити поточну назву"
-    kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
-
-    await save_current_fsm_state(state, VocabCreation.waiting_for_vocab_name)  # Зберегти та оновити FSM стан
-
-    await callback.message.edit_text(text=msg_final, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'create_wordpairs_status')
