@@ -203,12 +203,8 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
         validator_wordpair = WordpairValidator(wordpair)
 
         if validator_wordpair.is_valid():
-            logger.info(f'Словникова пара "{wordpair}" ВАЛІДНА')
-
             valid_wordpairs.append(wordpair)
         else:
-            logger.warning(f'Словникова пара "{wordpair}" НЕ ВАЛІДНА')
-
             formatted_errors: str = validator_wordpair.format_errors()
             invalid_wordpairs.append({
                 'wordpair': wordpair,
