@@ -105,13 +105,13 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
 
         await save_current_fsm_state(state, new_state=VocabCreation.waiting_for_vocab_description)
     else:
-        formatted_errors: str = validator_vocab_name.format_errors()
+        formatted_vocab_name_errors: str = validator_vocab_name.format_errors()
 
         kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name()
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name_old,
                                                   message_text=MSG_ERROR_VOCAB_NAME_INVALID.format(
                                                       vocab_name=vocab_name,
-                                                      errors=formatted_errors))
+                                                      errors=formatted_vocab_name_errors))
     await message.answer(text=msg_text, reply_markup=kb)
 
 
@@ -172,12 +172,12 @@ async def process_create_vocab_description(message: types.Message, state: FSMCon
 
         await save_current_fsm_state(state, new_state=VocabCreation.waiting_for_wordpairs)
     else:
-        formatted_errors: str = validator_description.format_errors()
+        formatted_vocab_description_errors: str = validator_description.format_errors()
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                                   message_text=MSG_ERROR_VOCAB_DESCRIPTION_INVALID.format(
                                                       description=vocab_description,
                                                       vocab_name=vocab_name,
-                                                      errors=formatted_errors))
+                                                      errors=formatted_vocab_description_errors))
     await message.answer(text=msg_text, reply_markup=kb)
 
 
@@ -192,8 +192,8 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
     wordpairs: str = message.text.strip()
     logger.info(f'Користувач ввів словникові пари: {wordpairs}')
 
-    valid_wordpairs = []  # Коректні словникові пари
-    invalid_wordpairs = []  # Не коректні словникові пари
+    valid_wordpairs: list[str] = []  # Коректні словникові пари
+    invalid_wordpairs: list[dict] = []  # Некоректні словникові пари та їх помилки
 
     validated_data_wordpairs: Any | list = data_fsm.get('validated_data_wordpairs') or []  # ? Всі дані словникових пар
 
@@ -205,16 +205,17 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
         if validator_wordpair.is_valid():
             valid_wordpairs.append(wordpair)
         else:
-            formatted_errors: str = validator_wordpair.format_errors()
+            formatted_wordpair_errors: str = validator_wordpair.format_errors()
             invalid_wordpairs.append({
                 'wordpair': wordpair,
-                'errors': formatted_errors})
+                'errors': formatted_wordpair_errors})
 
     # Якщо є валідні словникові пар
     if len(valid_wordpairs) != 0:
-        joined_valid_wordpairs: str = '\n'.join([f'{num}. {wordpair}' for num, wordpair in enumerate(valid_wordpairs,
-                                                                                                     start=1)])
-        valid_wordpairs_msg: str = MSG_INFO_ADDED_WORDPAIRS.format(wordpairs=joined_valid_wordpairs)
+        formatted_valid_wordpairs: str = '\n'.join([f'{num}. {wordpair}'
+                                                    for num, wordpair in enumerate(iterable=valid_wordpairs,
+                                                                                   start=1)])
+        valid_wordpairs_msg: str = MSG_INFO_ADDED_WORDPAIRS.format(wordpairs=formatted_valid_wordpairs)
     else:
         valid_wordpairs_msg = MSG_ERROR_WORDPAIRS_NO_VALID
 
@@ -222,15 +223,10 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
 
     # Якщо є не валідні словникові пар
     if len(invalid_wordpairs) != 0:
-        invalid_msg_parts_lst: list = []
-        for num, wordpair in enumerate(invalid_wordpairs, start=1):
-            # Кожна словникова пара та помилки
-            sep_invalid_wordpair: str = (f'{num}. {wordpair['wordpair']}\n'
-                                         f'{wordpair['errors']}')
-            invalid_msg_parts_lst.append(sep_invalid_wordpair)
-
-        joined_invalid_wordpairs: str = '\n\n'.join(invalid_msg_parts_lst)
-        invalid_wordpairs_msg: str = MSG_INFO_NO_ADDED_WORDPAIRS.format(wordpairs=joined_invalid_wordpairs)
+        formatted_invalid_wordpairs: str = '\n\n'.join([f'{num}. {wordpair['wordpair']}\n{wordpair['errors']}'
+                                                        for num, wordpair in enumerate(iterable=invalid_wordpairs,
+                                                                                       start=1)])
+        invalid_wordpairs_msg: str = MSG_INFO_NO_ADDED_WORDPAIRS.format(wordpairs=formatted_invalid_wordpairs)
     else:
         invalid_wordpairs_msg: str = MSG_SUCCESS_ALL_WORDPAIRS_VALID
 
