@@ -1,11 +1,8 @@
 import logging
 from typing import Any
-from tools import fsm_utils
-from tools import vocab_utils
-from tools import wordpair_utils
+
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 from db.crud import add_vocab_to_db
@@ -39,6 +36,7 @@ from text_data import (
     MSG_SUCCESS_VOCAB_SAVED_TO_DB,
     MSG_TITLE_MENU,
 )
+from tools import fsm_utils, vocab_utils, wordpair_utils
 from tools.message_formatter import add_vocab_data_to_message
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -47,6 +45,7 @@ router = Router(name='create_vocab')
 
 @router.callback_query(F.data == 'create_vocab')
 async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext) -> None:
+    """Відстежує натискання на кнопку "Додати словник" для створення нового словника"""
     logger.info(f'[START] Створення словника. USER_ID: {callback.from_user.id}')
 
     await state.clear()
@@ -56,7 +55,6 @@ async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext)
     msg_text: str = add_vocab_data_to_message(message_text=MSG_ENTER_VOCAB_NAME)
 
     await fsm_utils.save_current_fsm_state(state, new_state=VocabCreation.waiting_for_vocab_name)
-
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
@@ -116,8 +114,7 @@ async def process_change_vocab_name(callback: types.CallbackQuery, state: FSMCon
 
     kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_name(is_keep_old_vocab_name=True)
 
-    await fsm_utils.save_current_fsm_state(state, new_state=VocabCreation.waiting_for_vocab_name)
-
+    await fsm_utils.save_current_fsm_state(state, new_state=VocabCreation.waiting_for_vocab_description)
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
@@ -200,7 +197,7 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
     if len(valid_wordpairs) != 0:
         formatted_valid_wordpairs: str = wordpair_utils.format_valid_wordpairs(valid_wordpairs)
         valid_wordpairs_msg: str = MSG_INFO_ADDED_WORDPAIRS.format(wordpairs=formatted_valid_wordpairs)
-        await fsm_utils.append_valid_wordpairs_to_fsm_cache(state, wordpairs=valid_wordpairs)
+        await fsm_utils.extend_valid_wordpairs_to_fsm_cache(state, wordpairs=valid_wordpairs)
     else:
         valid_wordpairs_msg = MSG_ERROR_WORDPAIRS_NO_VALID
 
@@ -208,7 +205,7 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
     if len(invalid_wordpairs) != 0:
         formatted_invalid_wordpairs: str = wordpair_utils.format_invalid_wordpairs(invalid_wordpairs)
         invalid_wordpairs_msg: str = MSG_INFO_NO_ADDED_WORDPAIRS.format(wordpairs=formatted_invalid_wordpairs)
-        await fsm_utils.append_invalid_wordpairs_to_fsm_cache(state, wordpairs=invalid_wordpairs)
+        await fsm_utils.extend_invalid_wordpairs_to_fsm_cache(state, wordpairs=invalid_wordpairs)
     else:
         invalid_wordpairs_msg: str = MSG_SUCCESS_ALL_WORDPAIRS_VALID
 
@@ -219,7 +216,6 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
     msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                               vocab_description=vocab_description,
                                               message_text=wordpairs_info_msg)
-
     await message.answer(text=msg_text, reply_markup=kb)
 
 
@@ -228,21 +224,31 @@ async def process_create_wordpairs_status(callback: types.CallbackQuery, state: 
     """Відстежує натискання на кнопку "Статус" під час введення словникових пар"""
     logger.info('Користувач натиснув на кнопку "Статус" під час введення словникових пар')
 
-    data_fsm: dict[str, Any] = await state.get_data()  # Дані з FSM
+    data_fsm: dict[str, Any] = await state.get_data()
 
     vocab_name: str = data_fsm.get('vocab_name')
     vocab_description: str = data_fsm.get('vocab_description')
-    validated_data_wordpairs: list | None = data_fsm.get('validated_data_wordpairs')  # Всі дані словникових пар
 
-    all_valid_wordpairs: list[str] | None = data_fsm.get('all_valid_wordpairs') or []
-    all_invalid_wordpairs: list[dict] | None = data_fsm.get('all_invalid_wordpairs') or []
-
-
-    # Клавіатура для створення словникових пар без кнопки "Статус"
     kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs(is_keep_status=False)
 
+    # Обробка валідних словникових пар
+    all_valid_wordpairs: list[str] | None = data_fsm.get('all_valid_wordpairs')
+    formatted_valid_wordpairs: str = wordpair_utils.format_valid_wordpairs(all_valid_wordpairs)
+    valid_wordpairs_msg: str = MSG_INFO_ADDED_WORDPAIRS.format(wordpairs=formatted_valid_wordpairs)
 
-    message_msg = '\n\n'.join([str(all_valid_wordpairs), str(all_invalid_wordpairs)])
+    # Обробка не валідних словникових пар
+    all_invalid_wordpairs: list[dict] | None = data_fsm.get('all_invalid_wordpairs')
+    formatted_invalid_wordpairs: str = wordpair_utils.format_invalid_wordpairs(all_invalid_wordpairs)
+    invalid_wordpairs_msg: str = MSG_INFO_NO_ADDED_WORDPAIRS.format(wordpairs=formatted_invalid_wordpairs)
+
+    wordpairs_status_msg: str = '\n\n'.join((valid_wordpairs_msg,
+                                             invalid_wordpairs_msg,
+                                             MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS))
+
+    msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
+                                              vocab_description=vocab_description,
+                                              message_text=wordpairs_status_msg)
+    await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
     """
     # Якщо немає доданих словникових пар
@@ -270,11 +276,7 @@ async def process_create_wordpairs_status(callback: types.CallbackQuery, state: 
         message_msg: str = (
             f'Додані словникові пари:\n{joined_wordpairs}\n\n{'MSG_VOCAB_WORDPAIRS_SAVED_SMALL_INSTRUCTIONS'}')
     """
-    msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name,
-                                            vocab_description=vocab_description,
-                                            message_text=message_msg)
 
-    await callback.message.edit_text(text=msg_final, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'save_vocab')
