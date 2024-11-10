@@ -26,13 +26,16 @@ def get_inline_kb_create_vocab_description() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_inline_kb_create_wordpairs() -> InlineKeyboardMarkup:
+def get_inline_kb_create_wordpairs(is_keep_status: bool = True) -> InlineKeyboardMarkup:
     """Повертає клавіатуру для процесу додавання словникових пар"""
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='Зберегти', callback_data='save_vocab')],
-        [InlineKeyboardButton(text='Статус', callback_data='create_wordpairs_status')],
-        [InlineKeyboardButton(text='Скасувати', callback_data='cancel_create_vocab')],
-        ]
+        [InlineKeyboardButton(text='Скасувати', callback_data='cancel_create_vocab')]]
+
+    if is_keep_status:
+        button_status: list[InlineKeyboardButton] = [InlineKeyboardButton(text='Статус',
+                                                                          callback_data='create_wordpairs_status')]
+        buttons.insert(1, button_status)
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 

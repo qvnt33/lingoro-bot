@@ -61,7 +61,7 @@ async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext)
 
 @router.message(VocabCreation.waiting_for_vocab_name)
 async def process_create_vocab_name(message: types.Message, state: FSMContext) -> None:
-    """Обробляє назву словника, яку ввів користувач"""
+    """Обробляє назву словника, введену користувач"""
     data_fsm: dict[str, Any] = await state.get_data()
 
     vocab_name: str = message.text.strip()
@@ -127,7 +127,7 @@ async def process_skip_create_vocab_description(callback: types.CallbackQuery, s
     data_fsm: dict[str, Any] = await state.get_data()
     vocab_name: str | None = data_fsm.get('vocab_name')
 
-    kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs()
+    kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs(is_keep_status=False)
     msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                               message_text=MSG_ENTER_WORDPAIRS)
 
@@ -154,7 +154,7 @@ async def process_keep_old_vocab_name(callback: types.CallbackQuery, state: FSMC
 
 @router.message(VocabCreation.waiting_for_vocab_description)
 async def process_create_vocab_description(message: types.Message, state: FSMContext) -> None:
-    """Обробляє опис словника, який ввів користувач"""
+    """Обробляє опис словника, введений користувачем"""
     data_fsm: dict[str, Any] = await state.get_data()
 
     vocab_name: str | None = data_fsm.get('vocab_name')
@@ -162,11 +162,9 @@ async def process_create_vocab_description(message: types.Message, state: FSMCon
 
     logger.info(f'Користувач ввів опис словника: {vocab_description}')
 
-    kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs()
-    kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_description()
-
     validator_description = VocabDescriptionValidator(description=vocab_description)
     if validator_description.is_valid():
+        kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs(is_keep_status=False)
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                                   vocab_description=vocab_description,
                                                   message_text=MSG_ENTER_WORDPAIRS)
@@ -176,6 +174,7 @@ async def process_create_vocab_description(message: types.Message, state: FSMCon
 
         await fsm_utils.save_current_fsm_state(state, new_state=VocabCreation.waiting_for_wordpairs)
     else:
+        kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_description()
         formatted_vocab_description_errors: str = validator_description.format_errors()
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                                   message_text=MSG_ERROR_VOCAB_DESCRIPTION_INVALID.format(
