@@ -6,7 +6,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 from config import WORDPAIR_SEPARATOR
-from db.crud import add_vocab_to_db
+from src.exceptions import UserNotFoundError
+from db import crud
 from db.database import Session
 from src.fsm.states import VocabCreation
 from src.keyboards.create_vocab_kb import (
@@ -309,20 +310,23 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
 
     wordpairs: list[str] | None = data_fsm.get('all_valid_wordpairs')
 
-    wordpair_data = {}
-    words_lst: list = wordpair_data['words']  # Список кортежів слів і їх транскрипцій
-    translations_lst: list = wordpair_data['translations']  # Список кортежів перекладів і їх транскрипцій
-    annotation: str = wordpair_data['annotation'] or '–'  # Анотація (якщо є)
-
+    # Якщо немає валідних словникових пар
     if wordpairs is None:
         logger.warning('Немає доданих валідних словникових пар')
-        msg_text = 'Немає валідних словникових пар.'
+        msg_text = '\n\n'.join(('Немає доданих валідних словникових пар.',
+                                MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS))
         kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs(is_keep_status=False)
         await callback.message.edit_text(text=msg_text, reply_markup=kb)
         return  # Завершення обробки, якщо назва збігається
 
+    all_wordpair_components: list = []
     for wordpair in wordpairs:
-        wordpair_components = wordpair_utils.parse_wordpair_components(wordpair)
+        wordpair_components: dict[str, Any] = wordpair_utils.parse_wordpair_components(wordpair)
+        all_wordpair_components.append(wordpair_components)
+
+        wordpair_words: list[dict] = wordpair_components['words']
+        wordpair_translations: list[dict] = wordpair_components['translations']
+        wordpair_annotation: str | None = wordpair_components['annotation']
 
     user_id: int = callback.from_user.id
 
@@ -339,8 +343,16 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
         await state.clear()  # Очищення FSM-кеш та FSM-стану
         logger.info('Очищення FSM стану')
 
-        with Session() as db:
-            add_vocab_to_db(db, user_id, vocab_name, vocab_description, validated_data_wordpairs)
+        try:
+            with Session() as db:
+                crud.add_vocab_to_db(db=db,
+                                     user_id=user_id,
+                                     vocab_name=vocab_name,
+                                     vocab_description=vocab_description,
+                                     wordpairs_data=validated_data_wordpairs)
+        except UserNotFoundError as e:
+            logger.error(e)
+
         message_msg: str = MSG_SUCCESS_VOCAB_SAVED_TO_DB.format(vocab_name=vocab_name, menu=MSG_TITLE_MENU)
 
         kb: InlineKeyboardMarkup = get_inline_kb_menu()
@@ -381,7 +393,7 @@ async def process_back_to_previous_stage(callback: types.CallbackQuery, state: F
     previous_stage: Any | None = data_fsm.get('current_stage')
 
     logger.info('Користувач натиснув на кнопку "Ні" під час підтвердження скасування створення словника')
-    logger.info('Повернення на етап "{previous_stage}"')
+    logger.info(f'Повернення на етап "{previous_stage}"')
 
     await state.set_state(previous_stage)
     logger.info(f'FSM стан змінено на "{previous_stage}"')

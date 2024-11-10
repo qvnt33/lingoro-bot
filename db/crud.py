@@ -4,6 +4,9 @@ from typing import List
 from .models import Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
 from sqlalchemy import Column
 from sqlalchemy.orm import Session
+from src.exceptions import UserNotFoundError
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def is_user_exists_in_db(session: Session, user_id: int) -> bool:
@@ -22,14 +25,16 @@ def create_user_in_db(session: Session, tg_user_data: User | None) -> None:
     session.commit()
 
 
-def add_vocab_to_db(db: Session, user_id: int, vocab_name: str, vocab_note: str, wordpairs_data: list) -> None:
+def add_vocab_to_db(db: Session, user_id: int, vocab_name: str, vocab_description: str, wordpairs_data: list) -> None:
     """Додає новий словник, словникові пари, слова, переклади до БД"""
-    is_user_exists: bool = get_user_by_user_id(db, user_id=user_id) is not None
-    if not is_user_exists:
-        raise ValueError(f'Користувача з ID {user_id} не знайдено')
+    user: User | None = get_user_by_user_id(db, user_id=user_id)
+
+    # Якщо користувача немає в БД
+    if user is None:
+        raise UserNotFoundError(f'Користувача з ID "{user_id}" не знайдено у БД')
 
     # Додавання словника
-    vocab = Vocabulary(name=vocab_name, description=vocab_note, user_id=user_id)
+    vocab = Vocabulary(name=vocab_name, description=vocab_description, user_id=user_id)
     db.add(vocab)
     db.commit()
 
