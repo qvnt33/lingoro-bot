@@ -1,12 +1,92 @@
-import logging
 from typing import List
 
-from .models import Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
-from sqlalchemy import Column
 from sqlalchemy.orm import Session
+
+from db.models import Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
 from src.exceptions import UserNotFoundError
 
-logger: logging.Logger = logging.getLogger(__name__)
+
+def add_vocab_to_db(session: Session,
+                    user_id: int,
+                    vocab_name: str,
+                    vocab_description: str | None,
+                    wordpair_components: list[dict]) -> None:
+    """!docstring Додає новий словник та його словникові пари до БД"""
+    user: User | None = get_user_by_user_id(session, user_id)
+
+    # Якщо користувача немає в БД
+    if user is None:
+        raise UserNotFoundError(f'Користувача з ID "{user_id}" не знайдено у БД')
+
+    # Створення нового словника
+    vocab_entry = Vocabulary(name=vocab_name,
+                             description=vocab_description,
+                             user_id=user_id)
+    session.add(vocab_entry)
+    session.commit()
+
+    vocab_id: int = vocab_entry.id
+
+    # Додавання словникових пар та звʼязків між словами та перекладами
+    for wordpair in wordpair_components:
+        wordpair_words: list[dict] = wordpair['words']
+        wordpair_translations: list[dict] = wordpair['translations']
+        annotation: str | None = wordpair['annotation']
+
+        # Створення словникової пари
+        wordpair_entry = Wordpair(annotation, vocab_id)
+        session.add(wordpair_entry)
+        session.commit()
+
+        wordpair_id: int = wordpair_entry.id
+
+        _add_wordpair_words_to_db(session, wordpair_words, wordpair_id)  # Додавання слів
+        _add_wordpair_translations_to_db(session, wordpair_translations, wordpair_id)  # Додавання перекладів
+
+
+def _add_wordpair_words_to_db(session: Session,
+                              wordpair_words: list[dict],
+                              wordpair_id: int) -> None:
+    """Додає слова словникової пари до БД"""
+    for word_item in wordpair_words:
+        word: str = word_item['word']
+        word_transcription: str | None = word_item['transcription']
+
+        word_entry = Word(word=word,
+                          transcription=word_transcription)
+        session.add(word_entry)
+        session.commit()
+
+        word_id: int = word_entry.id
+
+        # Звʼязування слова та словникової пари
+        wordpair_word_entry = WordpairWord(word_id, wordpair_id)
+        session.add(wordpair_word_entry)
+    session.commit()
+
+
+def _add_wordpair_translations_to_db(session: Session,
+                                     wordpair_translations: list[dict],
+                                     wordpair_id: int) -> None:
+    """Додає переклади словникової пари до БД"""
+    for translation_item in wordpair_translations:
+        translation: str = translation_item['translation']
+        translation_transcription: str | None = translation_item['transcription']
+
+        translation_entry = Translation(translation=translation,
+                                        transcription=translation_transcription)
+        session.add(translation_entry)
+        session.commit()
+
+        translation_id: int = translation_entry.id
+
+        # Звʼязування перекладу та словникової пари
+        wordpair_translation_entry = WordpairTranslation(translation_id, wordpair_id)
+        session.add(wordpair_translation_entry)
+    session.commit()
+
+
+
 
 
 def is_user_exists_in_db(session: Session, user_id: int) -> bool:
@@ -16,68 +96,16 @@ def is_user_exists_in_db(session: Session, user_id: int) -> bool:
 
 def create_user_in_db(session: Session, tg_user_data: User | None) -> None:
     """Створює нового користувача в БД"""
-    user_id: Column[int] = tg_user_data.id
-    user = User(user_id=user_id,
-                username=tg_user_data.username,
-                first_name=tg_user_data.first_name,
-                last_name=tg_user_data.last_name)
-    session.add(user)
+    user_entry = User(user_id=tg_user_data.id,
+                      username=tg_user_data.username,
+                      first_name=tg_user_data.first_name,
+                      last_name=tg_user_data.last_name)
+    session.add(user_entry)
     session.commit()
 
-
-def add_vocab_to_db(db: Session, user_id: int, vocab_name: str, vocab_description: str, wordpairs_data: list) -> None:
-    """Додає новий словник, словникові пари, слова, переклади до БД"""
-    user: User | None = get_user_by_user_id(db, user_id=user_id)
-
-    # Якщо користувача немає в БД
-    if user is None:
-        raise UserNotFoundError(f'Користувача з ID "{user_id}" не знайдено у БД')
-
-    # Додавання словника
-    vocab = Vocabulary(name=vocab_name, description=vocab_description, user_id=user_id)
-    db.add(vocab)
-    db.commit()
-
-    # Додавання словникових пар та звʼязків між словами та перекладами
-    for wordpair_data in wordpairs_data:
-        words_lst: list = wordpair_data['words']  # Список кортежів слів і їх транскрипцій
-        translations_lst: list = wordpair_data['translations']  # Список кортежів перекладів і їх транскрипцій
-        annotation: str = wordpair_data['annotation'] or '–'  # Анотація (якщо є)
-
-        wordpair = Wordpair(annotation=annotation, vocabulary_id=vocab.id)  # Словникова пара
-        db.add(wordpair)
-        db.commit()
-
-        # Додавання слів
-        for word, transcription in words_lst:
-            word_entry = Word(word=word, transcription=transcription)
-            db.add(word_entry)
-            db.commit()
-
-            # Звʼязування слова та словникової пари
-            wordpair_word = WordpairWord(word_id=word_entry.id, wordpair_id=wordpair.id)
-            db.add(wordpair_word)
-
-        # Додавання перекладів
-        for translation, transcription in translations_lst:
-            translation_entry = Translation(translation=translation, transcription=transcription)
-            db.add(translation_entry)
-            db.commit()
-
-            # Звʼязування перекладу та словникової пари
-            wordpair_translation = WordpairTranslation(translation_id=translation_entry.id, wordpair_id=wordpair.id)
-            db.add(wordpair_translation)
-
-    logging.info(f'Був доданий до БД словник "{vocab}". Користувач: {user_id}')
-    db.commit()
-
-
-
-
-
-def get_user_by_user_id(db: Session, user_id: int) -> User | None:
+def get_user_by_user_id(session: Session, user_id: int) -> User | None:
     """Повертає користувача за його user_id"""
-    return db.query(User).filter(User.user_id == user_id).first()
+    return session.query(User).filter(User.user_id == user_id).first()
 
 
 def get_user_vocab_by_user_id(db: Session, user_id: int, is_all: bool = False) -> User | None:
