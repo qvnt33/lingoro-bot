@@ -36,7 +36,7 @@ MSG_ERROR_WORDPAIRS_NO_VALID = '⚠️ Немає валідних словни�
 MSG_ERROR_WORDPAIRS_NO_ADDED = 'Немає доданих словникових пар.'
 
 # SUCCESS
-MSG_SUCCESS_VOCAB_SAVED_TO_DB: str = 'Словник "{vocab_name}" успішно збережено до бази словників!\n\n{menu}'
+MSG_SUCCESS_VOCAB_SAVED_TO_DB = 'Словник "{vocab_name}" успішно збережено до бази словників!\n\n{instruction}'
 MSG_SUCCESS_ALL_WORDPAIRS_VALID = '🎉 Немає помилок серед введених пар!'
 
 # INFO
