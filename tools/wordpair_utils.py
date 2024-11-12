@@ -90,7 +90,7 @@ def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
     item_of_translations: list[str] = part_of_translation.split(WORDPAIR_ITEM_SEPARATOR)
 
     # Розділення елементів словникової пари на компоненти
-    annotation: str | None = wordpair_parts[2].strip() if len(wordpair_parts) == 3 else None
+    wordpair_annotation: str | None = wordpair_parts[2].strip() if len(wordpair_parts) == 3 else None
 
     for word_item in item_of_words:
         word, word_transcription = _parse_item_transcription(word_item)
@@ -104,7 +104,7 @@ def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
 
     wordpair_components['words'] = wordpair_words
     wordpair_components['translations'] = wordpair_translations
-    wordpair_components['annotation'] = annotation
+    wordpair_components['annotation'] = wordpair_annotation
 
     return wordpair_components
 

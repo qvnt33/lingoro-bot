@@ -1,5 +1,5 @@
-def add_vocab_data_to_message(vocab_name: str = None,
-                              vocab_description: str = None,
+def add_vocab_data_to_message(vocab_name: str | None = None,
+                              vocab_description: str | None = None,
                               message_text: str = '') -> str:
     """Додає до повідомлення назву та опис словника"""
     vocab_name = vocab_name or 'Відсутня'

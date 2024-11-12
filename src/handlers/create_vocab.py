@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 from config import WORDPAIR_SEPARATOR
+from db.models import User
 from src.exceptions import UserNotFoundError
 from db import crud
 from db.database import Session
@@ -17,16 +18,19 @@ from src.keyboards.create_vocab_kb import (
     get_inline_kb_create_wordpairs,
 )
 from src.keyboards.menu_kb import get_inline_kb_menu
+from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons
 from src.validators.vocab.vocab_description_validator import VocabDescriptionValidator
 from src.validators.vocab.vocab_name_validator import VocabNameValidator
 from src.validators.wordpair.wordpair_validator import WordpairValidator
 from text_data import (
     MSG_CONFIRM_CANCEL_CREATE_VOCAB,
     MSG_ENTER_NEW_VOCAB_NAME,
+    MSG_ENTER_VOCAB,
     MSG_ENTER_VOCAB_DESCRIPTION,
     MSG_ENTER_VOCAB_NAME,
     MSG_ENTER_WORDPAIRS,
     MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS,
+    MSG_ERROR_VOCAB_BASE_EMPTY,
     MSG_ERROR_VOCAB_DESCRIPTION_INVALID,
     MSG_ERROR_VOCAB_NAME_DUPLICATE,
     MSG_ERROR_VOCAB_NAME_INVALID,
@@ -313,58 +317,43 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
     # Якщо немає валідних словникових пар
     if wordpairs is None:
         logger.warning('Немає доданих валідних словникових пар')
-        msg_text = '\n\n'.join(('Немає доданих валідних словникових пар.',
-                                MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS))
+        msg_text: str = '\n\n'.join(('Немає доданих валідних словникових пар.',
+                                     MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS))
         kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs(is_keep_status=False)
         await callback.message.edit_text(text=msg_text, reply_markup=kb)
         return  # Завершення обробки, якщо назва збігається
 
-    all_wordpair_components: list = []
-    for wordpair in wordpairs:
-        wordpair_components: dict[str, Any] = wordpair_utils.parse_wordpair_components(wordpair)
-        all_wordpair_components.append(wordpair_components)
-
-        wordpair_words: list[dict] = wordpair_components['words']
-        wordpair_translations: list[dict] = wordpair_components['translations']
-        wordpair_annotation: str | None = wordpair_components['annotation']
+    await state.clear()  # Очищення FSM-кеш та FSM-стану
+    logger.info('Очищення FSM стану')
 
     user_id: int = callback.from_user.id
 
-    validated_data_wordpairs: Any | list = data_fsm.get('validated_data_wordpairs')  # Всі дані словникових пар
+    with Session() as db:
+        user_vocabs: User | None = crud.get_user_vocab_by_user_id(db, user_id, is_all=True)  # Словники користувача
 
-    # Якщо немає доданих словникових пар
-    if not validated_data_wordpairs:
-        logger.info('Користувач не додав словникових пар')
+    # Клавіатура для відображення словників
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(user_vocabs)
 
-        message_msg = MSG_ERROR_WORDPAIRS_NO_ADDED
-        # Клавіатура для створення словникових пар без кнопки "Статус"
-        kb: InlineKeyboardMarkup = get_inline_kb_create_wordpairs(is_keep_status=False)
-    else:
-        await state.clear()  # Очищення FSM-кеш та FSM-стану
-        logger.info('Очищення FSM стану')
+    msg_text: str = MSG_SUCCESS_VOCAB_SAVED_TO_DB.format(vocab_name=vocab_name,
+                                                                  instruction=MSG_ENTER_VOCAB)
 
-        try:
-            with Session() as db:
-                crud.add_vocab_to_db(db=db,
-                                     user_id=user_id,
-                                     vocab_name=vocab_name,
-                                     vocab_description=vocab_description,
-                                     wordpairs_data=validated_data_wordpairs)
-        except UserNotFoundError as e:
-            logger.error(e)
+    # Список словників із розділеними компонентами словникової пари
+    wordpair_components: list[dict] = [wordpair_utils.parse_wordpair_components(wordpair)
+                                       for wordpair in wordpairs]
 
-        message_msg: str = MSG_SUCCESS_VOCAB_SAVED_TO_DB.format(vocab_name=vocab_name, menu=MSG_TITLE_MENU)
+    try:
+        with Session() as session:
+            crud.add_vocab_to_db(session=session,
+                                 user_id=user_id,
+                                 vocab_name=vocab_name,
+                                 vocab_description=vocab_description,
+                                 wordpair_components=wordpair_components)
+            logger.info(f'Був доданий до БД словник "{vocab_name}". Користувач: {user_id}')
+    except UserNotFoundError as e:
+        logger.error(e)
+        return
 
-        kb: InlineKeyboardMarkup = get_inline_kb_menu()
-
-    msg_final: str = add_vocab_data_to_message(vocab_name=vocab_name,
-                                            vocab_description=vocab_description,
-                                            message_text=message_msg)
-
-    await callback.message.edit_text(text=msg_final, reply_markup=kb)
-
-
-
+    await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'cancel_create_vocab')
