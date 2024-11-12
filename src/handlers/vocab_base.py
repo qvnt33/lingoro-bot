@@ -5,9 +5,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from db.crud import get_user_vocab_by_user_id, get_user_vocab_by_vocab_id, get_wordpairs_by_vocab_id
+from db.crud import VocabCRUD, get_user_vocab_by_user_id, get_user_vocab_by_vocab_id, get_wordpairs_by_vocab_id
 from db.database import Session
-from db.models import User
+from db.models import User, Vocabulary
 from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons, get_inline_kb_vocab_options
 from src.keyboards.vocab_trainer_kb import get_inline_kb_all_training
 from text_data import MSG_ENTER_VOCAB, MSG_ERROR_VOCAB_BASE_EMPTY
@@ -22,9 +22,10 @@ async def process_vocab(callback: CallbackQuery, state: FSMContext) -> None:
     """
     user_id: int = callback.from_user.id
 
-    with Session() as db:
-        user_vocabs: User | None = get_user_vocab_by_user_id(db, user_id, is_all=True)  # Словники користувача
-        is_vocab_base_empty: bool = get_user_vocab_by_user_id(db, user_id) is None
+    with Session() as session:
+        vocab_crud = VocabCRUD(session=session, user_id=user_id)
+        user_vocabs: List[Vocabulary] = vocab_crud.get_user_all_vocabs()
+        is_vocab_base_empty: bool = vocab_crud.get_user_vocab() is None
 
         if is_vocab_base_empty:
             msg_finally: str = MSG_ERROR_VOCAB_BASE_EMPTY

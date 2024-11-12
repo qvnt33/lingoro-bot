@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, List
 
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
@@ -7,7 +7,7 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 from db import crud
 from db.database import Session
-from db.models import User
+from db.models import Vocabulary
 from exceptions import UserNotFoundError
 from src.filters.check_empty_filters import CheckEmptyFilter
 from src.fsm import states
@@ -113,7 +113,7 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
 @router.callback_query(F.data == 'change_vocab_name')
 async def process_change_vocab_name(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Змінити назву словника" під час створення словника.
-    Переводить стан FSM в очікування введення нової назви словника.
+    Переводить FSM стан в очікування введення нової назви словника.
     """
     logger.info('Користувач натиснув на кнопку "Змінити назву словника" при його створенні')
 
@@ -133,7 +133,7 @@ async def process_change_vocab_name(callback: types.CallbackQuery, state: FSMCon
 @router.callback_query(F.data == 'skip_create_vocab_description')
 async def process_skip_create_vocab_description(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Пропустити" під час створення опису словника.
-    Переводить стан FSM в очікування введення словникових пар.
+    Переводить FSM стан в очікування введення словникових пар.
     """
     logger.info('Користувач натиснув на кнопку "Пропустити" під час створення опису словника')
 
@@ -152,7 +152,7 @@ async def process_skip_create_vocab_description(callback: types.CallbackQuery, s
 @router.callback_query(F.data == 'keep_old_vocab_name')
 async def process_keep_old_vocab_name(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Залишити поточну назву" під час створення словника.
-    Переводить стан FSM в очікування введення опису словника.
+    Переводить FSM стан в очікування введення опису словника.
     """
     logger.info('Користувач натиснув на кнопку "Залишити поточну назву" під час зміни назви словника')
 
@@ -195,10 +195,9 @@ async def process_create_vocab_description(message: types.Message, state: FSMCon
         formatted_vocab_description_errors: str = validator_vocab_description.format_errors()
 
         kb: InlineKeyboardMarkup = get_inline_kb_create_vocab_description()
-        msg_error: str = MSG_ERROR_VOCAB_DESCRIPTION_INVALID.format(
-            description=vocab_description,
-            vocab_name=vocab_name,
-            errors=formatted_vocab_description_errors)
+        msg_error: str = MSG_ERROR_VOCAB_DESCRIPTION_INVALID.format(description=vocab_description,
+                                                                    vocab_name=vocab_name,
+                                                                    errors=formatted_vocab_description_errors)
 
         msg_text: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                                   message_text=msg_error)
@@ -230,23 +229,24 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
             valid_wordpairs.append(wordpair)
         else:
             formatted_wordpair_errors: str = validator_wordpair.format_errors()
-            invalid_wordpairs.append({
-                'wordpair': wordpair,
-                'errors': formatted_wordpair_errors})
+            invalid_wordpairs.append({'wordpair': wordpair,
+                                      'errors': formatted_wordpair_errors})
 
     # Якщо є валідні словникові пари
     if not check_empty_filter.apply(valid_wordpairs):
         formatted_valid_wordpairs: str = wordpair_utils.format_valid_wordpairs(valid_wordpairs)
         valid_wordpairs_msg: str = MSG_INFO_ADDED_WORDPAIRS.format(wordpairs=formatted_valid_wordpairs)
-        await fsm_utils.extend_valid_wordpairs_to_fsm_cache(state, wordpairs=valid_wordpairs)
+        await fsm_utils.extend_valid_wordpairs_to_fsm_cache(state=state,
+                                                            wordpairs=valid_wordpairs)
     else:
         valid_wordpairs_msg = MSG_ERROR_WORDPAIRS_NO_VALID
 
     # Якщо є не валідні словникові пари
-    if not empty_filter.apply(invalid_wordpairs):
+    if not check_empty_filter.apply(invalid_wordpairs):
         formatted_invalid_wordpairs: str = wordpair_utils.format_invalid_wordpairs(invalid_wordpairs)
         invalid_wordpairs_msg: str = MSG_INFO_NO_ADDED_WORDPAIRS.format(wordpairs=formatted_invalid_wordpairs)
-        await fsm_utils.extend_invalid_wordpairs_to_fsm_cache(state, wordpairs=invalid_wordpairs)
+        await fsm_utils.extend_invalid_wordpairs_to_fsm_cache(state=state,
+                                                              wordpairs=invalid_wordpairs)
     else:
         invalid_wordpairs_msg: str = MSG_SUCCESS_ALL_WORDPAIRS_VALID
 
@@ -305,7 +305,6 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
 
     vocab_name: str | None = data_fsm.get('vocab_name')
     vocab_description: str | None = data_fsm.get('vocab_description')
-
     wordpairs: list[str] | None = data_fsm.get('all_valid_wordpairs')
 
     check_empty_filter = CheckEmptyFilter()
@@ -326,14 +325,8 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
 
     user_id: int = callback.from_user.id
 
-    with Session() as db:
-        user_vocabs: User | None = crud.get_user_vocab_by_user_id(db, user_id, is_all=True)  # Словники користувача
-
-    # Клавіатура для відображення словників
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(user_vocabs)
-
     msg_text: str = MSG_SUCCESS_VOCAB_SAVED_TO_DB.format(vocab_name=vocab_name,
-                                                                  instruction=MSG_ENTER_VOCAB)
+                                                         instruction=MSG_ENTER_VOCAB)
 
     # Список словників із розділеними компонентами словникової пари
     wordpair_components: list[dict] = [wordpair_utils.parse_wordpair_components(wordpair)
@@ -341,16 +334,18 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
 
     try:
         with Session() as session:
-            crud.add_vocab_to_db(session=session,
-                                 user_id=user_id,
-                                 vocab_name=vocab_name,
-                                 vocab_description=vocab_description,
-                                 wordpair_components=wordpair_components)
+            vocab_crud = crud.VocabCRUD(session=session, user_id=user_id)
+
+            vocab_crud.add_vocab_to_db(vocab_name, vocab_description, wordpair_components)
             logger.info(f'Був доданий до БД словник "{vocab_name}". Користувач: {user_id}')
-            logger.info(f'[END] Створення словника. USER_ID: {callback.from_user.id}')
+            logger.info(f'[END] Створення словника. USER_ID: {user_id}')
+
+            user_vocabs: List[Vocabulary] = vocab_crud.get_user_all_vocabs()
     except UserNotFoundError as e:
         logger.error(e)
         return
+
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(vocabularies=user_vocabs)
 
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
