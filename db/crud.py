@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from db.models import Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
-from src.exceptions import UserNotFoundError
+from exceptions import UserNotFoundError
 
 
 def add_vocab_to_db(session: Session,
