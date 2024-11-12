@@ -44,8 +44,8 @@ class VocabNameValidator(ValidatorBase):
             self.logger.warning('Назва словника містить некоректну кількість символів.'
                                 f'Зараз {current_length}, '
                                 f'має містити від {MIN_LENGTH_VOCAB_NAME} до {MAX_LENGTH_VOCAB_NAME}')
-            self.add_error(MSG_ERROR_VOCAB_NAME_INVALID_LENGTH.format(min_len=MIN_LENGTH_VOCAB_NAME,
-                                                                      max_len=MAX_LENGTH_VOCAB_NAME))
+            self.add_error(MSG_ERROR_VOCAB_NAME_INVALID_LENGTH.format(min_length=MIN_LENGTH_VOCAB_NAME,
+                                                                      max_length=MAX_LENGTH_VOCAB_NAME))
             return False
         return True
 
@@ -54,7 +54,7 @@ class VocabNameValidator(ValidatorBase):
 
         if not allowed_chars_filter.apply(self._name):
             self.logger.warning('Назва словника містить некоректні символи')
-            self.add_error(MSG_ERROR_COMPONENT_INVALID_CHARS.format(allowed_chars=ALLOWED_CHARS))
+            self.add_error(MSG_ERROR_COMPONENT_INVALID_CHARS.format(component=self._name, allowed_chars=ALLOWED_CHARS))
             return False
         return True
 
