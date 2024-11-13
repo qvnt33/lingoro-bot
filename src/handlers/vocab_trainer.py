@@ -10,7 +10,7 @@ from db.crud import get_user_vocab_by_user_id, get_wordpairs_by_vocab_id
 from db.database import Session
 from db.models import User
 from src.fsm.states import VocabTraining
-from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons
+from src.keyboards.vocab_base_kb import get_inline_kb_vocab_selection
 from src.keyboards.vocab_trainer_kb import get_inline_kb_all_training, get_inline_kb_process_training
 from text_data import MSG_ERROR_VOCAB_BASE_EMPTY
 
@@ -35,7 +35,7 @@ async def process_vocab(callback: CallbackQuery, state: FSMContext) -> None:
             msg_finally: str = f'Ви обрали словник: "{vocab_name}"\nОберіть тип, будь-ласка, тип тренування.'
 
     # Клавіатура для відображення словників
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(user_vocabs, is_with_create_vocab=False)
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection(user_vocabs, is_with_create_vocab=False)
 
     current_state = 'VocabTrainState'  # Стан FSM
     await state.update_data(current_state=current_state)  # Збереження поточного стану FSM

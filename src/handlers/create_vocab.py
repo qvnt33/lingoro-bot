@@ -18,7 +18,7 @@ from src.keyboards.create_vocab_kb import (
     get_inline_kb_create_vocab_name,
     get_inline_kb_create_wordpairs,
 )
-from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons
+from src.keyboards.vocab_base_kb import get_inline_kb_vocab_selection
 from src.validators.vocab.vocab_description_validator import VocabDescriptionValidator
 from src.validators.vocab.vocab_name_validator import VocabNameValidator
 from src.validators.wordpair.wordpair_validator import WordpairValidator
@@ -347,7 +347,7 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
         logger.error(e)
         return
 
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(vocabularies=user_vocabs)
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection(vocabularies=user_vocabs)
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 

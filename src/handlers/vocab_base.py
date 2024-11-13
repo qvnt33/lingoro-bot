@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, List, Tuple
 
 from aiogram import F, Router
@@ -5,40 +6,42 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from db.crud import VocabCRUD, get_user_vocab_by_user_id, get_user_vocab_by_vocab_id, get_wordpairs_by_vocab_id
+from db.crud import VocabCRUD, get_user_vocab_by_vocab_id, get_wordpairs_by_vocab_id
 from db.database import Session
-from db.models import User, Vocabulary
-from src.keyboards.vocab_base_kb import get_inline_kb_vocab_buttons, get_inline_kb_vocab_options
+from db.models import Vocabulary
+from src.filters.check_empty_filters import CheckEmptyFilter
+from src.keyboards.vocab_base_kb import get_inline_kb_vocab_options, get_inline_kb_vocab_selection
 from src.keyboards.vocab_trainer_kb import get_inline_kb_all_training
 from text_data import MSG_ENTER_VOCAB, MSG_ERROR_VOCAB_BASE_EMPTY
 
 router = Router(name='vocab_base')
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @router.callback_query(F.data == 'vocab_base')
-async def process_vocab(callback: CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "База словників".
+async def process_vocab_base(callback: CallbackQuery) -> None:
+    """Відстежує натискання на кнопку "База словників" у головному меню.
     Відправляє користувачу словники у вигляді кнопок.
     """
     user_id: int = callback.from_user.id
+    check_empty_filter = CheckEmptyFilter()
 
-    with Session() as session:
-        vocab_crud = VocabCRUD(session=session, user_id=user_id)
-        user_vocabs: List[Vocabulary] = vocab_crud.get_user_all_vocabs()
-        is_vocab_base_empty: bool = vocab_crud.get_user_vocab() is None
+    try:
+        with Session() as session:
+            vocab_crud = VocabCRUD(session=session, user_id=user_id)
+            user_vocabs: list[Vocabulary] = vocab_crud.get_user_all_vocabs()
+    except Exception as e:
+        logger.error(e)
+        return
 
-        if is_vocab_base_empty:
-            msg_finally: str = MSG_ERROR_VOCAB_BASE_EMPTY
-        else:
-            msg_finally: str = MSG_ENTER_VOCAB
+    # Якщо в БД користувача немає словників
+    if check_empty_filter.apply(user_vocabs):
+        msg_text: str = MSG_ERROR_VOCAB_BASE_EMPTY
+    else:
+        msg_text: str = MSG_ENTER_VOCAB
 
-    # Клавіатура для відображення словників
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(user_vocabs)
-
-    current_state = 'VocabBaseState'  # Стан FSM
-    await state.update_data(current_state=current_state)  # Збереження поточного стану FSM
-
-    await callback.message.edit_text(text=msg_finally, reply_markup=kb)
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection(vocabs=user_vocabs)
+    await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
 @router.callback_query(F.data.startswith('select_vocab_'))
