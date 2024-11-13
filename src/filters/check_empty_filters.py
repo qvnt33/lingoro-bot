@@ -11,5 +11,5 @@ class CheckEmptyFilter(BaseFilter):
             is_valid = True
         else:
             current_length: int = len(value)
-            is_valid: bool = current_length < 0
+            is_valid: bool = current_length == 0
         return is_valid
