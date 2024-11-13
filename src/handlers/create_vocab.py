@@ -336,13 +336,13 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
 
     try:
         with Session() as session:
-            vocab_crud = crud.VocabCRUD(session=session, user_id=user_id)
+            vocab_crud = crud.VocabCRUD(session=session)
             vocab_crud.add_vocab_to_db(vocab_name, vocab_description, wordpair_components)
 
             logger.info(f'Був доданий до БД словник "{vocab_name}". Користувач: {user_id}')
             logger.info(f'[END] Створення словника. USER_ID: {user_id}')
 
-            user_vocabs: List[Vocabulary] = vocab_crud.get_user_all_vocabs()
+            user_vocabs: List[Vocabulary] = vocab_crud.get_vocabs_by_user_id(user_id=user_id)
     except UserNotFoundError as e:
         logger.error(e)
         return
