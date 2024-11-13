@@ -7,6 +7,28 @@ from db.models import Translation, User, Vocabulary, Word, Wordpair, WordpairTra
 from exceptions import UserNotFoundError
 
 
+class UserCRUD:
+    """Клас для CRUD-операцій з користувачами в БД"""
+
+    def __init__(self, session: Session) -> None:
+        self.session: Session = session
+
+    def add_new_user_to_db(self, tg_user_data: User | None) -> None:
+        """Створює нового користувача в БД"""
+        new_user = User(user_id=tg_user_data.id,
+                        username=tg_user_data.username,
+                        first_name=tg_user_data.first_name,
+                        last_name=tg_user_data.last_name)
+        self.session.add(new_user)
+        self.session.commit()
+
+    def check_user_exists_in_db(self, user_id: int) -> bool:
+        """Перевіряє, чи є користувач в БД"""
+        user_query: User | None = self.session.query(User).filter(
+            User.user_id == user_id).first()
+        return user_query is not None
+
+
 class VocabCRUD:
     """Клас для CRUD-операцій з словниками в БД"""
 
@@ -18,7 +40,7 @@ class VocabCRUD:
                         vocab_name: str,
                         vocab_description: str | None,
                         wordpair_components: list[dict]) -> None:
-        """!docstring Додає новий словник та його словникові пари до БД"""
+        """Додає новий словник та його словникові пари до БД"""
         user: User | None = self.session.query(User).filter(
             User.user_id == self.user_id).first()
 
@@ -27,7 +49,9 @@ class VocabCRUD:
             raise UserNotFoundError(f'Користувача з ID "{self.user_id}" не знайдено у БД')
 
         # Створення нового словника
-        new_vocab = Vocabulary(name=vocab_name, description=vocab_description, user_id=self.user_id)
+        new_vocab = Vocabulary(name=vocab_name,
+                               description=vocab_description,
+                               user_id=self.user_id)
         self.session.add(new_vocab)
         self.session.commit()
 
@@ -40,7 +64,8 @@ class VocabCRUD:
             annotation: str | None = wordpair['annotation']
 
             # Створення словникової пари
-            new_wordpair = Wordpair(annotation=annotation, vocabulary_id=vocab_id)
+            new_wordpair = Wordpair(annotation=annotation,
+                                    vocabulary_id=vocab_id)
             self.session.add(new_wordpair)
             self.session.commit()
 
@@ -58,33 +83,37 @@ class VocabCRUD:
             word: str = word_item['word']
             word_transcription: str | None = word_item['transcription']
 
-            new_word = Word(word=word, transcription=word_transcription)
+            new_word = Word(word=word,
+                            transcription=word_transcription)
             self.session.add(new_word)
             self.session.commit()
 
             word_id: int = new_word.id
 
             # Звʼязування слова та словникової пари
-            new_wordpair_word = WordpairWord(word_id=word_id, wordpair_id=wordpair_id)
+            new_wordpair_word = WordpairWord(word_id=word_id,
+                                             wordpair_id=wordpair_id)
             self.session.add(new_wordpair_word)
         self.session.commit()
 
     def _add_wordpair_translations_to_db(self,
-                                        wordpair_translations: list[dict],
-                                        wordpair_id: int) -> None:
+                                         wordpair_translations: list[dict],
+                                         wordpair_id: int) -> None:
         """Додає переклади словникової пари до БД"""
         for translation_item in wordpair_translations:
             translation: str = translation_item['translation']
             translation_transcription: str | None = translation_item['transcription']
 
-            new_translation = Translation(translation=translation, transcription=translation_transcription)
+            new_translation = Translation(translation=translation,
+                                          transcription=translation_transcription)
             self.session.add(new_translation)
             self.session.commit()
 
             translation_id: int = new_translation.id
 
             # Звʼязування перекладу та словникової пари
-            new_wordpair_translation = WordpairTranslation(translation_id=translation_id, wordpair_id=wordpair_id)
+            new_wordpair_translation = WordpairTranslation(translation_id=translation_id,
+                                                           wordpair_id=wordpair_id)
             self.session.add(new_wordpair_translation)
         self.session.commit()
 
@@ -94,49 +123,11 @@ class VocabCRUD:
             Vocabulary.user_id == self.user_id)
         return vocab_query.first()
 
-    def get_user_all_vocabs(self) -> List[Vocabulary]:
+    def get_user_all_vocabs(self) -> list[Vocabulary]:
         """Повертає всі словники користувача з БД"""
         vocab_query: Query[Vocabulary] = self.session.query(Vocabulary).filter(
             Vocabulary.user_id == self.user_id)
         return vocab_query.all()
-
-
-
-def get_user_vocab_by_user_id(session: Session, user_id: int, is_all_vocabs: bool = False) -> User | None:
-    """Повертає словник користувача за його user_id"""
-    vocab_query: Query[Vocabulary] = session.query(Vocabulary).filter(Vocabulary.user_id == user_id)
-    if is_all_vocabs:
-        return vocab_query.all()
-    return vocab_query.first()
-
-
-
-def is_user_exists_in_db(session: Session, user_id: int) -> bool:
-    """Перевіряє, чи є користувач у БД"""
-    return session.query(User).filter(User.user_id == user_id).first() is not None
-
-
-def create_user_in_db(session: Session, tg_user_data: User | None) -> None:
-    """Створює нового користувача в БД"""
-    user_query = User(user_id=tg_user_data.id,
-                      username=tg_user_data.username,
-                      first_name=tg_user_data.first_name,
-                      last_name=tg_user_data.last_name)
-    session.add(user_query)
-    session.commit()
-
-def get_user_by_user_id(session: Session, user_id: int) -> User | None:
-    """Повертає користувача за його user_id"""
-    return session.query(User).filter(User.user_id == user_id).first()
-
-
-
-
-def get_user_vocab_by_vocab_id(db: Session, vocab_id: int, is_all: bool = False) -> User | None:
-    """Повертає словник користувача за vocab_id"""
-    if is_all:
-        return db.query(Vocabulary).filter(Vocabulary.id == vocab_id).all()
-    return db.query(Vocabulary).filter(Vocabulary.id == vocab_id).first()
 
 
 def get_vocab_details_by_vocab_id(db: Session, vocab_id: int) -> dict:
