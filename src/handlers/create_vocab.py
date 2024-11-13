@@ -3,6 +3,7 @@ from typing import Any, List
 
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 from db import crud
@@ -41,8 +42,8 @@ from text_data import (
 from tools import fsm_utils, vocab_utils, wordpair_utils
 from tools.message_formatter import add_vocab_data_to_message
 
-logger: logging.Logger = logging.getLogger(__name__)
 router = Router(name='create_vocab')
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @router.callback_query(F.data == 'create_vocab')
@@ -50,7 +51,8 @@ async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext)
     """Відстежує натискання на кнопку "Додати словник".
     Запускає процес створення словника.
     """
-    logger.info(f'[START] Створення словника. USER_ID: {callback.from_user.id}')
+    user_id: int = callback.from_user.id
+    logger.info(f'[START] Створення словника. USER_ID: {user_id}')
 
     await state.clear()
     logger.info('FSM стан та FSM-Cache очищено')
@@ -335,8 +337,8 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
     try:
         with Session() as session:
             vocab_crud = crud.VocabCRUD(session=session, user_id=user_id)
-
             vocab_crud.add_vocab_to_db(vocab_name, vocab_description, wordpair_components)
+
             logger.info(f'Був доданий до БД словник "{vocab_name}". Користувач: {user_id}')
             logger.info(f'[END] Створення словника. USER_ID: {user_id}')
 
@@ -346,7 +348,6 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
         return
 
     kb: InlineKeyboardMarkup = get_inline_kb_vocab_buttons(vocabularies=user_vocabs)
-
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
@@ -356,15 +357,17 @@ async def process_cancel_create_vocab(callback: types.CallbackQuery, state: FSMC
     Відправляє клавіатуру для підтвердження скасування.
     """
     data_fsm: dict[str, Any] = await state.get_data()
-    current_stage: Any | None = data_fsm.get('current_stage')
+    current_stage: State | None = data_fsm.get('current_stage')
+
     logger.info(f'Була натиснута кнопка "Скасувати" при створенні словника, на етапі "{current_stage}"')
 
     await state.set_state()
     logger.info('FSM стан переведено у очікування')
 
     kb: InlineKeyboardMarkup = get_inline_kb_confirm_cancel()
+    msg_text = MSG_CONFIRM_CANCEL_CREATE_VOCAB
 
-    await callback.message.edit_text(text=MSG_CONFIRM_CANCEL_CREATE_VOCAB, reply_markup=kb)
+    await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'cancel_no')
@@ -373,7 +376,7 @@ async def process_back_to_previous_stage(callback: types.CallbackQuery, state: F
     Повертає користувача до попереднього етапу (на якому була натиснута кнопка "Скасувати").
     """
     data_fsm: dict[str, Any] = await state.get_data()
-    previous_stage: Any | None = data_fsm.get('current_stage')
+    previous_stage: State | None = data_fsm.get('current_stage')
 
     logger.info('Користувач натиснув на кнопку "Ні" під час підтвердження скасування створення словника')
     logger.info(f'Повернення на етап "{previous_stage}"')
