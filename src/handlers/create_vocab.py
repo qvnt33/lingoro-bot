@@ -330,14 +330,14 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
     msg_text: str = MSG_SUCCESS_VOCAB_SAVED_TO_DB.format(vocab_name=vocab_name,
                                                          instruction=MSG_ENTER_VOCAB)
 
-    # Список словників із розділеними компонентами словникової пари
-    wordpair_components: list[dict] = [wordpair_utils.parse_wordpair_components(wordpair)
-                                       for wordpair in wordpairs]
+    # Список словникових пар із розділеними компонентами
+    vocab_wordpairs: list[dict] = [wordpair_utils.parse_wordpair_components(wordpair)
+                                   for wordpair in wordpairs]
 
     try:
         with Session() as session:
             vocab_crud = VocabCRUD(session=session)
-            vocab_crud.add_vocab_to_db(user_id, vocab_name, vocab_description, wordpair_components)
+            vocab_crud.create_new_vocab(user_id, vocab_name, vocab_description, vocab_wordpairs)
 
             logger.info(f'Був доданий до БД словник "{vocab_name}". Користувач: {user_id}')
             logger.info(f'[END] Створення словника. USER_ID: {user_id}')
