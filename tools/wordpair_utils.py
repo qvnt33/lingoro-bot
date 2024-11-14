@@ -109,10 +109,3 @@ def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
     wordpair_components['annotation'] = wordpair_annotation
 
     return wordpair_components
-
-
-# ?
-def check_has_valid_wordpairs(data_fsm: dict) -> bool:
-    """Перевіряє, чи є валідні словникові пари в FSM-кеші"""
-    all_valid_wordpairs: list[str] | None = data_fsm.get('all_valid_wordpairs')
-    return bool(all_valid_wordpairs)
