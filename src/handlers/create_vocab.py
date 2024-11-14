@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from db import crud
+from db.crud import VocabCRUD
 from db.database import Session
 from db.models import Vocabulary
 from exceptions import UserNotFoundError
@@ -18,7 +18,7 @@ from src.keyboards.create_vocab_kb import (
     get_inline_kb_create_vocab_name,
     get_inline_kb_create_wordpairs,
 )
-from src.keyboards.vocab_base_kb import get_inline_kb_vocab_selection
+from src.keyboards.vocab_selection_kb import get_inline_kb_vocab_selection
 from src.validators.vocab.vocab_description_validator import VocabDescriptionValidator
 from src.validators.vocab.vocab_name_validator import VocabNameValidator
 from src.validators.wordpair.wordpair_validator import WordpairValidator
@@ -336,18 +336,19 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
 
     try:
         with Session() as session:
-            vocab_crud = crud.VocabCRUD(session=session)
-            vocab_crud.add_vocab_to_db(vocab_name, vocab_description, wordpair_components)
+            vocab_crud = VocabCRUD(session=session)
+            vocab_crud.add_vocab_to_db(user_id, vocab_name, vocab_description, wordpair_components)
 
             logger.info(f'Був доданий до БД словник "{vocab_name}". Користувач: {user_id}')
             logger.info(f'[END] Створення словника. USER_ID: {user_id}')
 
-            user_vocabs: List[Vocabulary] = vocab_crud.get_vocabs_by_user_id(user_id=user_id)
+            vocabs: List[Vocabulary] = vocab_crud.get_vocabs_by_user_id(user_id=user_id)
     except UserNotFoundError as e:
         logger.error(e)
         return
-
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection(vocabularies=user_vocabs)
+    vocab_data: list[dict] = vocab_utils.get_vocab_data_with_wordpair_count(vocab_crud=vocab_crud,
+                                                                    vocabs=vocabs)
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection(vocab_data=vocab_data, callback_prefix='select_vocab_base')
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
