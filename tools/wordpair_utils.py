@@ -1,4 +1,5 @@
 from typing import Any
+
 from config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR, WORDPAIR_TRANSCRIPTION_SEPARATOR
 
 
@@ -28,10 +29,10 @@ def _parse_item_transcription(item: str) -> tuple[str, str | None]:
     """Розділяє елемент словникової пари на компоненти: слово та транскрипцію.
 
     Args:
-        item (str): частина словникової пари (слово з транскрипцією чи переклад з транскрипцією)
+        item (str): Частина словникової пари (слово з транскрипцією чи переклад з транскрипцією).
 
     Returns:
-        tuple[str, str | None]: кортеж із компонента та його транскрипції (якщо немає, то None)
+        tuple[str, str | None]: Кортеж із компонента та його транскрипції (якщо немає, то None).
     """
     parsed_item: str = item.split(WORDPAIR_TRANSCRIPTION_SEPARATOR)  # Розділений елемент
 
@@ -42,7 +43,8 @@ def _parse_item_transcription(item: str) -> tuple[str, str | None]:
 
 
 def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
-    """Розділяє словникову пару на окремі компоненти: слова з транскрипціями, переклади з транскрипціями та анотацію.
+    """Повертає розділену словникову пару на окремі компоненти:
+    слова з транскрипціями, переклади з транскрипціями та анотацію.
 
     Notes:
         Приймається завжди тільки перевірена словникова пара.
