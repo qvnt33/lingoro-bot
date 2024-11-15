@@ -43,7 +43,7 @@ class Wordpair(Base):
 
     id = Column(Integer, primary_key=True)
     annotation = Column(String(50))
-    total_number_errors = Column(Integer, default=0)
+    number_errors = Column(Integer, default=0)
 
     created_at = Column(DateTime(timezone=True),
                         default=datetime.now())
