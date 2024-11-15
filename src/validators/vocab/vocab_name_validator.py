@@ -15,17 +15,17 @@ from text_data import (
 
 
 class VocabNameValidator(ValidatorBase):
-    def __init__(self, name: str, user_id: int, db_session: Session, errors: list = None) -> None:
+    def __init__(self, name: str, user_id: int, session: Session, errors: list = None) -> None:
         super().__init__(errors)
         self.logger: logging.Logger = logging.getLogger(f'{__name__}.{self.__class__.__name__}')
 
         self._name: str = name
         self.user_id: int = user_id
-        self.db_session: Session = db_session
+        self.session: Session = session
 
     def _check_unique_name_per_user(self) -> bool:
         existing_vocab: Vocabulary | None = (
-            self.db_session.query(Vocabulary)
+            self.session.query(Vocabulary)
             .filter(Vocabulary.name.ilike(self._name), Vocabulary.user_id == self.user_id)
             .first())
 
