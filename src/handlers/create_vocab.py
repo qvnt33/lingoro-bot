@@ -342,7 +342,7 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
             logger.info(f'[END] Створення користувацького словника. USER_ID: {user_id}')
 
             # Дані всіх користувацьких словників користувача
-            all_vocabs_data: list[dict] = vocab_crud.get_data_all_vocabs(user_id)
+            all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
     except UserNotFoundError as e:
         logger.error(e)
         return
