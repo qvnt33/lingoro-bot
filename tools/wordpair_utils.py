@@ -25,23 +25,6 @@ def format_invalid_wordpairs(wordpairs: list[dict] | None) -> str:
     return formatted_invalid_wordpairs
 
 
-def _parse_item_transcription(item: str) -> tuple[str, str | None]:
-    """Розділяє елемент словникової пари на компоненти: слово та транскрипцію.
-
-    Args:
-        item (str): Частина словникової пари (слово з транскрипцією чи переклад з транскрипцією).
-
-    Returns:
-        tuple[str, str | None]: Кортеж із компонента та його транскрипції (якщо немає, то None).
-    """
-    parsed_item: str = item.split(WORDPAIR_TRANSCRIPTION_SEPARATOR)  # Розділений елемент
-
-    component: str = parsed_item[0].strip()
-    transcription: str | None = parsed_item[1].strip() if len(parsed_item) == 2 else None
-
-    return component, transcription
-
-
 def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
     """Повертає розділену словникову пару на окремі компоненти:
     слова з транскрипціями, переклади з транскрипціями та анотацію.
@@ -109,3 +92,20 @@ def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
     wordpair_components['annotation'] = wordpair_annotation
 
     return wordpair_components
+
+
+def _parse_item_transcription(item: str) -> tuple[str, str | None]:
+    """Розділяє елемент словникової пари на компоненти: слово та транскрипцію.
+
+    Args:
+        item (str): Частина словникової пари (слово з транскрипцією чи переклад з транскрипцією).
+
+    Returns:
+        tuple[str, str | None]: Кортеж із компонента та його транскрипції (якщо немає, то None).
+    """
+    parsed_item: str = item.split(WORDPAIR_TRANSCRIPTION_SEPARATOR)  # Розділений елемент
+
+    component: str = parsed_item[0].strip()
+    transcription: str | None = parsed_item[1].strip() if len(parsed_item) == 2 else None
+
+    return component, transcription
