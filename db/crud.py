@@ -1,8 +1,7 @@
-from typing import List
+from typing import Any
 
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.query import Query
-from typing import Any
+
 from db.models import Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
 from exceptions import InvalidVocabIndexError, UserNotFoundError
 
@@ -100,9 +99,9 @@ class VocabCRUD:
 
         # Додавання словникових пар та звʼязків між словами та перекладами
         for wordpair_item in vocab_wordpairs:
-            wordpair_words: list[dict] = wordpair_item['words']
-            wordpair_translations: list[dict] = wordpair_item['translations']
-            annotation: str | None = wordpair_item['annotation']
+            wordpair_words: list[dict] = wordpair_item.get('words')
+            wordpair_translations: list[dict] = wordpair_item.get('translations')
+            annotation: str | None = wordpair_item.get('annotation')
 
             new_wordpair = Wordpair(annotation=annotation,
                                     vocabulary_id=vocab_id)
@@ -132,8 +131,8 @@ class VocabCRUD:
             None
         """
         for word_item in wordpair_words:
-            word: str = word_item['word']
-            transcription: str | None = word_item['transcription']
+            word: str = word_item.get('word')
+            transcription: str | None = word_item.get('transcription')
 
             new_word = Word(word=word,
                             transcription=transcription)
@@ -163,8 +162,8 @@ class VocabCRUD:
             None
         """
         for translation_item in wordpair_translations:
-            translation: str = translation_item['translation']
-            transcription: str | None = translation_item['transcription']
+            translation: str = translation_item.get('translation')
+            transcription: str | None = translation_item.get('transcription')
 
             new_translation = Translation(translation=translation,
                                           transcription=transcription)
@@ -282,12 +281,10 @@ class VocabCRUD:
             annotation: str | None = wordpair.annotation
             total_number_errors: int = wordpair.total_number_errors
 
-            wordpair_components: dict = {}
-
-            wordpair_components['words'] = words
-            wordpair_components['translations'] = translations
-            wordpair_components['annotation'] = annotation
-            wordpair_components['total_number_errors'] = total_number_errors
+            wordpair_components: dict = {'words': words,
+                                         'translations': translations,
+                                         'annotation': annotation,
+                                         'total_number_errors': total_number_errors}
 
             all_wordpairs.append(wordpair_components)
 
@@ -352,14 +349,14 @@ def get_wordpairs_by_vocab_id(db: Session, vocab_id: int) -> list[dict]:
         annotation = wordpair.annotation  # Анотація
 
         # Всі слова словникової пари
-        wordpair_word_query: List[WordpairWord] = db.query(WordpairWord).filter(
+        wordpair_word_query: list[WordpairWord] = db.query(WordpairWord).filter(
             WordpairWord.wordpair_id == wordpair.id).all()
         for wordpair_word in wordpair_word_query:
             word_query: Word | None = db.query(Word).filter(Word.id == wordpair_word.word_id).first()
             words_lst.append((word_query.word, word_query.transcription))
 
         # Всі переклади словникової пари
-        wordpair_translation_query: List[WordpairTranslation] = db.query(WordpairTranslation).filter(
+        wordpair_translation_query: list[WordpairTranslation] = db.query(WordpairTranslation).filter(
             WordpairTranslation.wordpair_id == wordpair.id).all()
         for wordpair_translation in wordpair_translation_query:
             translation_query: Translation | None = db.query(Translation).filter(
