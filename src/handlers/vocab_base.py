@@ -67,20 +67,20 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
         logger.error(e)
         return
 
-    vocab_name: str = vocab_data['name']
-    vocab_description: str = vocab_data['description'] or 'Відсутній'
-    vocab_number_errors: int = vocab_data['number_errors']
-    vocab_wordpairs_count: int = vocab_data['wordpairs_count']
+    vocab_name: str = vocab_data.get('name')
+    vocab_description: str = vocab_data.get('description') or 'Відсутній'
+    vocab_number_errors: int = vocab_data.get('number_errors')
+    vocab_wordpairs_count: int = vocab_data.get('wordpairs_count')
 
     kb: InlineKeyboardMarkup = get_inline_kb_vocab_base()
 
     formatted_wordpairs: list[str] = []
 
     for idx, wordpair_item in enumerate(iterable=sorted_wordpair_items, start=1):
-        word_items: list[dict] = wordpair_item['words']
-        translation_items: list[dict] = wordpair_item['translations']
-        annotation: str = wordpair_item['annotation'] or 'Немає анотації'
-        wordpair_number_errors: int = wordpair_item['number_errors']
+        word_items: list[dict] = wordpair_item.get('words')
+        translation_items: list[dict] = wordpair_item.get('translations')
+        annotation: str = wordpair_item.get('annotation') or 'Немає анотації'
+        wordpair_number_errors: int = wordpair_item.get('number_errors')
 
         formatted_word_items: list[str] = format_word_items(word_items)
         formatted_translation_items: list[str] = format_word_items(translation_items, is_translation_items=True)
