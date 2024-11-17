@@ -1,5 +1,4 @@
 # handlers/create_vocab.py
-# ENTER
 MSG_ENTER_VOCAB_NAME = 'Введіть назву словника.'
 MSG_ENTER_NEW_VOCAB_NAME = 'Введіть, будь-ласка, нову назву словника або натисніть на кнопку "Залишити поточну назву".'
 
@@ -23,7 +22,6 @@ MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS = (
     'w1 | tr1 , w2 | tr2 : t1, t2 : a\n\n'
 )
 
-# ERROR
 MSG_ERROR_VOCAB_NAME_DUPLICATE = (
     'Нова назва словника не може бути такою ж, як і поточна.\n\n'
     'Введіть, будь-ласка, нову назву словника або натисніть на кнопку "Залишити поточну назву".')
@@ -33,44 +31,45 @@ MSG_ERROR_VOCAB_NAME_INVALID = (
 MSG_ERROR_VOCAB_DESCRIPTION_INVALID = 'У примітці "{description}" до словника "{vocab_name}" є помилки:\n{errors}'
 
 MSG_ERROR_WORDPAIRS_NO_VALID = '⚠️ Немає валідних словникових пар.'
-MSG_ERROR_WORDPAIRS_NO_ADDED = 'Немає доданих словникових пар.'
+MSG_ERROR_NO_VALID_WORDPAIRS_ADDED = 'Не було додано жодної валідної словникової пари.'
 
-# SUCCESS
 MSG_SUCCESS_VOCAB_SAVED_TO_DB = 'Словник "{vocab_name}" успішно збережено до бази словників!\n\n{instruction}'
 MSG_SUCCESS_ALL_WORDPAIRS_VALID = '🎉 Немає помилок серед введених пар!'
 
-# INFO
 MSG_INFO_ADDED_WORDPAIRS = '✅ Додані словникові пари:\n{wordpairs}'
 MSG_INFO_NO_ADDED_WORDPAIRS = '❌ Не додані словникові пари:\n{wordpairs}'
 
-# CONFIRM
 MSG_CONFIRM_CANCEL_CREATE_VOCAB = 'Ви дійсно хочете скасувати створення словника?'
 
 
-
 # handlers/menu.py
-# TITLE
 MSG_TITLE_MENU = 'Головне меню'
 MSG_TITLE_MENU_FOR_NEW_USER = 'Привіт! 👋 Вітаємо у боті для вивчення слів!\n\nГоловне меню'
 
 
-
 # handlers/vocab_base.py
-# CHOOSE
 MSG_CHOOSE_VOCAB = 'Оберіть словник із вашої бази або створіть новий.'
 
-# ERROR
 MSG_ERROR_VOCAB_BASE_EMPTY = 'У вашій базі поки що немає словників.\nСтворіть новий словник, щоб почати.'
 
+TEMPLATE_WORDPAIR = ('{idx}. {words} ▪️ '
+                     '{translations} ▪️ '
+                     '{annotation}\n'
+                     '🔺 Помилки: {number_errors}\n')
+
+MSG_INFO_VOCAB = ('📚 Назва словника: {name}\n'
+                  '📄 Опис: {description}\n'
+                  '🔢 Кількість словникових пар: {wordpairs_count}\n'
+                  '⚠️ Загальна кількість помилок: {number_errors}\n\n'
+                  'Словникові пари:\n'
+                  '{wordpairs}')
 
 
 # handlers/vocab_trainer.py
 MSG_ENTER_VOCAB_FOR_TRAIN = 'Оберіть словник із вашої бази для початку тренування.'
 
 
-
 # handlers/help.py
-# TITLE
 MSG_TITLE_HELP = """
 📚 Допомога: Як користуватися ботом для вивчення слів
 
@@ -133,30 +132,28 @@ MSG_TITLE_HELP = """
 """
 
 
-
 # validators/vocab/vocab_name_validator.py
-# ERROR
 MSG_ERROR_VOCAB_NAME_UNIQUELY = 'У вашій базі словників вже є словник з назвою "{name}".'
 MSG_ERROR_VOCAB_NAME_INVALID_LENGTH = 'Довжина назви словника має бути від {min_length} до {max_length} символів.'
 MSG_ERROR_VOCAB_NAME_INVALID_CHARS = 'Назва словника може містити лише літери, цифри та символи: "{allowed_chars}".'
 
 
 # validators/vocab/vocab_description_validator.py
-# ERROR
-MSG_ERROR_VOCAB_DESCRIPTION_INVALID_LENGTH = 'Довжина опису словника має бути від {min_length} до {max_length} символів.'
+MSG_ERROR_VOCAB_DESCRIPTION_INVALID_LENGTH = ('Довжина опису словника має бути від {min_length} до {max_length} '
+                                              'символів.')
 
 
 # validators/wordpair/wordpair_validator.py
-# ERROR
-MSG_ERROR_WORDPAIR_MIN_REQUIREMENT = 'Словникова пара повинна містити щонайменше одне слово та один переклад, розділені символом "{separator}".'
+MSG_ERROR_WORDPAIR_MIN_REQUIREMENT = ('Словникова пара повинна містити щонайменше одне слово та один переклад, '
+                                      'розділені символом "{separator}".')
 MSG_ERROR_WORDPAIR_MAX_REQUIREMENT = 'Словникова пара може містити максимум три частини: слово, переклад і анотацію.'
 del_MSG_ERROR_WORDPAIR_WORD_IS_EMPTY = 'Слово словникової пари не може бути порожнім.'
 del_MSG_ERROR_WORDPAIR_TRANSLATION_IS_EMPTY = 'Переклад словникової пари не може бути порожнім.'
 del_MSG_ERROR_WORDPAIR_INVALID_WORDS_COUNT = 'Кількість слів до словникової пари має бути від {min_count} до {max_count}.'
 
 
-
 # validators/wordpair/component_validator.py
-# ERROR
-MSG_ERROR_COMPONENT_INVALID_LENGTH = 'Довжина компонента "{component}" має бути від {min_length} до {max_length} символів.'
-MSG_ERROR_COMPONENT_INVALID_CHARS = 'Компонент "{component}" може містити лише літери, цифри та символи: "{allowed_chars}".'
+MSG_ERROR_COMPONENT_INVALID_LENGTH = ('Довжина компонента "{component}" має бути від '
+                                      '{min_length} до {max_length} символів.')
+MSG_ERROR_COMPONENT_INVALID_CHARS = ('Компонент "{component}" може містити лише літери, цифри та символи: '
+                                     '"{allowed_chars}".')
