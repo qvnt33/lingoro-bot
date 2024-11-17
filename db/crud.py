@@ -59,21 +59,21 @@ class VocabCRUD:
                 [
                     {
                         'words': [
-                            {'word': 'cat', 'transcription': None}
+                            {'word': 'cat', 'transcription': None},
                             ],
                         'translations': [
-                            {'translation': 'кіт', 'transcription': None}
+                            {'translation': 'кіт', 'transcription': None},
                             ],
                         'annotation': None
                     },
                     {
                         'words': [
                             {'word': 'hello', 'transcription': 'хелоу'},
-                            {'word': 'hi', 'transcription': 'хай'}
+                            {'word': 'hi', 'transcription': 'хай'},
                             ],
                         'translations': [
                             {'translation': 'привіт', 'transcription': None},
-                            {'translation': 'вітаю', 'transcription': None}
+                            {'translation': 'вітаю', 'transcription': None},
                             ],
                         'annotation': 'загальна форма вітання'
                     }
@@ -123,7 +123,7 @@ class VocabCRUD:
                 Приклад (wordpair_words):
                 [
                     {'word': 'hello', 'transcription': 'хелоу'},
-                    {'word': 'hi', 'transcription': 'хай'}
+                    {'word': 'hi', 'transcription': 'хай'},
                 ]
             wordpair_id (int): ID словникової пари, якій належать слова.
 
@@ -154,7 +154,7 @@ class VocabCRUD:
                 Приклад:
                 [
                     {'translation': 'привіт', 'transcription': None},
-                    {'translation': 'доброго дня', 'transcription': None}
+                    {'translation': 'доброго дня', 'transcription': None},
                 ]
             wordpair_id (int): ID словникової пари, якій належать переклади.
 
@@ -191,21 +191,21 @@ class VocabCRUD:
                 [
                     {
                         'words': [
-                            {'word': 'cat', 'transcription': None}
+                            {'word': 'cat', 'transcription': None},
                             ],
                         'translations': [
-                            {'translation': 'кіт', 'transcription': None}
+                            {'translation': 'кіт', 'transcription': None},
                             ],
                         'annotation': None
                     },
                     {
                         'words': [
                             {'word': 'hello', 'transcription': 'хелоу'},
-                            {'word': 'hi', 'transcription': 'хай'}
+                            {'word': 'hi', 'transcription': 'хай'},
                             ],
                         'translations': [
                             {'translation': 'привіт', 'transcription': None},
-                            {'translation': 'вітаю', 'transcription': None}
+                            {'translation': 'вітаю', 'transcription': None},
                             ],
                         'annotation': 'загальна форма вітання'
                     }
@@ -236,10 +236,10 @@ class VocabCRUD:
             >>> get_vocab_data(vocab_id=1)
                 {
                     'words': [
-                        {'word': 'cat', 'transcription': None}
+                        {'word': 'cat', 'transcription': None},
                         ],
                     'translations': [
-                        {'translation': 'кіт', 'transcription': None}
+                        {'translation': 'кіт', 'transcription': None},
                         ],
                     'annotation': None
                 }
@@ -261,14 +261,37 @@ class VocabCRUD:
                                       'wordpairs_count': wordpairs_count}
         return vocab_data
 
-    def get_wordpairs_by_vocab_id(self, vocab_id: int) -> list[dict]:
+
+class WordpairCRUD:
+    """Клас для CRUD-операцій з словниковими парами в БД"""
+
+    def __init__(self, session: Session) -> None:
+        self.session: Session = session
+
+    def get_wordpairs(self, vocab_id: int) -> list[dict]:
         """Повертає список словникових пар за "vocab_id".
 
         Args:
-            vocab_id (int): Ідентифікатор словника.
+            vocab_id (int): ID користувацького словника.
 
         Returns:
-            list[dict]: Список з словниковими парами у вигляді словників.
+            list[dict]: Список з всією інформацією (слова, переклади, анотація, к-сть помилок під час тренування)
+            про всі словникові пари, які належать користувацькому словнику по переданному ID у вигляді python-словників.
+
+        Examples:
+            >>> get_wordpairs_by_vocab_id(vocab_id=1)
+                [
+                    {
+                        'words': [
+                            {'word': 'cat', 'transcription': 'кет'},
+                            ],
+                        'translations': [
+                            {'translation': 'кіт', 'transcription': None},
+                            ],
+                        'annotation': None,
+                        'number_errors': 0
+                    },
+                ]
         """
         wordpair_query: list[Wordpair] = self.session.query(Wordpair).filter(
             Wordpair.vocabulary_id == vocab_id).all()
@@ -279,13 +302,12 @@ class VocabCRUD:
             words: list[dict] = self._get_words_with_transcriptions(wordpair.id)
             translations: list[dict] = self._get_translations_with_transcriptions(wordpair.id)
             annotation: str | None = wordpair.annotation
-            total_number_errors: int = wordpair.total_number_errors
+            number_errors: int = wordpair.number_errors
 
-            wordpair_components: dict = {'words': words,
-                                         'translations': translations,
-                                         'annotation': annotation,
-                                         'total_number_errors': total_number_errors}
-
+            wordpair_components: dict[str, Any] = {'words': words,
+                                                   'translations': translations,
+                                                   'annotation': annotation,
+                                                   'number_errors': number_errors}
             all_wordpairs.append(wordpair_components)
 
         return all_wordpairs
@@ -294,16 +316,24 @@ class VocabCRUD:
         """Повертає список слів та їх транскрипцій зі словникової пари за "wordpair_id".
 
         Args:
-            wordpair_id (int): Ідентифікатор словникової пари.
+            wordpair_id (int): ID словникової пари.
 
         Returns:
-            list[dict]: Список з словами та їх транскрипцією у вигляді словника.
+            list[dict]: Список з всіма словами та їх транскрипцією, які належать словниковій парі по переданному ID
+            у вигляді python-словників.
+
+        Examples:
+            >>> _get_words_with_transcriptions(wordpair_id=1)
+                [
+                    {'word': cat,
+                    'transcription': 'кет'},
+                ]
         """
-        wordpair_word_query: list[WordpairWord] = self.session.query(WordpairWord).filter(
+        all_wordpair_words: list[WordpairWord] = self.session.query(WordpairWord).filter(
             WordpairWord.wordpair_id == wordpair_id).all()
         words_with_transcriptions: list[dict] = []
 
-        for word in wordpair_word_query:
+        for word in all_wordpair_words:
             word_query: Word | None = self.session.query(Word).filter(
                 Word.id == word.word_id).first()
             words_with_transcriptions.append({'word': word_query.word,
@@ -314,16 +344,24 @@ class VocabCRUD:
         """Повертає список перекладів та їх транскрипцій зі словникової пари за "wordpair_id".
 
         Args:
-            wordpair_id (int): Ідентифікатор словникової пари.
+            wordpair_id (int): ID словникової пари.
 
         Returns:
-            list[dict]: Список з перекладами та їх транскрипцією у вигляді словника.
+            list[dict]: Список з всіма перекладами та їх транскрипцією, які належать словниковій парі по переданному ID
+            у вигляді python-словників.
+
+        Examples:
+            >>> _get_translations_with_transcriptions(wordpair_id=1)
+                [
+                    {'translation': кіт,
+                    'transcription': None},
+                ]
         """
-        wordpair_translation_query: list[WordpairWord] = self.session.query(WordpairTranslation).filter(
+        all_wordpair_translations: list[WordpairWord] = self.session.query(WordpairTranslation).filter(
             WordpairTranslation.wordpair_id == wordpair_id).all()
         translations_with_transcriptions: list[dict] = []
 
-        for translation in wordpair_translation_query:
+        for translation in all_wordpair_translations:
             translation_query: Translation | None = self.session.query(Translation).filter(
                 Translation.id == translation.translation_id).first()
             translations_with_transcriptions.append({'translation': translation_query.translation,
