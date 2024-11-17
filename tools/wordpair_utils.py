@@ -109,3 +109,33 @@ def _parse_item_transcription(item: str) -> tuple[str, str | None]:
     transcription: str | None = parsed_item[1].strip() if len(parsed_item) == 2 else None
 
     return component, transcription
+
+
+def format_word_items(word_items: list[dict], is_translation_items: bool = False) -> str:
+    """Розділяє всі переданні слова на слова та транскрипції (якщо є), після форматує їх у рядок.
+
+    Args:
+        word_items (list[dict]):
+            Приклад (word_items):
+            [
+                {'word': 'cat', 'transcription': 'кет'},
+                {'word': 'dog', 'transcription': 'дог'},
+            ]
+        is_translation (bool): Флаг, чи передані слова є перекладами.
+
+    Returns:
+        list[str]: Список відформатованих частин слів.
+    """
+    formatted_words: list[str] = []
+
+    for word_item in word_items:
+        word: str = word_item.get('translation') if is_translation_items else word_item.get('word')
+
+        transcription: str | None = word_item['transcription']
+
+        formatted_word: str = (f'{word} [{transcription}]' if transcription is not None
+                                        else word)
+        formatted_words.append(formatted_word)
+
+    joined_words: str = ', '.join(formatted_words)
+    return joined_words
