@@ -4,7 +4,7 @@ from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from db.crud import VocabCRUD
+from db.crud import VocabCRUD, WordpairCRUD
 from db.database import Session
 from exceptions import InvalidVocabIndexError
 from src.filters.check_empty_filters import CheckEmptyFilter
@@ -27,8 +27,8 @@ async def process_vocab_base(callback: types.CallbackQuery) -> None:
     with Session() as session:
         vocab_crud = VocabCRUD(session)
 
-        # Дані всіх словників користувача
-        all_vocabs_data: list[dict] = vocab_crud.get_data_all_vocabs(user_id)
+        # Дані всіх користувацьких словників користувача
+        all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
 
     # Якщо в БД користувача немає словників
     if check_empty_filter.apply(all_vocabs_data):
@@ -53,9 +53,15 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
     try:
         with Session() as session:
             vocab_crud = VocabCRUD(session)
+            wordpair_crud = WordpairCRUD(session)
 
-            wordpair_items: list[dict] = vocab_crud.get_wordpairs_by_vocab_id(vocab_id)
-            vocab_data: dict = vocab_crud.get_vocab_data_by_id(vocab_id)
+            wordpair_items: list[dict] = wordpair_crud.get_wordpairs(vocab_id)
+
+            # Відсортований список словникових пар по кількості їх помилок
+            sorted_wordpair_items: list[dict] = sorted(wordpair_items,
+                                                       key=lambda item: item['number_errors'],
+                                                       reverse=True)
+            vocab_data: dict = vocab_crud.get_vocab_data(vocab_id)
     except InvalidVocabIndexError as e:
         logger.error(e)
         return
@@ -69,7 +75,7 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
 
     formatted_wordpairs: list[str] = []
 
-    for idx, wordpair_item in enumerate(iterable=wordpair_items, start=1):
+    for idx, wordpair_item in enumerate(iterable=sorted_wordpair_items, start=1):
         word_items: list[dict] = wordpair_item['words']
         translation_items: list[dict] = wordpair_item['translations']
         annotation: str = wordpair_item['annotation'] or 'Немає анотації'
