@@ -10,7 +10,7 @@ from exceptions import InvalidVocabIndexError
 from src.filters.check_empty_filters import CheckEmptyFilter
 from src.keyboards.vocab_base_kb import get_inline_kb_vocab_base
 from src.keyboards.vocab_selection_kb import get_inline_kb_vocab_selection
-from text_data import MSG_CHOOSE_VOCAB, MSG_ERROR_VOCAB_BASE_EMPTY
+from text_data import MSG_CHOOSE_VOCAB, MSG_ERROR_VOCAB_BASE_EMPTY, MSG_INFO_VOCAB, TEMPLATE_WORDPAIR
 from tools.wordpair_utils import format_word_items
 
 router = Router(name='vocab_base')
@@ -85,21 +85,19 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
         formatted_word_items: list[str] = format_word_items(word_items)
         formatted_translation_items: list[str] = format_word_items(translation_items, is_translation_items=True)
 
-        formatted_wordpair: str = (
-            f'{idx}. {formatted_word_items} ▪️ '
-            f'{formatted_translation_items} ▪️ '
-            f'{annotation}\n'
-            f'🔺 Помилки: {wordpair_number_errors}\n')
+        formatted_wordpair: str = TEMPLATE_WORDPAIR.format(idx=idx,
+                                                           words=formatted_word_items,
+                                                           translations=formatted_translation_items,
+                                                           annotation=annotation,
+                                                           number_errors=wordpair_number_errors)
         formatted_wordpairs.append(formatted_wordpair)
 
     joined_wordpairs: str = '\n'.join(formatted_wordpairs)
 
-    msg_text: str = (
-        f'📚 Назва словника: {vocab_name}\n'
-        f'📄 Опис: {vocab_description}\n'
-        f'🔢 Кількість словникових пар: {vocab_wordpairs_count}\n'
-        f'⚠️ Загальна кількість помилок: {vocab_number_errors}\n\n'
-        f'Словникові пари:\n'
-        f'{joined_wordpairs}')
+    msg_vocab_info: str = MSG_INFO_VOCAB.format(name=vocab_name,
+                                                description=vocab_description,
+                                                wordpairs_count=vocab_wordpairs_count,
+                                                number_errors=vocab_number_errors,
+                                                wordpairs=joined_wordpairs)
 
-    await callback.message.edit_text(text=msg_text, reply_markup=kb)
+    await callback.message.edit_text(text=msg_vocab_info, reply_markup=kb)
