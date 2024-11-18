@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from db.models import Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
 from exceptions import InvalidVocabIndexError, UserNotFoundError
+from text_data import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR
 
 
 class UserCRUD:
@@ -86,7 +87,7 @@ class VocabCRUD:
             User.user_id == user_id).first()
 
         if user is None:
-            raise UserNotFoundError(f'Користувача з ID "{self.user_id}" не було знайдено у БД')
+            raise UserNotFoundError(USER_NOT_FOUND_ERROR.format(id=self.user_id))
 
         # Створення нового словника
         new_vocab = Vocabulary(name=vocab_name,
@@ -248,7 +249,7 @@ class VocabCRUD:
             Vocabulary.id == vocab_id).first()
 
         if vocab is None:
-            raise InvalidVocabIndexError(f'Словника з ID "{vocab_id}" не було знайдено у БД')
+            raise InvalidVocabIndexError(INVALID_VOCAB_INDEX_ERROR.format(id=vocab_id))
 
         all_wordpairs: list[Wordpair] = self.session.query(Wordpair).filter(
                 Wordpair.vocabulary_id == vocab_id).all()
@@ -276,7 +277,7 @@ class VocabCRUD:
             Vocabulary.id == vocab_id).first()
 
         if vocab is None:
-            raise InvalidVocabIndexError(f'Словника з ID "{vocab_id}" не було знайдено у БД')
+            raise InvalidVocabIndexError(INVALID_VOCAB_INDEX_ERROR.format(id=vocab.id))
 
         self.session.delete(vocab)
         self.session.commit()

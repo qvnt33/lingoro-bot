@@ -157,3 +157,8 @@ MSG_ERROR_COMPONENT_INVALID_LENGTH = ('Довжина компонента "{com
                                       '{min_length} до {max_length} символів.')
 MSG_ERROR_COMPONENT_INVALID_CHARS = ('Компонент "{component}" може містити лише літери, цифри та символи: '
                                      '"{allowed_chars}".')
+
+
+# custom exceptions
+INVALID_VOCAB_INDEX_ERROR = 'Словника з ID "{id}" не було знайдено у БД'
+USER_NOT_FOUND_ERROR = 'Користувача з ID "{id}" не було знайдено у БД'
