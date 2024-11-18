@@ -367,7 +367,7 @@ async def process_cancel_create_vocab(callback: types.CallbackQuery, state: FSMC
     logger.info('FSM стан переведено у очікування')
 
     kb: InlineKeyboardMarkup = get_inline_kb_confirm_cancel()
-    msg_confirm_cancel_create = MSG_CONFIRM_CANCEL_CREATE_VOCAB
+    msg_confirm_cancel_create: str = MSG_CONFIRM_CANCEL_CREATE_VOCAB
 
     await callback.message.edit_text(text=msg_confirm_cancel_create, reply_markup=kb)
 
