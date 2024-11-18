@@ -32,23 +32,24 @@ class User(Base):
 class Vocabulary(Base):
     """Таблиця словників"""
 
-    __tablename__: str = 'vocabularies'
+    __tablename__ = 'vocabularies'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
     description = Column(String(100))
     number_errors = Column(Integer, default=0)
 
-    created_at = Column(DateTime(timezone=True),
-                        default=datetime.now())
-
+    created_at = Column(DateTime(timezone=True), default=datetime.now())
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
-    # Відношення до Wordpair (для каскадного видалення)
-    # Видалення всіх пов'язаних словників (Wordpair), якщо видаляється Vocabulary
-    wordpairs: _RelationshipDeclared[Any] = relationship('Wordpair',
-                                                         backref='vocabulary',
-                                                         cascade='all, delete-orphan')
+    # Відношення до Wordpair (passive_deletes=True)
+    # Дозволяє базі даних керувати видаленням дочірніх записів без додаткових запитів
+    wordpairs: _RelationshipDeclared[Any] = relationship(
+        'Wordpair',
+        backref='vocabulary',
+        cascade='all, delete-orphan',
+        passive_deletes=True,  # Уникає додаткових запитів до бази при видаленні
+    )
 
 
 class Wordpair(Base):
