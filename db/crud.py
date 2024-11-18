@@ -263,15 +263,9 @@ class VocabCRUD:
         return vocab_data
 
     def delete_vocab(self, vocab_id: int) -> None:
-        """Видаляє користувацький словник та всі його звʼязки з БД.
+        """Видаляє користувацький словник.
         За допомогою ID словника.
-        Слова та переклади залишаються у БД.
-
-        Args:
-            vocab_id (int): ID користувацького словника.
-
-        Returns:
-            None
+        Словникові пари та вся інформація залишається у БД.
         """
         vocab: Vocabulary | None = self.session.query(Vocabulary).filter(
             Vocabulary.id == vocab_id).first()
