@@ -52,7 +52,7 @@ async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext)
     Запускає процес створення користувацького словника.
     """
     user_id: int = callback.from_user.id
-    logger.info(f'[START] Створення користувацького словника. USER_ID: {user_id}')
+    logger.info(f'Початок процесу "створення користувацького словника". USER_ID: {user_id}')
 
     await state.clear()
     logger.info('FSM стан та FSM-Cache очищено')
@@ -215,7 +215,7 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
     vocab_description: str | None = data_fsm.get('vocab_description')
 
     wordpairs: str = message.text.strip()
-    logger.info(f'Введено словникові пари: {wordpairs}')
+    logger.info(f'Введено словникові пари (одним повідомленням): {wordpairs}')
 
     valid_wordpairs: list[str] = []  # Валідні словникові пари
     invalid_wordpairs: list[dict] = []  # Не валідні словникові пари та їх помилки
@@ -338,8 +338,7 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
             vocab_crud = VocabCRUD(session)
             vocab_crud.create_new_vocab(user_id, vocab_name, vocab_description, vocab_wordpairs)
 
-            logger.info(f'Був доданий до БД користувацький словник. Назва: {vocab_name}')
-            logger.info(f'[END] Створення користувацького словника. USER_ID: {user_id}')
+            logger.info(f'До БД доданий користувацький словник. Назва: {vocab_name}. USER_ID: {user_id}')
 
             # Дані всіх користувацьких словників користувача
             all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
