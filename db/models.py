@@ -1,10 +1,7 @@
 from datetime import datetime
-from typing import Any
 
 from .database import Base
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm.relationships import _RelationshipDeclared
 
 
 class User(Base):
@@ -22,17 +19,11 @@ class User(Base):
     created_at = Column(DateTime(timezone=True),
                         default=datetime.now())
 
-    # Відношення до Vocabulary (для каскадного видалення)
-    # Видалення всіх пов'язаних словників (Vocabulary), якщо видаляється User
-    vocabularies: _RelationshipDeclared[Any] = relationship('Vocabulary',
-                                                            backref='user',
-                                                            cascade='all, delete-orphan')
-
 
 class Vocabulary(Base):
     """Таблиця словників"""
 
-    __tablename__ = 'vocabularies'
+    __tablename__: str = 'vocabularies'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
@@ -41,15 +32,6 @@ class Vocabulary(Base):
 
     created_at = Column(DateTime(timezone=True), default=datetime.now())
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-
-    # Відношення до Wordpair (passive_deletes=True)
-    # Дозволяє базі даних керувати видаленням дочірніх записів без додаткових запитів
-    wordpairs: _RelationshipDeclared[Any] = relationship(
-        'Wordpair',
-        backref='vocabulary',
-        cascade='all, delete-orphan',
-        passive_deletes=True,  # Уникає додаткових запитів до бази при видаленні
-    )
 
 
 class Wordpair(Base):
@@ -66,13 +48,6 @@ class Wordpair(Base):
 
     vocabulary_id = Column(Integer, ForeignKey('vocabularies.id'), nullable=False)
 
-    # Відношення до WordpairWord та WordpairTranslation (для каскадного видалення)
-    # Видалення всіх пов'язаних словників (WordpairWord, WordpairTranslation), якщо видаляється Wordpair
-    wordpair_words: _RelationshipDeclared[Any] = relationship('WordpairWord',
-                                                              cascade='all, delete-orphan')
-    wordpair_translations: _RelationshipDeclared[Any] = relationship('WordpairTranslation',
-                                                                     cascade='all, delete-orphan')
-
 
 class WordpairWord(Base):
     """Таблиця зв'язків між словниковими парами та словами"""
@@ -81,10 +56,8 @@ class WordpairWord(Base):
 
     id = Column(Integer, primary_key=True)
 
-    # ondelete='CASCADE' забезпечує автоматичне видалення записів з WordpairWord,
-    # якщо видаляється відповідний Word або Wordpair
-    word_id = Column(Integer, ForeignKey('words.id', ondelete='CASCADE'), nullable=False)
-    wordpair_id = Column(Integer, ForeignKey('wordpairs.id', ondelete='CASCADE'), nullable=False)
+    word_id = Column(Integer, ForeignKey('words.id'), nullable=False)
+    wordpair_id = Column(Integer, ForeignKey('wordpairs.id'), nullable=False)
 
 
 class WordpairTranslation(Base):
@@ -94,10 +67,8 @@ class WordpairTranslation(Base):
 
     id = Column(Integer, primary_key=True)
 
-    # ondelete='CASCADE' забезпечує автоматичне видалення записів з WordpairTranslation,
-    # якщо видаляється відповідний Translation або Wordpair
-    translation_id = Column(Integer, ForeignKey('translations.id', ondelete='CASCADE'), nullable=False)
-    wordpair_id = Column(Integer, ForeignKey('wordpairs.id', ondelete='CASCADE'), nullable=False)
+    translation_id = Column(Integer, ForeignKey('translations.id'), nullable=False)
+    wordpair_id = Column(Integer, ForeignKey('wordpairs.id'), nullable=False)
 
 
 class Word(Base):
