@@ -261,6 +261,26 @@ class VocabCRUD:
                                       'wordpairs_count': wordpairs_count}
         return vocab_data
 
+    def delete_vocab(self, vocab_id: int) -> None:
+        """Видаляє користувацький словник та всі його звʼязки з БД.
+        За допомогою ID словника.
+        Слова та переклади залишаються у БД.
+
+        Args:
+            vocab_id (int): ID користувацького словника.
+
+        Returns:
+            None
+        """
+        vocab: Vocabulary | None = self.session.query(Vocabulary).filter(
+            Vocabulary.id == vocab_id).first()
+
+        if vocab is None:
+            raise InvalidVocabIndexError(f'Словника з ID "{vocab_id}" не було знайдено у БД')
+
+        self.session.delete(vocab)
+        self.session.commit()
+
 
 class WordpairCRUD:
     """Клас для CRUD-операцій з словниковими парами в БД"""
