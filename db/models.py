@@ -16,8 +16,7 @@ class User(Base):
     first_name = Column(String(50))
     last_name = Column(String(50))
 
-    created_at = Column(DateTime(timezone=True),
-                        default=datetime.now())
+    created_at = Column(DateTime(timezone=True), default=datetime.now)
 
 
 class Vocabulary(Base):
@@ -30,7 +29,7 @@ class Vocabulary(Base):
     description = Column(String(100))
     number_errors = Column(Integer, default=0)
 
-    created_at = Column(DateTime(timezone=True), default=datetime.now())
+    created_at = Column(DateTime(timezone=True), default=datetime.now)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
 
@@ -44,7 +43,7 @@ class Wordpair(Base):
     number_errors = Column(Integer, default=0)
 
     created_at = Column(DateTime(timezone=True),
-                        default=datetime.now())
+                        default=datetime.now)
 
     vocabulary_id = Column(Integer, ForeignKey('vocabularies.id'), nullable=False)
 

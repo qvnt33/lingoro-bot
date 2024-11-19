@@ -236,13 +236,12 @@ class VocabCRUD:
         Examples:
             >>> get_vocab_data(vocab_id=1)
                 {
-                    'words': [
-                        {'word': 'cat', 'transcription': None},
-                        ],
-                    'translations': [
-                        {'translation': 'кіт', 'transcription': None},
-                        ],
-                    'annotation': None
+                    'id': 1,
+                    'name': 'Тварини',
+                    'description': None,
+                    'number_errors': 0,
+                    'created_at': '2024-11-17 10:12:35.123',
+                    'wordpairs_count': 2
                 }
         """
         vocab: Vocabulary | None = self.session.query(Vocabulary).filter(
@@ -259,6 +258,7 @@ class VocabCRUD:
                                       'name': vocab.name,
                                       'description': vocab.description,
                                       'number_errors': vocab.number_errors,
+                                      'created_at': vocab.created_at,
                                       'wordpairs_count': wordpairs_count}
         return vocab_data
 
