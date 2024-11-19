@@ -32,7 +32,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 @router.callback_query(F.data == 'vocab_base')
 async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "База словників" у головному меню.
-    Відправляє користувачу словники у вигляді кнопок.
+    Відправляє користувачу користувацькі словники у вигляді кнопок.
     """
     user_id: int = callback.from_user.id
 
