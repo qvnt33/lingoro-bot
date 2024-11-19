@@ -263,17 +263,54 @@ class VocabCRUD:
         return vocab_data
 
     def delete_vocab(self, vocab_id: int) -> None:
-        """Видаляє користувацький словник.
-        За допомогою ID словника.
-        Словникові пари та вся інформація залишається у БД.
-        """
+        """Видаляє користувацький словник, словникові пари, та всі звʼязки"""
         vocab: Vocabulary | None = self.session.query(Vocabulary).filter(
             Vocabulary.id == vocab_id).first()
 
         if vocab is None:
-            raise InvalidVocabIndexError(INVALID_VOCAB_INDEX_ERROR.format(id=vocab.id))
+            raise InvalidVocabIndexError(INVALID_VOCAB_INDEX_ERROR.format(id=vocab_id))
 
+        # Видалення всіх словникових пар, повʼязаних зі словником
+        self._delete_wordpairs_by_vocab_id(vocab_id)
+
+        # Видалення словника
         self.session.delete(vocab)
+        self.session.commit()
+
+        # Видалення невикористаних слів та перекладів
+        self._delete_unused_words()
+        self._delete_unused_translations()
+
+    def _delete_wordpairs_by_vocab_id(self, vocab_id: int) -> None:
+        """Видаляє всі словникові пари, повʼязані зі словником"""
+        wordpairs: list[Wordpair] = self.session.query(Wordpair).filter(
+            Wordpair.vocabulary_id == vocab_id).all()
+
+        for wordpair in wordpairs:
+            # Видалення звʼязків слів та перекладів зі словниковою парою
+            self.session.query(WordpairWord).filter(
+                WordpairWord.wordpair_id == wordpair.id).delete(synchronize_session=False)
+            self.session.query(WordpairTranslation).filter(
+                WordpairTranslation.wordpair_id == wordpair.id).delete(synchronize_session=False)
+
+            # Видалення словникової пари
+            self.session.delete(wordpair)
+        self.session.commit()
+
+    def _delete_unused_words(self) -> None:
+        """Видаляє всі слова, які більше не повʼязані зі словниковими парами"""
+        unused_words: list[Word] = self.session.query(Word).outerjoin(WordpairWord).filter(
+            WordpairWord.id.is_(None)).all()
+        for word in unused_words:
+            self.session.delete(word)
+        self.session.commit()
+
+    def _delete_unused_translations(self) -> None:
+        """Видаляє всі переклади, які більше не повʼязані зі словниковими парами"""
+        unused_translations: list[Translation] = self.session.query(Translation).outerjoin(WordpairTranslation).filter(
+            WordpairTranslation.id.is_(None)).all()
+        for translation in unused_translations:
+            self.session.delete(translation)
         self.session.commit()
 
 
