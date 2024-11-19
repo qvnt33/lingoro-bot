@@ -5,13 +5,14 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 def get_inline_kb_vocab_selection(all_vocabs_data: list[dict],
                                   callback_prefix: str,
-                                  is_with_btn_create_vocab: bool = True) -> InlineKeyboardMarkup:
+                                  is_for_training: bool = False) -> InlineKeyboardMarkup:
     """Клавіатура з вибором словників.
 
     Args:
         all_vocabs_data (list[dict]): Список словників зі всіма даними.
         callback_prefix (str): Префікс для callback_data кнопок, залежить від контексту.
-        is_with_btn_create_vocab (bool): Додати кнопку "Додати словник", якщо True.
+        is_for_training (bool): Додавання кнопки "База словників" для розділу "Тренування" та кнопки
+        "Додати словник" для розділу "База словників"
 
     Returns:
         InlineKeyboardMarkup: Сформована клавіатура.
@@ -30,8 +31,10 @@ def get_inline_kb_vocab_selection(all_vocabs_data: list[dict],
         btn_vocab = InlineKeyboardButton(text=btn_text, callback_data=callback_data_text)
         kb.add(btn_vocab)
 
-    # Додаємо кнопку додавання нового словника та кнопку виходу
-    if is_with_btn_create_vocab:
+    if is_for_training:
+        btn_vocab_base = InlineKeyboardButton(text='База словників', callback_data='vocab_base')
+        kb.add(btn_vocab_base)
+    else:
         btn_create_vocab = InlineKeyboardButton(text='Додати словник', callback_data='create_vocab')
         kb.add(btn_create_vocab)
 
