@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from db.models import Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
+from db.models import TrainingSession, Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
 from exceptions import InvalidVocabIndexError, UserNotFoundError
 from text_data import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR
 
@@ -432,3 +432,45 @@ class WordpairCRUD:
             translations_with_transcriptions.append({'translation': translation_query.translation,
                                                      'transcription': translation_query.transcription})
         return translations_with_transcriptions
+
+
+class TrainingCRUD:
+    """Клас для CRUD-операцій з сесіями тренування в БД"""
+
+    def __init__(self, session: Session) -> None:
+        self.session: Session = session
+
+    def create_new_training_session(self, user_id: int,
+                                    vocabulary_id: int,
+                                    training_mode: str,
+                                    start_time: str,
+                                    end_time: str,
+                                    number_correct_answers: int,
+                                    number_wrong_answers: int,
+                                    is_completed: bool) -> None:
+        """Створює нову сесію тренування для користувача.
+
+        Args:
+            user_id (int): ID користувача.
+            vocabulary_id (int): ID словника, який використовується для тренування.
+            training_mode (str): Режим тренування.
+            start_time (str): Час початку тренування у форматі рядка.
+            end_time (str): Час завершення тренування у форматі рядка.
+            number_correct_answers (int): Кількість правильних відповідей під час тренування.
+            number_wrong_answers (int): Кількість неправильних відповідей під час тренування.
+            is_completed (bool): Чи було тренування успішно завершене.
+
+        Returns:
+            None
+        """
+        new_training_session = TrainingSession(training_mode=training_mode,
+                                               start_time=start_time,
+                                               end_time=end_time,
+                                               number_correct_answers=number_correct_answers,
+                                               number_wrong_answers=number_wrong_answers,
+                                               is_completed=is_completed,
+                                               user_id=user_id,
+                                               vocabulary_id=vocabulary_id)
+
+        self.session.add(new_training_session)
+        self.session.commit()
