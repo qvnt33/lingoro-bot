@@ -213,7 +213,8 @@ class VocabCRUD:
                 ]
         """
         all_vocabs: list[Vocabulary] = self.session.query(Vocabulary).filter(
-            Vocabulary.user_id == user_id).all()
+            Vocabulary.user_id == user_id,
+            ~Vocabulary.is_deleted).all()
 
         all_vocabs_data: list[dict] = []
 
@@ -245,7 +246,8 @@ class VocabCRUD:
                 }
         """
         vocab: Vocabulary | None = self.session.query(Vocabulary).filter(
-            Vocabulary.id == vocab_id).first()
+            Vocabulary.id == vocab_id,
+            ~Vocabulary.is_deleted).first()
 
         if vocab is None:
             raise InvalidVocabIndexError(INVALID_VOCAB_INDEX_ERROR.format(id=vocab_id))
@@ -261,6 +263,17 @@ class VocabCRUD:
                                       'created_at': vocab.created_at,
                                       'wordpairs_count': wordpairs_count}
         return vocab_data
+
+    def soft_delete_vocab(self, vocab_id: int) -> None:
+        """Мʼяко видаляє користувацький словник, позначаючи його як 'видалений' (.is_deleted=True)"""
+        vocab: Vocabulary | None = self.session.query(Vocabulary).filter(
+            Vocabulary.id == vocab_id).first()
+
+        if vocab is None:
+            raise InvalidVocabIndexError(INVALID_VOCAB_INDEX_ERROR.format(id=vocab_id))
+
+        vocab.is_deleted = True
+        self.session.commit()
 
     def delete_vocab(self, vocab_id: int) -> None:
         """Видаляє користувацький словник, словникові пари, та всі звʼязки"""

@@ -152,7 +152,7 @@ async def process_delete_vocab(callback: types.CallbackQuery, state: FSMContext)
 @router.callback_query(F.data == 'accept_delete_vocab')
 async def process_accept_delete_vocab(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Так" при підтвердженні видалення користувацького словника.
-    Видаляє користувацький словник та всі його звʼязки з БД (слова та переклади залишаються в БД).
+    Мʼяко видаляє користувацький словник, залишаючи всі його звʼязки в БД.
     """
     logger.info('Натиснуто кнопку "Так" під час підтвердження видалення словника')
 
@@ -166,7 +166,7 @@ async def process_accept_delete_vocab(callback: types.CallbackQuery, state: FSMC
             vocab_data: dict[str, Any] = vocab_crud.get_vocab_data(vocab_id)
             vocab_name: str | None = vocab_data.get('name')
 
-            vocab_crud.delete_vocab(vocab_id)
+            vocab_crud.soft_delete_vocab(vocab_id)
 
             logger.info('Словник був видалений з БД')
     except InvalidVocabIndexError as e:

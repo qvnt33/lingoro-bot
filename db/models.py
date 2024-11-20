@@ -28,6 +28,7 @@ class Vocabulary(Base):
     name = Column(String(50), nullable=False)
     description = Column(String(100))
     number_errors = Column(Integer, default=0)
+    is_deleted = Column(Boolean, default=False)
 
     created_at = Column(DateTime(timezone=True), default=datetime.now)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
