@@ -5,36 +5,39 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 def get_inline_kb_all_training() -> InlineKeyboardMarkup:
     """Клавіатура з списком словникових тренувань"""
-    inline_builder = InlineKeyboardBuilder()
+    buttons: list[list[InlineKeyboardButton]] = [
+        [InlineKeyboardButton(text='📖 Прямий переклад (W -> T)', callback_data='direct_translation')],
+        [InlineKeyboardButton(text='📖 Зворотній переклад (T -> W)', callback_data='reverse_translation')],
+        [InlineKeyboardButton(text='📚 Змінити словник', callback_data='vocab_trainer')],
+        [InlineKeyboardButton(text='🏠 Головне меню', callback_data='menu')]]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
-    btn_direct_translation = InlineKeyboardButton(text='Прямий переклад (Word → Translation)',
-                                                  callback_data='direct_translation')
-    btn_reverse_translation = InlineKeyboardButton(text='Зворотній переклад (Translation → Word)',
-                                                   callback_data='reverse_translation')
-    btn_change_vocab = InlineKeyboardButton(text='Змінити словник',
-                                            callback_data='vocab_trainer')
-    btn_menu = InlineKeyboardButton(text='Головне меню',
-                                    callback_data='menu')
 
-    inline_builder.row(btn_direct_translation,
-                       btn_reverse_translation,
-                       btn_change_vocab,
-                       btn_menu,
-                       width=1)
-
-    return inline_builder.as_markup()
+def get_inline_kb_finish_training() -> InlineKeyboardMarkup:
+    """Клавіатура з списком словникових тренувань"""
+    buttons: list[list[InlineKeyboardButton]] = [
+        [InlineKeyboardButton(text='🔄 Повторити тренування', callback_data='repeat_training')],
+        [InlineKeyboardButton(text='🎯 Змінити тип тренування', callback_data='change_training_mode')],
+        [InlineKeyboardButton(text='📚 Змінити словник', callback_data='vocab_trainer')],
+        [InlineKeyboardButton(text='🏠 Головне меню', callback_data='menu')]]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def get_inline_kb_process_training() -> InlineKeyboardMarkup:
-    """Клавіатура з списком словникових тренувань"""
-    inline_builder = InlineKeyboardBuilder()
+    buttons: list[list[InlineKeyboardButton]] = [
+        [InlineKeyboardButton(text='➡️ Пропустити', callback_data='skip_word')],
+        [
+            InlineKeyboardButton(text='💡 Анотація', callback_data='show_annotation'),
+            InlineKeyboardButton(text='💬 Переклад', callback_data='show_translation')],
+        [InlineKeyboardButton(text='❌ Завершити тренування', callback_data='cancel_training')]]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
-    btn_cancel = InlineKeyboardButton(text='Скасувати',
-                                      callback_data='cancel_training')
 
-    inline_builder.row(btn_cancel)
-
-    return inline_builder.as_markup()
+def get_inline_kb_confirm_cancel_training() -> InlineKeyboardMarkup:
+    buttons: list[list[InlineKeyboardButton]] = [
+        [InlineKeyboardButton(text='✅ Так', callback_data='accept_cancel_training')],
+        [InlineKeyboardButton(text='❌ Ні', callback_data='decline_cancel_training')]]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def get_inline_kb_vocab_selection_training(all_vocabs_data: list[dict],

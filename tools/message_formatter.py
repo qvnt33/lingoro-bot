@@ -22,6 +22,33 @@ def add_vocab_data_to_message(vocab_name: str | None = None,
     formatted_message: str = (
         f'Назва: {vocab_name}\n'
         f'Опис: {vocab_description}\n\n'
-        f'{message_text}'
-    )
+        f'{message_text}')
+    return formatted_message
+
+
+
+
+
+def del_add_section_title_to_message(message_text: str, section: str) -> str:
+    """Додає назву поточного розділу до повідомлення.
+
+    Notes:
+        - Якщо не буде передана назва розділу, то записується слово "Відсутня".
+
+    Args:
+        section_title (str | None): Назва розділу (за замовчуванням: None).
+        message_text (str): Повідомлення, до якого потрібно додати назву розділу
+        (за замовчуванням пустий рядок).
+
+    Returns:
+        str: Відредаговане повідомлення з доданою назвою розділу.
+    """
+    if section == 'training':
+        section_title = 'Словниковий тренажер'
+    elif section == 'vocab_base':
+        section_title = 'База словників'
+
+    formatted_message: str = (
+        f'📂 {section_title}\n\n'
+        f'{message_text}')
     return formatted_message

@@ -440,7 +440,8 @@ class TrainingCRUD:
     def __init__(self, session: Session) -> None:
         self.session: Session = session
 
-    def create_new_training_session(self, user_id: int,
+    def create_new_training_session(self,
+                                    user_id: int,
                                     vocabulary_id: int,
                                     training_mode: str,
                                     start_time: str,
