@@ -10,10 +10,10 @@ from db.database import Session
 from exceptions import InvalidVocabIndexError
 from src.filters.check_empty_filters import CheckEmptyFilter
 from src.keyboards.vocab_base_kb import (
-    get_inline_kb_accept_delete_vocab,
-    get_inline_kb_confirm_delete,
-    get_inline_kb_vocab_options,
-    get_inline_kb_vocab_selection_base,
+    get_kb_accept_delete_vocab,
+    get_kb_confirm_delete,
+    get_kb_vocab_options,
+    get_kb_vocab_selection_base,
 )
 from text_data import (
     MSG_CHOOSE_VOCAB,
@@ -56,7 +56,7 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
     else:
         msg_text: str = MSG_CHOOSE_VOCAB
 
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection_base(all_vocabs_data)
+    kb: InlineKeyboardMarkup = get_kb_vocab_selection_base(all_vocabs_data)
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
@@ -92,7 +92,7 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
     vocab_number_errors: int = vocab_data.get('number_errors')
     vocab_wordpairs_count: int = vocab_data.get('wordpairs_count')
 
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_options()
+    kb: InlineKeyboardMarkup = get_kb_vocab_options()
 
     formatted_wordpairs: list[str] = []
 
@@ -143,7 +143,7 @@ async def process_delete_vocab(callback: types.CallbackQuery, state: FSMContext)
         logger.error(e)
         return
 
-    kb: InlineKeyboardMarkup = get_inline_kb_confirm_delete()
+    kb: InlineKeyboardMarkup = get_kb_confirm_delete()
     msg_confirm_delete_vocab: str = MSG_CONFIRM_DELETE_VOCAB.format(name=vocab_name)
 
     await callback.message.edit_text(text=msg_confirm_delete_vocab, reply_markup=kb)
@@ -173,7 +173,7 @@ async def process_accept_delete_vocab(callback: types.CallbackQuery, state: FSMC
         logger.error(e)
         return
 
-    kb: InlineKeyboardMarkup = get_inline_kb_accept_delete_vocab()
+    kb: InlineKeyboardMarkup = get_kb_accept_delete_vocab()
     msg_vocab_deleted: str = MSG_SUCCESS_VOCAB_DELETED.format(name=vocab_name)
 
     await callback.message.edit_text(text=msg_vocab_deleted, reply_markup=kb)
