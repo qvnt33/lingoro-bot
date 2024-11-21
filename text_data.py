@@ -69,8 +69,8 @@ MSG_CONFIRM_DELETE_VOCAB = 'Ви дійсно хочете видалити сл
 MSG_SUCCESS_VOCAB_DELETED = 'Словник "{name}" був успішно видалений з бази словників.'
 
 # handlers/vocab_trainer.py
-MSG_ERROR_VOCAB_BASE_EMPTY_FOR_TRAINING = ('У вашій базі поки що немає словників.\n'
-                                           'Створіть новий словник, у розділі "База словників".')
+MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING = ('У вашій базі поки що немає словників.\n'
+                                          'Створіть новий словник, у розділі "База словників".')
 MSG_CHOOSE_VOCAB_FOR_TRAINING = 'Оберіть словник із вашої бази для початку тренування.'
 MSG_CHOOSE_TRAINING_MODE = 'Словник: {name}\n\nОберіть тип тренування.'
 MSG_CONFIRM_CANCEL_TRAINING = 'Ви дійсно хочете завершити тренування?'
