@@ -3,7 +3,7 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-def get_inline_kb_help() -> InlineKeyboardMarkup:
+def get_kb_help() -> InlineKeyboardMarkup:
     """Клавіатура з кнопкою головного меню"""
     inline_builder = InlineKeyboardBuilder()
 

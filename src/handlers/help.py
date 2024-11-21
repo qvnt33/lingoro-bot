@@ -4,7 +4,7 @@ from aiogram import F, Router, types
 from aiogram.filters import Command
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from src.keyboards.help_kb import get_inline_kb_help
+from src.keyboards.help_kb import get_kb_help
 from text_data import MSG_TITLE_HELP
 
 router = Router(name='help')
@@ -21,7 +21,7 @@ async def cmd_menu(message: types.Message) -> None:
     logger.info(f'Користувач ввів команду "{message.text}". USER_ID: {user_id}')
     logger.info('Користувач перейшов до розділу "Довідка"')
 
-    kb: InlineKeyboardMarkup = get_inline_kb_help()
+    kb: InlineKeyboardMarkup = get_kb_help()
     msg_help_info: str = MSG_TITLE_HELP
 
     await message.answer(text=msg_help_info, reply_markup=kb)
@@ -37,7 +37,7 @@ async def process_btn_help(callback: types.CallbackQuery) -> None:
     logger.info(f'Користувач натиснув на кнопку "Довідка". USER_ID: {user_id}')
     logger.info('Користувач перейшов до розділу "Довідка"')
 
-    kb: InlineKeyboardMarkup = get_inline_kb_help()
+    kb: InlineKeyboardMarkup = get_kb_help()
     msg_help_info: str = MSG_TITLE_HELP
 
     await callback.message.edit_text(text=msg_help_info, reply_markup=kb)
