@@ -7,7 +7,7 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from db.crud import UserCRUD
 from db.database import Session
 from db.models import User
-from src.keyboards.menu_kb import get_inline_kb_menu
+from src.keyboards.menu_kb import get_kb_menu
 from text_data import MSG_TITLE_MENU, MSG_TITLE_MENU_FOR_NEW_USER
 
 router = Router(name='menu')
@@ -26,7 +26,7 @@ async def cmd_menu(message: types.Message) -> None:
 
     tg_user_data: User | None = message.from_user
 
-    kb: InlineKeyboardMarkup = get_inline_kb_menu()
+    kb: InlineKeyboardMarkup = get_kb_menu()
 
     with Session() as session:
         user_crud = UserCRUD(session)
@@ -52,7 +52,7 @@ async def process_btn_menu(callback: types.CallbackQuery) -> None:
     logger.info(f'Користувач натиснув на кнопку "Головне меню". USER_ID: {user_id}')
     logger.info('Користувач перейшов до розділу "Головне меню"')
 
-    kb: InlineKeyboardMarkup = get_inline_kb_menu()
+    kb: InlineKeyboardMarkup = get_kb_menu()
     msg_title_menu: str = MSG_TITLE_MENU
 
     await callback.message.edit_text(text=msg_title_menu, reply_markup=kb)
