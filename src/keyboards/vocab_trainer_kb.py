@@ -41,9 +41,12 @@ def get_inline_kb_confirm_cancel_training() -> InlineKeyboardMarkup:
 
 
 def get_inline_kb_vocab_selection_training(all_vocabs_data: list[dict],
-                                  callback_prefix: str,
-                                  is_with_btn_vocab_base: bool = False) -> InlineKeyboardMarkup:
+                                           callback_prefix: str,
+                                           is_with_btn_vocab_base: bool = False) -> InlineKeyboardMarkup:
     """Клавіатура з вибором словників.
+
+    Notes:
+        Порядок словників обертається.
 
     Args:
         all_vocabs_data (list[dict]): Список словників зі всіма даними.
@@ -58,9 +61,9 @@ def get_inline_kb_vocab_selection_training(all_vocabs_data: list[dict],
 
     # Генерація кнопок для кожного словника
     for vocab in all_vocabs_data[::-1]:
-        vocab_id: int = vocab['id']
-        vocab_name: str = vocab['name']
-        wordpairs_count: int = vocab['wordpairs_count']
+        vocab_id: int = vocab.get('id')
+        vocab_name: str = vocab.get('name')
+        wordpairs_count: int = vocab.get('wordpairs_count')
 
         btn_text: str = f'{vocab_name} [{wordpairs_count}]'
         callback_data_text: str = f'{callback_prefix}_{vocab_id}'
