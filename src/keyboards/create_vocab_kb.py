@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 
-def get_inline_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyboardMarkup:
+def get_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyboardMarkup:
     """Повертає клавіатуру для процесу створення назви словника.
     З флагом, чи додавати кнопку "Залишити поточну назву".
     """
@@ -17,7 +17,7 @@ def get_inline_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> Inl
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_inline_kb_create_vocab_description() -> InlineKeyboardMarkup:
+def get_kb_create_vocab_description() -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='Пропустити', callback_data='skip_create_vocab_description')],
         [InlineKeyboardButton(text='Змінити назву словника', callback_data='change_vocab_name')],
@@ -26,7 +26,7 @@ def get_inline_kb_create_vocab_description() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_inline_kb_create_wordpairs(is_with_btn_status: bool = True) -> InlineKeyboardMarkup:
+def get_kb_create_wordpairs(is_with_btn_status: bool = True) -> InlineKeyboardMarkup:
     """Повертає клавіатуру для процесу додавання словникових пар"""
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='Зберегти', callback_data='save_vocab')],
@@ -40,7 +40,7 @@ def get_inline_kb_create_wordpairs(is_with_btn_status: bool = True) -> InlineKey
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_inline_kb_confirm_cancel() -> InlineKeyboardMarkup:
+def get_kb_confirm_cancel() -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='✅ Так', callback_data='vocab_base')],
         [InlineKeyboardButton(text='❌ Ні', callback_data='cancel_create_vocab_no')]]
