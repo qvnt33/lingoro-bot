@@ -12,9 +12,9 @@ from src.filters.check_empty_filters import CheckEmptyFilter
 from src.keyboards.vocab_base_kb import (
     get_inline_kb_accept_delete_vocab,
     get_inline_kb_confirm_delete,
-    get_inline_kb_vocab_base,
+    get_inline_kb_vocab_options,
+    get_inline_kb_vocab_selection_base,
 )
-from src.keyboards.vocab_selection_kb import get_inline_kb_vocab_selection
 from text_data import (
     MSG_CHOOSE_VOCAB,
     MSG_CONFIRM_DELETE_VOCAB,
@@ -56,7 +56,7 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
     else:
         msg_text: str = MSG_CHOOSE_VOCAB
 
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection(all_vocabs_data, callback_prefix='select_vocab_base')
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection_base(all_vocabs_data)
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
@@ -92,7 +92,7 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
     vocab_number_errors: int = vocab_data.get('number_errors')
     vocab_wordpairs_count: int = vocab_data.get('wordpairs_count')
 
-    kb: InlineKeyboardMarkup = get_inline_kb_vocab_base()
+    kb: InlineKeyboardMarkup = get_inline_kb_vocab_options()
 
     formatted_wordpairs: list[str] = []
 

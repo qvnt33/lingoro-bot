@@ -41,17 +41,15 @@ def get_inline_kb_confirm_cancel_training() -> InlineKeyboardMarkup:
 
 
 def get_inline_kb_vocab_selection_training(all_vocabs_data: list[dict],
-                                           callback_prefix: str,
                                            is_with_btn_vocab_base: bool = False) -> InlineKeyboardMarkup:
-    """Клавіатура з вибором словників.
+    """Повертає клавіатуру з вибором словників для розділу "Тренування".
 
     Notes:
         Порядок словників обертається.
 
     Args:
         all_vocabs_data (list[dict]): Список словників зі всіма даними.
-        callback_prefix (str): Префікс для callback_data кнопок, залежить від контексту.
-        is_for_training (bool): Додавання кнопки "База словників" для розділу "Тренування" та кнопки
+        is_with_btn_vocab_base (bool): Прапор, чи потрібно додавати кнопку "База словників". За замовчуванням False.
         "Додати словник" для розділу "База словників"
 
     Returns:
@@ -66,7 +64,7 @@ def get_inline_kb_vocab_selection_training(all_vocabs_data: list[dict],
         wordpairs_count: int = vocab.get('wordpairs_count')
 
         btn_text: str = f'{vocab_name} [{wordpairs_count}]'
-        callback_data_text: str = f'{callback_prefix}_{vocab_id}'
+        callback_data_text: str = f'select_vocab_training_{vocab_id}'
 
         btn_vocab = InlineKeyboardButton(text=btn_text, callback_data=callback_data_text)
         kb.add(btn_vocab)

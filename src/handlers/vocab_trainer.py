@@ -1,11 +1,11 @@
 import logging
-from datetime import datetime
 import random
+from datetime import datetime
 from typing import Any, Dict, List
 
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
+from aiogram.types import InlineKeyboardMarkup
 
 from db.crud import TrainingCRUD, VocabCRUD, WordpairCRUD
 from db.database import Session
@@ -23,7 +23,7 @@ from text_data import (
     MSG_CHOOSE_TRAINING_MODE,
     MSG_CHOOSE_VOCAB_FOR_TRAINING,
     MSG_CONFIRM_CANCEL_TRAINING,
-    MSG_ERROR_VOCAB_BASE_EMPTY_FOR_TRAINING,
+    MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING,
 )
 from tools.training_utils import format_training_message
 from tools.wordpair_utils import format_word_items
@@ -55,15 +55,11 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
     # Якщо в БД користувача немає користувацьких словників
     if check_empty_filter.apply(all_vocabs_data):
         logger.info('В БД користувача немає користувацьких словників')
-        msg_text: str = MSG_ERROR_VOCAB_BASE_EMPTY_FOR_TRAINING
-        kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection_training(all_vocabs_data,
-                                                             callback_prefix='select_vocab_training',
-                                                             is_with_btn_vocab_base=True)
+        msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING
+        kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection_training(all_vocabs_data, is_with_btn_vocab_base=True)
     else:
         msg_text: str = MSG_CHOOSE_VOCAB_FOR_TRAINING
-
-        kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection_training(all_vocabs_data,
-                                                                callback_prefix='select_vocab_training')
+        kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection_training(all_vocabs_data)
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
@@ -102,7 +98,7 @@ async def process_training_selection(callback: types.CallbackQuery, state: FSMCo
 
 
 @router.callback_query(F.data == 'direct_translation')
-async def process_btn_direct_translation(callback: CallbackQuery, state: FSMContext) -> None:
+async def process_btn_direct_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Ініціалізація тренування та збереження даних у FSM"""
     await callback.message.delete()
 
@@ -119,7 +115,7 @@ async def process_btn_direct_translation(callback: CallbackQuery, state: FSMCont
 
 
 @router.callback_query(F.data == 'reverse_translation')
-async def process_btn_reverse_translation(callback: CallbackQuery, state: FSMContext) -> None:
+async def process_btn_reverse_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Ініціалізація тренування і збереження даних у FSM"""
     data_fsm: Dict[str, Any] = await state.get_data()
     vocab_id: int = data_fsm.get('vocab_id')
@@ -159,7 +155,7 @@ def get_random_wordpair_idx(available_idxs: list, preview_idx: int) -> int:
     return wordpair_idx
 
 
-async def send_next_word(message: Message, state: FSMContext) -> None:
+async def send_next_word(message: types.Message, state: FSMContext) -> None:
     """Відправляє наступне слово для перекладу"""
     data_fsm: dict[str, Any] = await state.get_data()
 
@@ -237,7 +233,7 @@ async def send_next_word(message: Message, state: FSMContext) -> None:
 
 
 @router.message(VocabTraining.waiting_for_translation)
-async def process_translation(message: Message, state: FSMContext) -> None:
+async def process_translation(message: types.Message, state: FSMContext) -> None:
     """Обробляє переклад, введений користувачем"""
     data_fsm: dict[str, Any] = await state.get_data()
 
@@ -268,7 +264,7 @@ async def process_translation(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == 'skip_word')
-async def process_skip_word(callback: CallbackQuery, state: FSMContext) -> None:
+async def process_skip_word(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Повторити тренування" під час тренування"""
     await callback.message.delete()
 
@@ -280,7 +276,7 @@ async def process_skip_word(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == 'show_annotation')
-async def process_show_annotation(callback: CallbackQuery, state: FSMContext) -> None:
+async def process_show_annotation(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Повторити тренування" під час тренування"""
     await callback.message.delete()
 
@@ -293,7 +289,7 @@ async def process_show_annotation(callback: CallbackQuery, state: FSMContext) ->
 
 
 @router.callback_query(F.data == 'show_translation')
-async def process_show_translation(callback: CallbackQuery, state: FSMContext) -> None:
+async def process_show_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Повторити тренування" під час тренування"""
     await callback.message.delete()
 
@@ -312,7 +308,7 @@ async def process_show_translation(callback: CallbackQuery, state: FSMContext) -
 
 
 @router.callback_query(F.data == 'repeat_training')
-async def process_repeat_training(callback: CallbackQuery, state: FSMContext) -> None:
+async def process_repeat_training(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Повторити тренування" під час тренування"""
     await callback.message.delete()
 
@@ -330,7 +326,7 @@ async def process_repeat_training(callback: CallbackQuery, state: FSMContext) ->
 
 
 @router.callback_query(F.data == 'change_training_mode')
-async def process_change_training_mode(callback: CallbackQuery, state: FSMContext) -> None:
+async def process_change_training_mode(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Змінити тип тренування" під час тренування"""
     data_fsm: dict[str, Any] = await state.get_data()
     wordpairs_count: int = data_fsm.get('wordpairs_count')
@@ -346,7 +342,7 @@ async def process_change_training_mode(callback: CallbackQuery, state: FSMContex
 
 
 @router.callback_query(F.data == 'cancel_training')
-async def process_cancel_training(callback: CallbackQuery) -> None:
+async def process_cancel_training(callback: types.CallbackQuery) -> None:
     """Відстежує натискання на кнопку "Скасувати" під час тренування.
     Відправляє клавіатуру для підтвердження скасування.
     """
