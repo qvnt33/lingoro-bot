@@ -56,7 +56,7 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
     else:
         msg_text: str = MSG_CHOOSE_VOCAB
 
-    kb: InlineKeyboardMarkup = get_kb_vocab_selection_base(all_vocabs_data)
+    kb: InlineKeyboardMarkup = get_kb_vocab_selection_base(all_vocabs_data[::-1])
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 

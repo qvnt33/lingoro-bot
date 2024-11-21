@@ -14,7 +14,7 @@ def get_kb_all_training() -> InlineKeyboardMarkup:
 
 
 def get_kb_finish_training() -> InlineKeyboardMarkup:
-    """Клавіатура з списком словникових тренувань"""
+    """Повертає клавіатуру з функціоналом після завершення тренування"""
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='🔄 Повторити тренування', callback_data='repeat_training')],
         [InlineKeyboardButton(text='🎯 Змінити тип тренування', callback_data='change_training_mode')],
@@ -41,11 +41,8 @@ def get_kb_confirm_cancel_training() -> InlineKeyboardMarkup:
 
 
 def get_kb_vocab_selection_training(all_vocabs_data: list[dict],
-                                           is_with_btn_vocab_base: bool = False) -> InlineKeyboardMarkup:
+                                    is_with_btn_vocab_base: bool = False) -> InlineKeyboardMarkup:
     """Повертає клавіатуру з вибором словників для розділу "Тренування".
-
-    Notes:
-        Порядок словників обертається.
 
     Args:
         all_vocabs_data (list[dict]): Список словників зі всіма даними.
@@ -58,7 +55,7 @@ def get_kb_vocab_selection_training(all_vocabs_data: list[dict],
     kb = InlineKeyboardBuilder()
 
     # Генерація кнопок для кожного словника
-    for vocab in all_vocabs_data[::-1]:
+    for vocab in all_vocabs_data:
         vocab_id: int = vocab.get('id')
         vocab_name: str = vocab.get('name')
         wordpairs_count: int = vocab.get('wordpairs_count')

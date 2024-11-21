@@ -32,9 +32,6 @@ def get_kb_accept_delete_vocab() -> InlineKeyboardMarkup:
 def get_kb_vocab_selection_base(all_vocabs_data: list[dict]) -> InlineKeyboardMarkup:
     """Повертає клавіатуру з вибором словників для розділу "База словників".
 
-    Notes:
-        Порядок словників обертається.
-
     Args:
         all_vocabs_data (list[dict]): Список словників зі всіма даними.
 
@@ -44,7 +41,7 @@ def get_kb_vocab_selection_base(all_vocabs_data: list[dict]) -> InlineKeyboardMa
     kb = InlineKeyboardBuilder()
 
     # Генерація кнопок для кожного словника
-    for vocab in all_vocabs_data[::-1]:
+    for vocab in all_vocabs_data:
         vocab_id: int = vocab.get('id')
         vocab_name: str = vocab.get('name')
         wordpairs_count: int = vocab.get('wordpairs_count')
