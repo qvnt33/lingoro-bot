@@ -117,24 +117,35 @@ def format_word_items(word_items: list[dict], is_translation_items: bool = False
     Args:
         word_items (list[dict]):
             Приклад (word_items):
-            [
-                {'word': 'cat', 'transcription': 'кет'},
-                {'word': 'dog', 'transcription': 'дог'},
-            ]
-        is_translation (bool): Флаг, чи передані слова є перекладами.
+                [
+                    {'word': 'кіт', 'transcription': None},
+                    {'word': 'собака', 'transcription': None},
+                ]
+                або
+                [
+                    {'translation': 'cat', 'transcription': 'кет'},
+                    {'translation': 'dog', 'transcription': None},
+                ]
+        is_translation_items (bool): Прапор, чи передані слова є перекладами (translation).
 
     Returns:
-        list[str]: Список відформатованих частин слів.
+        str: Список відформатованих частин слів.
+
+    Examples:
+        >>> format_word_items(word_items=[{'translation': 'cat', 'transcription': 'кет'},
+                                          {'translation': 'dog', 'transcription': None],
+                              is_translation_items=True)
+        "cat [кет], dog"
     """
     formatted_words: list[str] = []
 
     for word_item in word_items:
         word: str = word_item.get('translation') if is_translation_items else word_item.get('word')
 
-        transcription: str | None = word_item['transcription']
+        transcription: str | None = word_item.get('transcription')
 
-        formatted_word: str = (f'{word} [{transcription}]' if transcription is not None
-                                        else word)
+        formatted_word: str = (f'{word} [{transcription}]'
+                               if transcription is not None else word)
         formatted_words.append(formatted_word)
 
     joined_words: str = ', '.join(formatted_words)
