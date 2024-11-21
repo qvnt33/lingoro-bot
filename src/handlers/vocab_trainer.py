@@ -13,11 +13,11 @@ from exceptions import InvalidVocabIndexError
 from src.filters.check_empty_filters import CheckEmptyFilter
 from src.fsm.states import VocabTraining
 from src.keyboards.vocab_trainer_kb import (
-    get_inline_kb_all_training,
-    get_inline_kb_confirm_cancel_training,
-    get_inline_kb_finish_training,
-    get_inline_kb_process_training,
-    get_inline_kb_vocab_selection_training,
+    get_kb_all_training,
+    get_kb_confirm_cancel_training,
+    get_kb_finish_training,
+    get_kb_process_training,
+    get_kb_vocab_selection_training,
 )
 from text_data import (
     MSG_CHOOSE_TRAINING_MODE,
@@ -56,10 +56,10 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
     if check_empty_filter.apply(all_vocabs_data):
         logger.info('В БД користувача немає користувацьких словників')
         msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING
-        kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection_training(all_vocabs_data, is_with_btn_vocab_base=True)
+        kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data, is_with_btn_vocab_base=True)
     else:
         msg_text: str = MSG_CHOOSE_VOCAB_FOR_TRAINING
-        kb: InlineKeyboardMarkup = get_inline_kb_vocab_selection_training(all_vocabs_data)
+        kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data)
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
@@ -82,7 +82,7 @@ async def process_training_selection(callback: types.CallbackQuery, state: FSMCo
         logger.error(e)
         return
 
-    kb: InlineKeyboardMarkup = get_inline_kb_all_training()
+    kb: InlineKeyboardMarkup = get_kb_all_training()
     vocab_name: str = vocab_data.get('name')
     msg_choose_training_mode: str = MSG_CHOOSE_TRAINING_MODE.format(name=vocab_name)
 
@@ -177,7 +177,7 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
 
     # Якщо не залишилось невикористаних індексів
     if check_empty_filter.apply(available_idxs):
-        kb: InlineKeyboardMarkup = get_inline_kb_finish_training()
+        kb: InlineKeyboardMarkup = get_kb_finish_training()
 
         msg_choose_training_mode: str = MSG_CHOOSE_TRAINING_MODE.format(name=vocab_name)
         msg_text: str = f'Всі словникові пари переведені. Тренування завершено!\n\n{msg_choose_training_mode}'
@@ -220,7 +220,7 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
                             wordpair_idx=wordpair_idx,
                             correct_translations=correct_translations)
 
-    kb: InlineKeyboardMarkup = get_inline_kb_process_training()  # Клавіатура для тренування
+    kb: InlineKeyboardMarkup = get_kb_process_training()  # Клавіатура для тренування
     msg_enter_translation: str = format_training_message(vocab_name=vocab_name,
                                                          training_mode=current_training_mode,
                                                          training_count=current_training_count,
@@ -334,7 +334,7 @@ async def process_change_training_mode(callback: types.CallbackQuery, state: FSM
     available_idxs = list(range(wordpairs_count))
     await state.update_data(available_idxs=available_idxs)  # Оновлення списку невикористаних індексів
 
-    kb: InlineKeyboardMarkup = get_inline_kb_all_training()
+    kb: InlineKeyboardMarkup = get_kb_all_training()
     vocab_name: str = data_fsm.get('vocab_name')
     msg_choose_training_mode: str = MSG_CHOOSE_TRAINING_MODE.format(name=vocab_name)
 
@@ -346,7 +346,7 @@ async def process_cancel_training(callback: types.CallbackQuery) -> None:
     """Відстежує натискання на кнопку "Скасувати" під час тренування.
     Відправляє клавіатуру для підтвердження скасування.
     """
-    kb: InlineKeyboardMarkup = get_inline_kb_confirm_cancel_training()
+    kb: InlineKeyboardMarkup = get_kb_confirm_cancel_training()
     msg_confirm_cancel_training: str = MSG_CONFIRM_CANCEL_TRAINING
 
     await callback.message.edit_text(text=msg_confirm_cancel_training, reply_markup=kb)
@@ -366,7 +366,7 @@ async def process_accept_cancel_training(callback: types.CallbackQuery, state: F
                             number_wrong_answers=number_wrong_answers + len(available_idxs),
                             training_is_completed=False)  # Оновлення списку невикористаних індексів
 
-    kb: InlineKeyboardMarkup = get_inline_kb_all_training()
+    kb: InlineKeyboardMarkup = get_kb_all_training()
     await finish_training(callback.message, state)
     msg_text = 'Ви скасували тренування'
     await callback.message.edit_text(text=msg_text, reply_markup=kb)

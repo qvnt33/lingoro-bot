@@ -3,7 +3,7 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-def get_inline_kb_all_training() -> InlineKeyboardMarkup:
+def get_kb_all_training() -> InlineKeyboardMarkup:
     """Клавіатура з списком словникових тренувань"""
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='📖 Прямий переклад (W -> T)', callback_data='direct_translation')],
@@ -13,7 +13,7 @@ def get_inline_kb_all_training() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_inline_kb_finish_training() -> InlineKeyboardMarkup:
+def get_kb_finish_training() -> InlineKeyboardMarkup:
     """Клавіатура з списком словникових тренувань"""
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='🔄 Повторити тренування', callback_data='repeat_training')],
@@ -23,7 +23,7 @@ def get_inline_kb_finish_training() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_inline_kb_process_training() -> InlineKeyboardMarkup:
+def get_kb_process_training() -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='➡️ Пропустити', callback_data='skip_word')],
         [
@@ -33,14 +33,14 @@ def get_inline_kb_process_training() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_inline_kb_confirm_cancel_training() -> InlineKeyboardMarkup:
+def get_kb_confirm_cancel_training() -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='✅ Так', callback_data='accept_cancel_training')],
         [InlineKeyboardButton(text='❌ Ні', callback_data='decline_cancel_training')]]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_inline_kb_vocab_selection_training(all_vocabs_data: list[dict],
+def get_kb_vocab_selection_training(all_vocabs_data: list[dict],
                                            is_with_btn_vocab_base: bool = False) -> InlineKeyboardMarkup:
     """Повертає клавіатуру з вибором словників для розділу "Тренування".
 
