@@ -3,8 +3,8 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-def get_kb_all_training() -> InlineKeyboardMarkup:
-    """Клавіатура з списком словникових тренувань"""
+def get_kb_training_modes() -> InlineKeyboardMarkup:
+    """Повертає клавіатуру зі списком типів словникових тренувань"""
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='📖 Прямий переклад (W -> T)', callback_data='direct_translation')],
         [InlineKeyboardButton(text='📖 Зворотній переклад (T -> W)', callback_data='reverse_translation')],
@@ -23,7 +23,8 @@ def get_kb_finish_training() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_kb_process_training() -> InlineKeyboardMarkup:
+def get_kb_training_actions() -> InlineKeyboardMarkup:
+    """Повертає клавіатуру з діями під час тренування"""
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='➡️ Пропустити', callback_data='skip_word')],
         [

@@ -1,5 +1,4 @@
 import logging
-import random
 from datetime import datetime
 from typing import Any, Dict, List
 
@@ -13,19 +12,29 @@ from exceptions import InvalidVocabIndexError
 from src.filters.check_empty_filters import CheckEmptyFilter
 from src.fsm.states import VocabTraining
 from src.keyboards.vocab_trainer_kb import (
-    get_kb_all_training,
     get_kb_confirm_cancel_training,
     get_kb_finish_training,
-    get_kb_process_training,
+    get_kb_training_actions,
+    get_kb_training_modes,
     get_kb_vocab_selection_training,
 )
 from text_data import (
     MSG_CHOOSE_TRAINING_MODE,
     MSG_CHOOSE_VOCAB_FOR_TRAINING,
     MSG_CONFIRM_CANCEL_TRAINING,
+    MSG_CORRECT_ANSWER,
     MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING,
+    MSG_LEFT_ONE_WORD_TRAINING,
+    MSG_SHOW_WORDPAIR_ANNOTATION,
+    MSG_SHOW_WORDPAIR_TRANSLATION,
+    MSG_TRAINING_EARLY_COMPLETED,
+    MSG_WRONG_ANSWER,
 )
-from tools.training_utils import format_training_message
+from tools.vocab_trainer_utils import (
+    format_training_process_message,
+    format_training_summary_message,
+    get_random_wordpair_idx,
+)
 from tools.wordpair_utils import format_word_items
 
 router = Router(name='vocab_trainer')
@@ -33,7 +42,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 @router.callback_query(F.data == 'vocab_trainer')
-async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -> None:
+async def process_vocab_trainer(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Тренування" у головному меню.
     Відправляє користувачу користувацькі словники у вигляді кнопок.
     """
@@ -57,11 +66,11 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
     # Якщо в БД користувача немає користувацьких словників
     if check_empty_filter.apply(all_vocabs_data):
         logger.info('В БД користувача немає користувацьких словників')
+        kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data[::-1], is_with_btn_vocab_base=True)
         msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING
-        kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data, is_with_btn_vocab_base=True)
     else:
+        kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data[::-1])
         msg_text: str = MSG_CHOOSE_VOCAB_FOR_TRAINING
-        kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data)
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
@@ -71,6 +80,7 @@ async def process_training_selection(callback: types.CallbackQuery, state: FSMCo
     Відправляє клавіатуру з вибором типу тренування.
     """
     vocab_id = int(callback.data.split('_')[-1])
+
     try:
         with Session() as session:
             vocab_crud = VocabCRUD(session)
@@ -82,39 +92,39 @@ async def process_training_selection(callback: types.CallbackQuery, state: FSMCo
         logger.error(e)
         return
 
-    kb: InlineKeyboardMarkup = get_kb_all_training()
+    kb: InlineKeyboardMarkup = get_kb_training_modes()
 
     vocab_name: str = vocab_data.get('name')
-    wordpairs_count: int = vocab_data.get('wordpairs_count')
+    total_wordpairs_count: int = vocab_data.get('wordpairs_count')  # К-сть словникових пар у користувацькому словнику
 
-    logger.info(f'Обраний користувацький словник. Name: {vocab_name}. ID: {vocab_id}')
+    logger.info(f'Обраний користувацький словник. Назва: "{vocab_name}". ID: {vocab_id}')
 
     msg_choose_training_mode: str = MSG_CHOOSE_TRAINING_MODE.format(name=vocab_name)
 
     await state.update_data(vocab_id=vocab_id,
                             vocab_name=vocab_name,
                             wordpair_items=wordpair_items,
-                            wordpairs_count=wordpairs_count)
+                            total_wordpairs_count=total_wordpairs_count)
     logger.info('Дані словника збережені у FSM-Cache')
 
     await callback.message.edit_text(text=msg_choose_training_mode, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'direct_translation')
-async def process_btn_direct_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
+async def process_direct_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Прямий переклад" під час вибору типу тренування.
     Починає процес тренування та відправляє перше слово для перекладу.
     """
-    logger.info('Початок тренування. Тип: Прямий переклад')
+    logger.info('Початок тренування. Тип: "Прямий переклад"')
     await callback.message.delete()
 
     data_fsm: dict[str, Any] = await state.get_data()
 
-    wordpairs_count: int = data_fsm.get('wordpairs_count')  # К-сть словникових пар у користувацькому словнику
+    total_wordpairs_count: int = data_fsm.get('total_wordpairs_count')
+    available_idxs: list = list(range(total_wordpairs_count))  # Список індексів словникових пар
     start_time_training: datetime = datetime.now()  # Час початку тренування
-    available_idxs = list(range(wordpairs_count))  # Список індексів, які ще не були використані
 
-    await state.update_data(current_training_mode='direct_translation',
+    await state.update_data(training_mode='direct_translation',
                             start_time_training=start_time_training,
                             available_idxs=available_idxs)
     logger.info('Початкові дані тренування збережені у FSM-Cache')
@@ -141,220 +151,238 @@ async def process_btn_reverse_translation(callback: types.CallbackQuery, state: 
     await send_next_word(callback.message, state)
 
 
-def get_random_wordpair_idx(available_idxs: list, preview_idx: int) -> int:
-    """Повертає випадковий індекс словникової пари із доступних.
-    Якщо кількість доступних індексів більша за один, то обраний новий індекс не повинен збігатися з попереднім.
-
-    Args:
-        available_idxs (list): Список доступних індексів.
-        preview_idx (int): Попередній індекс.
-
-    Returns:
-        int: Випадковий індекс.
+@router.callback_query(F.data == 'change_training_mode')
+async def process_change_training_mode(callback: types.CallbackQuery, state: FSMContext) -> None:
+    """Відстежує натискання на кнопку "Змінити тип тренування" під час тренування.
+    Відправляє клавіатуру зі списком типів словникових тренувань.
     """
-    if len(available_idxs) == 1:
-        return available_idxs[0]
+    logger.info('Зміна типу тренування')
 
-    # Якщо індексів більше одного, то обирається новий індекс
-    wordpair_idx: int = random.choice(available_idxs)
-    while wordpair_idx == preview_idx:
-        wordpair_idx: int = random.choice(available_idxs)
+    data_fsm: dict[str, Any] = await state.get_data()
+    vocab_name: str = data_fsm.get('vocab_name')
 
-    return wordpair_idx
+    kb: InlineKeyboardMarkup = get_kb_training_modes()
+    msg_choose_training_mode: str = MSG_CHOOSE_TRAINING_MODE.format(name=vocab_name)
+
+    await callback.message.edit_text(text=msg_choose_training_mode, reply_markup=kb)
 
 
 async def send_next_word(message: types.Message, state: FSMContext) -> None:
     """Відправляє наступне слово для перекладу"""
     data_fsm: dict[str, Any] = await state.get_data()
 
-    # Прапор, використовувати поточне слово чи обрати нове
-    is_use_current_word: bool = data_fsm.get('is_use_current_word', False)
+    available_idxs: list = data_fsm.get('available_idxs')  # Список індексів, які ще не були використані
 
-    # Список індексів, які ще не були використані
-    available_idxs: list = data_fsm.get('available_idxs', [])
+    # Якщо не залишилось невикористаних індексів
+    check_empty_filter = CheckEmptyFilter()
+    if check_empty_filter.apply(available_idxs):
+        await state.update_data(is_training_completed=True)
+        await send_training_finish_stats(message, state)
+        await finish_training(state)
+        return
 
     vocab_name: str = data_fsm.get('vocab_name')
     wordpair_items: list[dict] = data_fsm.get('wordpair_items')
 
-    current_training_mode: str = data_fsm.get('current_training_mode')  # Обраний тип тренування
-
-    check_empty_filter = CheckEmptyFilter()
-
-    # Лічильники
-    annotation_shown_count: int = data_fsm.get('annotation_shown_count', 0)  # Показів анотацій
-    translation_shown_count: int = data_fsm.get('translation_shown_count', 0)  # Показів перекладу
-    training_streak_count: int = data_fsm.get('training_streak_count', 0)  # К-сть тренувань поспіль
-    wrong_answer_count: int = data_fsm.get('wrong_answer_count', 0)  # К-сть помилок
-    correct_answer_count: int = data_fsm.get('correct_answer_count', 0)  # К-сть вірних відповідей
-
-    # Якщо не залишилось невикористаних індексів
-    if check_empty_filter.apply(available_idxs):
-        await state.update_data(wrong_answer_count=0,
-                                training_is_completed=True)
-
-        await finish_training(state)
-        await send_training_finish_stats(message, state)
-        return
-
+    training_mode: str = data_fsm.get('training_mode')  # Обраний тип тренування
     preview_wordpair_idx: int = data_fsm.get('wordpair_idx', 0)  # Минулий індекс
 
-    if is_use_current_word:
+    # Прапор, використовувати поточне слово(а) чи обрати нове
+    is_use_current_words: bool = data_fsm.get('is_use_current_words', False)
+    if is_use_current_words:
         wordpair_idx: int = preview_wordpair_idx
-        await state.update_data(is_use_current_word=False)
+        await state.update_data(is_use_current_words=False)
     else:
         # Вибір випадкового індексу з тих, що ще не були використані
         wordpair_idx: int = get_random_wordpair_idx(available_idxs, preview_wordpair_idx)
+
     await state.update_data(wordpair_idx=wordpair_idx)
+    logger.info('Оновлення нового індексу словникової пари у FSM-Cache')
 
     wordpair_item: dict[str, Any] = wordpair_items[wordpair_idx]
 
     # Список всіх слів та перекладів словникової пари з їх транскрипціями
     word_items: list[dict] = wordpair_item.get('words')
     translation_items: list[dict] = wordpair_item.get('translations')
-
     wordpair_annotation: str = wordpair_item.get('annotation') or 'Відсутня'  # Анотація словникової пари
 
-    if current_training_mode == 'direct_translation':
+    if training_mode == 'direct_translation':
+        training_mode_name = 'Прямий переклад (W -> T)'
         formatted_words: str = format_word_items(word_items)
         formatted_translations: str = format_word_items(translation_items, is_translation_items=True)
-        correct_translations: list = [translation.get('translation').lower() for translation in translation_items]
-    elif current_training_mode == 'reverse_translation':
+        correct_translations: list[str] = [translation.get('translation').lower() for translation in translation_items]
+    elif training_mode == 'reverse_translation':
+        training_mode_name = 'Зворотній переклад (T -> W)'
         formatted_words: str = format_word_items(translation_items, is_translation_items=True)
         formatted_translations: str = format_word_items(word_items)
-        correct_translations: list = [translation.get('word').lower() for translation in word_items]
+        correct_translations: list[str] = [translation.get('word').lower() for translation in word_items]
 
-    await state.update_data(wordpair_idx=wordpair_idx,
-                            wordpair_annotation=wordpair_annotation,
+    logger.info(f'Словникова пара для перекладу: "{formatted_words}" -> "{formatted_translations}"')
+
+    total_wordpairs_count: int = data_fsm.get('total_wordpairs_count')
+    wordpairs_left: int = total_wordpairs_count - len(available_idxs)  # Скільки залишилось словникових пар
+
+    kb: InlineKeyboardMarkup = get_kb_training_actions()  # Клавіатура з діями під час тренування
+    msg_enter_translation: str = format_training_process_message(vocab_name=vocab_name,
+                                                                 training_mode=training_mode_name,
+                                                                 wordpairs_left=wordpairs_left,
+                                                                 total_wordpairs_count=total_wordpairs_count,
+                                                                 words=formatted_words)
+
+    await state.update_data(wordpair_annotation=wordpair_annotation,
                             formatted_words=formatted_words,
                             formatted_translations=formatted_translations,
-                            correct_translations=correct_translations)
+                            correct_translations=correct_translations,
+                            training_mode_name=training_mode_name)
+    logger.info('Дані словникової пари для перекладу збережені у FSM-Cache')
 
-    kb: InlineKeyboardMarkup = get_kb_process_training()  # Клавіатура для тренування
-    msg_enter_translation: str = format_training_message(vocab_name=vocab_name,
-                                                         training_mode=current_training_mode,
-                                                         training_count=training_streak_count,
-                                                         number_errors=wrong_answer_count,
-                                                         word=formatted_words)
     await message.answer(text=msg_enter_translation, reply_markup=kb)
-
-    # Оновлюємо стан на очікування відповіді
     await state.set_state(VocabTraining.waiting_for_translation)
 
 
 @router.message(VocabTraining.waiting_for_translation)
-async def process_translation(message: types.Message, state: FSMContext) -> None:
+async def process_check_user_translation(message: types.Message, state: FSMContext) -> None:
     """Обробляє переклад, введений користувачем"""
     data_fsm: dict[str, Any] = await state.get_data()
 
-    wordpair_idx = data_fsm.get('wordpair_idx')
+    wordpair_idx: int = data_fsm.get('wordpair_idx')
 
-    formatted_words = data_fsm.get('formatted_words')
-    formatted_translations = data_fsm.get('formatted_translations')
+    formatted_words: str = data_fsm.get('formatted_words')
+    formatted_translations: str = data_fsm.get('formatted_translations')
 
-    available_idxs = data_fsm.get('available_idxs', [])  # Список індексів, які ще не були використані
-    correct_translations = data_fsm.get('correct_translations')
+    available_idxs: list = data_fsm.get('available_idxs', [])  # Список індексів, які ще не були використані
+    correct_translations: list = data_fsm.get('correct_translations')  # Переклади у нижньому регістри без анотацій
 
-    # Переклади без анотацій
-    print(correct_translations)
-    user_translation: str = message.text.strip().lower()  # Введений користувачем переклад
-    print(user_translation)
-    if user_translation in correct_translations:
-        await message.answer(f'Правильно!\n{formatted_words} -> {formatted_translations}')
+    user_translation: str = message.text.strip()  # Введений користувачем переклад
+    logger.info(f'Введений переклад: "{user_translation}"')
+
+    if user_translation.lower() in correct_translations:
+        await message.answer(MSG_CORRECT_ANSWER.format(words=formatted_words, translations=formatted_translations))
+        logger.info('Переклад ВІРНИЙ')
+
         available_idxs.remove(wordpair_idx)
-        correct_answer_count = data_fsm.get('correct_answer_count', 0)
-        await state.update_data(available_idxs=available_idxs,
-                                correct_answer_count=correct_answer_count + 1)  # Оновлення індексу
+        await state.update_data(available_idxs=available_idxs)
+        logger.info('Видалення індексу коректного перекладу та оновлення списку невикористаних індексів у FSM-Cache')
+
+        correct_answer_count: int = data_fsm.get('correct_answer_count', 0)
+        await state.update_data(correct_answer_count=correct_answer_count + 1)
+        logger.info('Оновлення к-сть коректних відповідей у FSM-Cache')
+
         await send_next_word(message, state)
     else:
-        wrong_answer_count: int = data_fsm.get('wrong_answer_count', 0)  # К-сть помилок за тренування
+        await message.answer(MSG_WRONG_ANSWER.format(words=formatted_words, user_translation=user_translation))
+        logger.info('Переклад НЕ ВІРНИЙ')
+
+        wrong_answer_count: int = data_fsm.get('wrong_answer_count', 0)
         await state.update_data(wrong_answer_count=wrong_answer_count + 1)
-        await message.answer('Не Правильно!')
+        logger.info('Оновлення к-сть некоректних відповідей у FSM-Cache')
+
         await send_next_word(message, state)
 
 
 @router.callback_query(F.data == 'skip_word')
 async def process_skip_word(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Повторити тренування" під час тренування"""
+    """Відстежує натискання на кнопку "Пропустити" під час тренування"""
+    logger.info('Обраний пропуск словникової пари')
+
     await callback.message.delete()
 
     data_fsm: dict[str, Any] = await state.get_data()
-    available_idxs: list = data_fsm.get('available_idxs', [])  # Список індексів, які ще не були використані
+
+    # Якщо залишилось остання словникова пара для перекладу
+    available_idxs: list = data_fsm.get('available_idxs')
     if len(available_idxs) == 1:
-        await callback.message.answer('Залишилось одне слово, не можна пропустити!')
+        logger.info('Залишилась остання словникова пара. Пропуск неможливий')
+        await callback.message.answer(text=MSG_LEFT_ONE_WORD_TRAINING)
     await send_next_word(callback.message, state)
 
 
 @router.callback_query(F.data == 'show_annotation')
 async def process_show_annotation(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Повторити тренування" під час тренування"""
+    """Відстежує натискання на кнопку "Показати анотацію" під час тренування"""
+    logger.info('Обраний показ анотації словникової пари')
+
     await callback.message.delete()
 
     data_fsm: dict[str, Any] = await state.get_data()
+
     wordpair_annotation: str = data_fsm.get('wordpair_annotation')
-    words: str = data_fsm.get('formatted_words')
-    await state.update_data(is_use_current_word=True)
-    await callback.message.answer(f'Ви обрали показ анотації!\n\nСлово(а): {words}\nАнотація: {wordpair_annotation}')
+    formatted_words: str = data_fsm.get('formatted_words')
+    annotation_shown_count: int = data_fsm.get('annotation_shown_count', 0)  # К-сть показів анотацій
+
+    await state.update_data(is_use_current_words=True)
+    logger.info('Оновлення прапора "використання поточного слова (is_use_current_words)" на True у FSM-Cache. '
+                'Щоб після показу анотації, потрібно було перекласти поточне слово')
+
+    await state.update_data(annotation_shown_count=annotation_shown_count + 1)
+    logger.info('Оновлення к-сть показів анотацій у FSM-Cache')
+
+    msg_show_annotation: str = MSG_SHOW_WORDPAIR_ANNOTATION.format(words=formatted_words,
+                                                                   annotation=wordpair_annotation)
+    await callback.message.answer(msg_show_annotation)
     await send_next_word(callback.message, state)
 
 
 @router.callback_query(F.data == 'show_translation')
 async def process_show_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Повторити тренування" під час тренування"""
+    """Відстежує натискання на кнопку "Показати переклад" під час тренування"""
+    logger.info('Обраний показ перекладу словникової пари')
+
     await callback.message.delete()
 
     data_fsm: dict[str, Any] = await state.get_data()
+
+    formatted_words: str = data_fsm.get('formatted_words')
+    formatted_translations: str = data_fsm.get('formatted_translations')
     wordpair_annotation: str = data_fsm.get('wordpair_annotation')
-    words: str = data_fsm.get('formatted_words')
-    translations: str = data_fsm.get('formatted_translations')
-    available_idxs: list = data_fsm.get('available_idxs', [])  # Список індексів, які ще не були використані
-    wordpair_idx = data_fsm.get('wordpair_idx')
-    wrong_answer_count = data_fsm.get('wrong_answer_count', 0)
-    await callback.message.answer(f'Ви обрали показ перекладу!\n\nСлово(а): {words}\nПереклад(и): {translations}\nАнотація: {wordpair_annotation}')
+
+    available_idxs: list = data_fsm.get('available_idxs')
+    wordpair_idx: int = data_fsm.get('wordpair_idx')
+
+    translation_shown_count: int = data_fsm.get('translation_shown_count', 0)
+
     available_idxs.remove(wordpair_idx)
-    await state.update_data(available_idxs=available_idxs,
-                            wrong_answer_count=wrong_answer_count + 1)  # Оновлення індексу
+    await state.update_data(available_idxs=available_idxs)
+    logger.info('Видалення індексу показаного перекладу словникової пари та '
+                'оновлення списку невикористаних індексів у FSM-Cache')
+
+    await state.update_data(translation_shown_count=translation_shown_count + 1)
+    logger.info('Оновлення к-сть показаних перекладів у FSM-Cache')
+
+    msg_show_translation: str = MSG_SHOW_WORDPAIR_TRANSLATION.format(words=formatted_words,
+                                                                     translations=formatted_translations,
+                                                                     annotation=wordpair_annotation)
+    await callback.message.answer(msg_show_translation)
+
     await send_next_word(callback.message, state)
 
 
 @router.callback_query(F.data == 'repeat_training')
 async def process_repeat_training(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Повторити тренування" під час тренування"""
+    """Відстежує натискання на кнопку "Повторити тренування" після проходження тренування"""
+    logger.info('Обрано повторення тренування після його проходження')
+
     await callback.message.delete()
 
     data_fsm: dict[str, Any] = await state.get_data()
-    wordpairs_count: int = data_fsm.get('wordpairs_count')
 
-    available_idxs = list(range(wordpairs_count))
-    training_streak_count: int = data_fsm.get('training_streak_count', 1)  # К-сть тренувань поспіль
-    start_time_training: datetime = datetime.now()
+    training_streak_count: int = data_fsm.get('training_streak_count', 0)  # К-сть тренувань поспіль
+    start_time_training: datetime = datetime.now()  # Час початку тренування
 
-    await state.update_data(available_idxs=available_idxs,
-                            start_time_training=start_time_training,
-                            training_streak_count=training_streak_count + 1)  # Оновлення списку невикористаних індексів
+    await state.update_data(start_time_training=start_time_training,
+                            training_streak_count=training_streak_count + 1)
+    logger.info('Оновлення к-сть тренувань поспіль та час початку тренування у FSM-Cache')
+
     await send_next_word(callback.message, state)
-
-
-@router.callback_query(F.data == 'change_training_mode')
-async def process_change_training_mode(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Змінити тип тренування" під час тренування"""
-    data_fsm: dict[str, Any] = await state.get_data()
-    wordpairs_count: int = data_fsm.get('wordpairs_count')
-
-    available_idxs = list(range(wordpairs_count))
-    await state.update_data(available_idxs=available_idxs)  # Оновлення списку невикористаних індексів
-
-    kb: InlineKeyboardMarkup = get_kb_all_training()
-    vocab_name: str = data_fsm.get('vocab_name')
-    msg_choose_training_mode: str = MSG_CHOOSE_TRAINING_MODE.format(name=vocab_name)
-
-    await callback.message.edit_text(text=msg_choose_training_mode, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'cancel_training')
 async def process_cancel_training(callback: types.CallbackQuery) -> None:
-    """Відстежує натискання на кнопку "Скасувати" під час тренування.
-    Відправляє клавіатуру для підтвердження скасування.
+    """Відстежує натискання на кнопку "Завершити тренування" під час тренування.
+    Відправляє клавіатуру для підтвердження завершення.
     """
+    logger.info('Обрано завершення тренування, під час тренування')
+
     kb: InlineKeyboardMarkup = get_kb_confirm_cancel_training()
     msg_confirm_cancel_training: str = MSG_CONFIRM_CANCEL_TRAINING
 
@@ -363,94 +391,111 @@ async def process_cancel_training(callback: types.CallbackQuery) -> None:
 
 @router.callback_query(F.data == 'accept_cancel_training')
 async def process_accept_cancel_training(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Так" при підтвердженні видалення користувацького словника.
-    Мʼяко видаляє користувацький словник, залишаючи всі його звʼязки в БД.
+    """Відстежує натискання на кнопку "Так" при підтвердженні дострокового завершення тренування.
+    Завершує тренування.
+    Відправляє клавіатуру зі списком типів тренування.
     """
+    logger.info('Дострокове завершення тренування')
+
     data_fsm: dict[str, Any] = await state.get_data()
-    wordpairs_count: int = data_fsm.get('wordpairs_count')
-    wrong_answer_count = data_fsm.get('wrong_answer_count', 0)
+    vocab_name: str = data_fsm.get('vocab_name')
 
-    available_idxs = list(range(wordpairs_count))
-    await state.update_data(available_idxs=available_idxs,
-                            wrong_answer_count=wrong_answer_count + len(available_idxs),
-                            training_is_completed=False)  # Оновлення списку невикористаних індексів
+    await state.update_data(is_training_completed=False)  # Оновлення списку невикористаних індексів
+    logger.info('Оновлення прапора "тренування було завершено (is_training_completed)" на False у FSM-Cache. ')
 
-    kb: InlineKeyboardMarkup = get_kb_all_training()
-    await finish_training(callback.message, state)
-    msg_text = 'Ви скасували тренування'
-    await callback.message.edit_text(text=msg_text, reply_markup=kb)
+    await finish_training(state)
+
+    kb: InlineKeyboardMarkup = get_kb_training_modes()
+    msg_choose_training_mode: str = MSG_CHOOSE_TRAINING_MODE.format(name=vocab_name)
+
+    await callback.message.edit_text(text=msg_choose_training_mode, reply_markup=kb)
 
 
 @router.callback_query(F.data == 'decline_cancel_training')
 async def process_decline_cancel_training(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Відстежує натискання на кнопку "Так" при підтвердженні видалення користувацького словника.
-    Мʼяко видаляє користувацький словник, залишаючи всі його звʼязки в БД.
+    """Відстежує натискання на кнопку "Ні" при підтвердженні дострокового завершення тренування.
+    Продовжує тренування.
+    Відправляє нове слово для перекладу.
     """
+    logger.info('Продовження тренування')
+
+    await callback.message.delete()
+
     await send_next_word(callback.message, state)
 
 
 async def finish_training(state: FSMContext) -> None:
-    """Завершення тренування: оновлення статистики у базі даних."""
-
-    # Отримуємо дані зі стану
+    """Завершення тренування.
+    Додає до БД інформацію про сесію тренування та анулює лічильники тренування.
+    """
     data_fsm: dict[str, Any] = await state.get_data()
 
     user_id: int = data_fsm.get('user_id')
-    print(user_id)
-    vocab_id = data_fsm.get('vocab_id')
-    current_training_mode = data_fsm.get('current_training_mode')
-    start_time_training = data_fsm.get('start_time_training')
-    end_time_training = datetime.now()
-    correct_answer_count = data_fsm.get('correct_answer_count', 0)
-    wrong_answer_count = data_fsm.get('wrong_answer_count', 0)
+    vocab_id: int = data_fsm.get('vocab_id')
 
-    training_is_completed: bool = data_fsm.get('training_is_completed', True)  # Прапор, чи було завершене тренування
+    training_mode: str = data_fsm.get('training_mode')
+    is_training_completed: bool = data_fsm.get('is_training_completed', True)
 
-    # Лічильники
-    annotation_shown_count: int = data_fsm.get('annotation_shown_count', 0)  # Показів анотацій
-    translation_shown_count: int = data_fsm.get('translation_shown_count', 0)  # Показів перекладу
-    training_streak_count: int = data_fsm.get('training_streak_count', 0)  # К-сть тренувань поспіль
-    wrong_answer_count: int = data_fsm.get('wrong_answer_count', 0)  # К-сть помилок
-    correct_answer_count: int = data_fsm.get('correct_answer_count', 0)  # К-сть вірних відповідей
+    start_time_training: datetime = data_fsm.get('start_time_training')
+    end_time_training: datetime = datetime.now()
+
+    wrong_answer_count: int = data_fsm.get('wrong_answer_count', 0)
+    correct_answer_count: int = data_fsm.get('correct_answer_count', 0)
 
     with Session() as session:
         training_crud = TrainingCRUD(session)
         training_crud.create_new_training_session(
             user_id=user_id,
             vocabulary_id=vocab_id,
-            training_mode=current_training_mode,
+            training_mode=training_mode,
             start_time=start_time_training,
             end_time=end_time_training,
             number_correct_answers=correct_answer_count,
             number_wrong_answers=wrong_answer_count,
-            is_completed=training_is_completed)
+            is_completed=is_training_completed)
+        logger.info('В БД додано інформацію про сесію тренування')
+
+    total_wordpairs_count: int = data_fsm.get('total_wordpairs_count')
+    available_idxs = list(range(total_wordpairs_count))
+
+    await state.update_data(available_idxs=available_idxs)
+    logger.info('Оновлення списку невикористаних індексів словникових пар у FSM-Cache')
+
+    await state.update_data(correct_answer_count=0,
+                            wrong_answer_count=0,
+                            translation_shown_count=0)
+    logger.info('Анулювання лічильників тренування у FSM-Cache')
 
 
 async def send_training_finish_stats(message: types.Message, state: FSMContext) -> None:
-    """Відправляє статистику завершеного тренування користувачеві."""
-    # Отримуємо дані зі стану
+    """Відправляє статистику завершеного тренування користувачеві"""
     data_fsm: dict[str, Any] = await state.get_data()
 
     kb: InlineKeyboardMarkup = get_kb_finish_training()
 
-    vocab_name = data_fsm.get('vocab_name')
-    start_time_training = data_fsm.get('start_time_training')
-    end_time_training = datetime.now()
-    correct_answer_count = data_fsm.get('correct_answer_count', 0)
-    wrong_answer_count = data_fsm.get('wrong_answer_count', 0)
+    vocab_name: str = data_fsm.get('vocab_name')
+    start_time_training: datetime = data_fsm.get('start_time_training')
+    end_time_training: datetime = datetime.now()
+    training_mode_name: str = data_fsm.get('training_mode')  # Назва режиму тренування
+    training_streak_count: int = data_fsm.get('training_streak_count', 1)  # К-сть тренувань поспіль
+    correct_answer_count: int = data_fsm.get('correct_answer_count', 0)  # К-сть переведених слів
+    wrong_answer_count: int = data_fsm.get('wrong_answer_count', 0)  # К-сть помилок
+    annotation_shown_count: int = data_fsm.get('annotation_shown_count', 0)  # Показів анотацій
+    translation_shown_count: int = data_fsm.get('translation_shown_count', 0)  # Показів перекладу
 
-    # Обчислюємо тривалість тренування
-    duration_training = end_time_training - start_time_training
-    training_time_minutes = duration_training.seconds // 60  # Цілі хвилини
-    training_time_seconds = duration_training.seconds % 60  # Залишкові секунди
+    # Обчислення тривалості тренування
+    duration_training: datetime.timedelta = end_time_training - start_time_training
+    training_time_minutes: int = duration_training.seconds // 60  # Цілі хвилини
+    training_time_seconds: int = duration_training.seconds % 60  # Залишкові секунди
 
-    # Формуємо повідомлення
-    await message.answer(
-        f'🎉 Тренування завершено!\n\n'
-        f'📚 Словник: {vocab_name}\n'
-        f'✅ Правильні відповіді: {correct_answer_count}\n'
-        f'❌ Неправильні відповіді: {wrong_answer_count}\n'
-        f'⏱ Тривалість тренування: {training_time_minutes} хвилин, {training_time_seconds} секунд\n\n'
-        '➡️ Оберіть, що робити далі:',
-    reply_markup=kb
-    )
+    summary_message: str = format_training_summary_message(vocab_name=vocab_name,
+                                                           training_mode=training_mode_name,
+                                                           training_streak_count=training_streak_count,
+                                                           correct_answer_count=correct_answer_count,
+                                                           wrong_answer_count=wrong_answer_count,
+                                                           annotation_shown_count=annotation_shown_count,
+                                                           translation_shown_count=translation_shown_count,
+                                                           training_time_minutes=training_time_minutes,
+                                                           training_time_seconds=training_time_seconds)
+
+    await message.answer(text=summary_message, reply_markup=kb)
