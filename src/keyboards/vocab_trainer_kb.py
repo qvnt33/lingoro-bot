@@ -35,6 +35,7 @@ def get_kb_training_actions() -> InlineKeyboardMarkup:
 
 
 def get_kb_confirm_cancel_training() -> InlineKeyboardMarkup:
+    """Повертає клавіатуру з кнопками підтвердження скасування тренування"""
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='✅ Так', callback_data='accept_cancel_training')],
         [InlineKeyboardButton(text='❌ Ні', callback_data='decline_cancel_training')]]
