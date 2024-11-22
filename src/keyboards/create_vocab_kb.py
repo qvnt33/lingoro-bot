@@ -26,16 +26,28 @@ def get_kb_create_vocab_description() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_kb_create_wordpairs(is_with_btn_status: bool = True) -> InlineKeyboardMarkup:
+def get_kb_create_wordpairs(is_with_btn_save: bool = True, is_with_btn_status: bool = True) -> InlineKeyboardMarkup:
     """Повертає клавіатуру для процесу додавання словникових пар"""
-    buttons: list[list[InlineKeyboardButton]] = [
-        [InlineKeyboardButton(text='💾 Зберегти', callback_data='save_vocab')],
-        [InlineKeyboardButton(text='🛑 Скасувати', callback_data='cancel_create_vocab')]]
+    buttons = []
+
+    btn_save: list[InlineKeyboardButton] = [
+        InlineKeyboardButton(text='💾 Зберегти', callback_data='save_vocab')]
+    btn_status: list[InlineKeyboardButton] = [
+        InlineKeyboardButton(text='📊 Статус', callback_data='create_wordpairs_status')]
+    btn_cancel: list[InlineKeyboardButton] = [
+        InlineKeyboardButton(text='🛑 Скасувати', callback_data='cancel_create_vocab')]
+
+    if is_with_btn_save:
+        btn_save: list[InlineKeyboardButton] = [
+            InlineKeyboardButton(text='💾 Зберегти', callback_data='save_vocab')]
+        buttons.append(btn_save)
 
     if is_with_btn_status:
         btn_status: list[InlineKeyboardButton] = [
             InlineKeyboardButton(text='📊 Статус', callback_data='create_wordpairs_status')]
-        buttons.insert(1, btn_status)
+        buttons.append(btn_status)
+
+    buttons.append(btn_cancel)
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 

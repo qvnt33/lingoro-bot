@@ -315,7 +315,7 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
     if check_empty_filter.apply(wordpairs):
         logger.warning('Не було додано жодної валідної словникової пари')
 
-        kb: InlineKeyboardMarkup = get_kb_create_wordpairs(is_with_btn_status=False)
+        kb: InlineKeyboardMarkup = get_kb_create_wordpairs(is_with_btn_save=False, is_with_btn_status=False)
         msg_text: str = '\n\n'.join((MSG_ERROR_NO_VALID_WORDPAIRS_ADDED,
                                      MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS))
 
