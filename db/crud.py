@@ -463,6 +463,8 @@ class TrainingCRUD:
                                     end_time: str,
                                     number_correct_answers: int,
                                     number_wrong_answers: int,
+                                    number_annotation_shown: int,
+                                    number_translation_shown: int,
                                     is_completed: bool) -> None:
         """Створює нову сесію тренування для користувача.
 
@@ -474,6 +476,8 @@ class TrainingCRUD:
             end_time (str): Час завершення тренування у форматі рядка.
             number_correct_answers (int): Кількість правильних відповідей під час тренування.
             number_wrong_answers (int): Кількість неправильних відповідей під час тренування.
+            number_annotation_shown
+            number_translation_shown
             is_completed (bool): Чи було тренування успішно завершене.
 
         Returns:
@@ -484,6 +488,8 @@ class TrainingCRUD:
                                                end_time=end_time,
                                                number_correct_answers=number_correct_answers,
                                                number_wrong_answers=number_wrong_answers,
+                                               number_annotation_shown=number_annotation_shown,
+                                               number_translation_shown=number_translation_shown,
                                                is_completed=is_completed,
                                                user_id=user_id,
                                                vocabulary_id=vocabulary_id)

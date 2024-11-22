@@ -417,6 +417,10 @@ async def process_repeat_training(callback: types.CallbackQuery, state: FSMConte
                             training_streak_count=training_streak_count + 1)
     logger.info('Оновлення к-сть тренувань поспіль та час початку тренування у FSM-Cache')
 
+    new_state: State = VocabTraining.waiting_for_translation
+    await state.set_state(new_state)
+    logger.info(f'FSM стан змінено на "{new_state}"')
+
     await send_next_word(callback.message, state)
 
 
@@ -492,6 +496,8 @@ async def finish_training(state: FSMContext) -> None:
 
     wrong_answer_count: int = data_fsm.get('wrong_answer_count', 0)
     correct_answer_count: int = data_fsm.get('correct_answer_count', 0)
+    annotation_shown_count: int = data_fsm.get('annotation_shown_count', 0)  # Показів анотацій
+    translation_shown_count: int = data_fsm.get('translation_shown_count', 0)  # Показів перекладу
 
     with Session() as session:
         training_crud = TrainingCRUD(session)
@@ -503,6 +509,8 @@ async def finish_training(state: FSMContext) -> None:
             end_time=end_time_training,
             number_correct_answers=correct_answer_count,
             number_wrong_answers=wrong_answer_count,
+            number_annotation_shown=annotation_shown_count,
+            number_translation_shown=translation_shown_count,
             is_completed=is_training_completed)
         logger.info('В БД додано інформацію про сесію тренування')
 

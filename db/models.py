@@ -104,6 +104,9 @@ class TrainingSession(Base):
     number_correct_answers = Column(Integer, default=0)
     number_wrong_answers = Column(Integer, default=0)
 
+    number_annotation_shown = Column(Integer, default=0)
+    number_translation_shown = Column(Integer, default=0)
+
     is_completed = Column(Boolean, default=False)
 
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
