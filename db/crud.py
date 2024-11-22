@@ -344,7 +344,7 @@ class WordpairCRUD:
             про всі словникові пари, які належать користувацькому словнику по переданному ID у вигляді python-словників.
 
         Examples:
-            >>> get_wordpairs_by_vocab_id(vocab_id=1)
+            >>> get_wordpairs(vocab_id=1)
                 [
                     {
                         'words': [
