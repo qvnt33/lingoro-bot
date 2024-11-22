@@ -3,10 +3,10 @@ from datetime import datetime
 from typing import Any
 
 from aiogram import F, Router, types
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import InlineKeyboardMarkup
-from aiogram.filters import Command
 
 from db.crud import TrainingCRUD, VocabCRUD, WordpairCRUD
 from db.database import Session
@@ -78,8 +78,8 @@ async def cmd_vocab_trainer(message: types.Message, state: FSMContext) -> None:
     """
     user_id: int = message.from_user.id
 
-    logger.info(f'Користувач ввів команду "vocab_trainer". USER_ID: {user_id}')
-    logger.info('Користувач перейшов до розділу "Тренування"')
+    logger.info('Користувач ввів команду "vocab_trainer"')
+    logger.info(f'Користувач перейшов до розділу "Тренування". USER_ID: {user_id}')
 
     await state.clear()
     logger.info('FSM стан та FSM-Cache очищено перед запуском розділу "Тренування"')
@@ -255,8 +255,8 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
     formatted_translations: str = training_data.get('formatted_translations')
     correct_translations: list[str] = training_data.get('correct_translations')
 
-    logger.info(f'Словникова пара для перекладу: "{formatted_words}" -> "{formatted_translations}". '
-                f'WORDPAIR_ID: {wordpair_id}. WORDPAIR_IDX: {wordpair_idx}')
+    logger.info(f'Словникова пара для перекладу: "{formatted_words}" -> "{formatted_translations}" -> '
+                f'"{wordpair_annotation}". WORDPAIR_ID: {wordpair_id}. WORDPAIR_IDX: {wordpair_idx}')
 
     wordpairs_left: int = total_wordpairs_count - len(available_idxs)  # Скільки залишилось словникових пар
 
