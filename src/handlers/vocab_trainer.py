@@ -59,9 +59,8 @@ async def process_vocab_trainer(callback: types.CallbackQuery, state: FSMContext
         vocab_crud = VocabCRUD(session)
         all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)  # Дані всіх користувацьких словників
 
-    check_empty_filter = CheckEmptyFilter()
-
     # Якщо в БД користувача немає користувацьких словників
+    check_empty_filter = CheckEmptyFilter()
     if check_empty_filter.apply(all_vocabs_data):
         kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data[::-1], is_with_btn_vocab_base=True)
         msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING
@@ -90,9 +89,8 @@ async def cmd_vocab_trainer(message: types.Message, state: FSMContext) -> None:
         vocab_crud = VocabCRUD(session)
         all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)  # Дані всіх користувацьких словників
 
-    check_empty_filter = CheckEmptyFilter()
-
     # Якщо в БД користувача немає користувацьких словників
+    check_empty_filter = CheckEmptyFilter()
     if check_empty_filter.apply(all_vocabs_data):
         kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data[::-1], is_with_btn_vocab_base=True)
         msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING
@@ -232,10 +230,13 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
 
     wordpair_item: dict[str, Any] = wordpair_items[wordpair_idx]
 
+    wordpair_id: int = wordpair_item.get('id')
+    wordpair_annotation: str = wordpair_item.get('annotation') or 'Відсутня'
+    wordpair_total_error_count: int = wordpair_item.get('number_errors')  # К-сть всіх помилок словникової пари з БД
+
     # Список всіх слів та перекладів словникової пари з їх транскрипціями
     word_items: list[dict] = wordpair_item.get('words')
     translation_items: list[dict] = wordpair_item.get('translations')
-    wordpair_annotation: str = wordpair_item.get('annotation') or 'Відсутня'
 
     # Дані для тренування
     training_data: dict[str, Any] = get_training_data(training_mode, word_items, translation_items)
@@ -255,7 +256,9 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
                                                                  total_wordpairs_count=total_wordpairs_count,
                                                                  words=formatted_words)
 
-    await state.update_data(wordpair_annotation=wordpair_annotation,
+    await state.update_data(wordpair_id=wordpair_id,
+                            wordpair_total_error_count=wordpair_total_error_count,
+                            wordpair_annotation=wordpair_annotation,
                             formatted_words=formatted_words,
                             formatted_translations=formatted_translations,
                             correct_translations=correct_translations,
@@ -274,7 +277,8 @@ async def process_check_user_translation(message: types.Message, state: FSMConte
     user_translation: str = message.text.strip()  # Введений користувачем переклад
     logger.info(f'Введений переклад: "{user_translation}"')
 
-    wordpair_idx: int = data_fsm.get('wordpair_idx')
+    wordpair_idx: int = data_fsm.get('wordpair_idx')  # Індекс поточної словникової пари
+    wordpair_id: int = data_fsm.get('wordpair_id')  # ID в БД поточної словникової пари
 
     formatted_words: str = data_fsm.get('formatted_words')
     formatted_translations: str = data_fsm.get('formatted_translations')
@@ -296,6 +300,12 @@ async def process_check_user_translation(message: types.Message, state: FSMConte
     else:
         await message.answer(MSG_WRONG_ANSWER.format(words=formatted_words, user_translation=user_translation))
         logger.info('Переклад НЕ ВІРНИЙ')
+
+        # Оновлення к-сть сумарних помилок словникової пари в БД
+        with Session() as session:
+            wordpair_crud = WordpairCRUD(session)
+            wordpair_crud.increment_wordpair_error_count(wordpair_id=wordpair_id)
+            logger.info(f'К-сть всіх помилок словникової пари в БД збільшено на 1. WORDPAIR_ID: {wordpair_id}')
 
         wrong_answer_count: int = data_fsm.get('wrong_answer_count', 0)
         await state.update_data(wrong_answer_count=wrong_answer_count + 1)

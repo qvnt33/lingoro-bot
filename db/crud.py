@@ -347,6 +347,7 @@ class WordpairCRUD:
             >>> get_wordpairs(vocab_id=1)
                 [
                     {
+                        'id': 0,
                         'words': [
                             {'word': 'cat', 'transcription': 'кет'},
                             ],
@@ -364,12 +365,14 @@ class WordpairCRUD:
         all_wordpairs: list[dict] = []
 
         for wordpair in wordpair_query:
+            wordpair_id: int = wordpair.id
             words: list[dict] = self._get_words_with_transcriptions(wordpair.id)
             translations: list[dict] = self._get_translations_with_transcriptions(wordpair.id)
             annotation: str | None = wordpair.annotation
             number_errors: int = wordpair.number_errors
 
-            wordpair_components: dict[str, Any] = {'words': words,
+            wordpair_components: dict[str, Any] = {'id': wordpair_id,
+                                                   'words': words,
                                                    'translations': translations,
                                                    'annotation': annotation,
                                                    'number_errors': number_errors}
@@ -432,6 +435,18 @@ class WordpairCRUD:
             translations_with_transcriptions.append({'translation': translation_query.translation,
                                                      'transcription': translation_query.transcription})
         return translations_with_transcriptions
+
+    def increment_wordpair_error_count(self, wordpair_id: int) -> None:
+        """Збільшує кількість помилок у словниковій парі на 1.
+
+        Args:
+            wordpair_id (int): ID словникової пари.
+        """
+        wordpair: Wordpair = self.session.query(Wordpair).filter(
+            Wordpair.id == wordpair_id).first()
+
+        wordpair.number_errors += 1
+        self.session.commit()
 
 
 class TrainingCRUD:
