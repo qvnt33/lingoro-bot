@@ -402,11 +402,14 @@ async def process_repeat_training(callback: types.CallbackQuery, state: FSMConte
 
 
 @router.callback_query(F.data == 'cancel_training')
-async def process_cancel_training(callback: types.CallbackQuery) -> None:
+async def process_cancel_training(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Завершити тренування" під час тренування.
     Відправляє клавіатуру для підтвердження завершення.
     """
     logger.info('Обрано дострокове завершення тренування під час тренування')
+
+    await state.set_state()
+    logger.info('FSM стан переведено у очікування')
 
     kb: InlineKeyboardMarkup = get_kb_confirm_cancel_training()
     msg_confirm_cancel_training: str = MSG_CONFIRM_CANCEL_TRAINING
@@ -514,6 +517,9 @@ async def send_training_finish_stats(message: types.Message, state: FSMContext) 
     duration_training: datetime.timedelta = end_time_training - start_time_training
     training_time_minutes: int = duration_training.seconds // 60  # Цілі хвилини
     training_time_seconds: int = duration_training.seconds % 60  # Залишкові секунди
+
+    await state.set_state()
+    logger.info('FSM стан переведено у очікування')
 
     summary_message: str = format_training_summary_message(vocab_name=vocab_name,
                                                            training_mode=training_mode_name,
