@@ -4,6 +4,7 @@ from typing import Any
 
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.filters import Command
 
@@ -123,7 +124,7 @@ async def process_training_selection(callback: types.CallbackQuery, state: FSMCo
     vocab_name: str = vocab_data.get('name')
     total_wordpairs_count: int = vocab_data.get('wordpairs_count')  # К-сть словникових пар у користувацькому словнику
 
-    logger.info(f'Обраний користувацький словник. Назва: "{vocab_name}". ID: {vocab_id}')
+    logger.info(f'Обраний користувацький словник. Назва: "{vocab_name}". VOCAB_ID: {vocab_id}')
 
     msg_choose_training_mode: str = MSG_CHOOSE_TRAINING_MODE.format(name=vocab_name)
 
@@ -155,6 +156,10 @@ async def process_direct_translation(callback: types.CallbackQuery, state: FSMCo
                             available_idxs=available_idxs)
     logger.info('Початкові дані тренування збережені у FSM-Cache')
 
+    new_state: State = VocabTraining.waiting_for_translation
+    await state.set_state(new_state)
+    logger.info(f'FSM стан змінено на "{new_state}"')
+
     await send_next_word(callback.message, state)
 
 
@@ -176,6 +181,10 @@ async def process_reverse_translation(callback: types.CallbackQuery, state: FSMC
                             start_time_training=start_time_training,
                             available_idxs=available_idxs)
     logger.info('Початкові дані тренування збережені у FSM-Cache')
+
+    new_state: State = VocabTraining.waiting_for_translation
+    await state.set_state(new_state)
+    logger.info(f'FSM стан змінено на "{new_state}"')
 
     await send_next_word(callback.message, state)
 
@@ -206,6 +215,8 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
     check_empty_filter = CheckEmptyFilter()
     if check_empty_filter.apply(available_idxs):
         await state.update_data(is_training_completed=True)
+        logger.info('Оновлення  а "тренування було завершено (is_training_completed)" на True у FSM-Cache')
+
         await send_training_finish_stats(message, state)
         await finish_training(state)
         return
@@ -224,7 +235,6 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
     wordpair_idx: int = get_wordpair_idx_for_training(available_idxs,
                                                       preview_wordpair_idx,
                                                       is_use_current_words)
-
     await state.update_data(wordpair_idx=wordpair_idx)
     logger.info('Оновлення нового індексу словникової пари у FSM-Cache')
 
@@ -245,7 +255,8 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
     formatted_translations: str = training_data.get('formatted_translations')
     correct_translations: list[str] = training_data.get('correct_translations')
 
-    logger.info(f'Словникова пара для перекладу: "{formatted_words}" -> "{formatted_translations}"')
+    logger.info(f'Словникова пара для перекладу: "{formatted_words}" -> "{formatted_translations}". '
+                f'WORDPAIR_ID: {wordpair_id}. WORDPAIR_IDX: {wordpair_idx}')
 
     wordpairs_left: int = total_wordpairs_count - len(available_idxs)  # Скільки залишилось словникових пар
 
@@ -263,10 +274,9 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
                             formatted_translations=formatted_translations,
                             correct_translations=correct_translations,
                             training_mode_name=training_mode_name)
-    logger.info('Дані словникової пари для перекладу збережені у FSM-Cache')
+    logger.info('Дані словникової пари збережені у FSM-Cache')
 
     await message.answer(text=msg_enter_translation, reply_markup=kb)
-    await state.set_state(VocabTraining.waiting_for_translation)
 
 
 @router.message(VocabTraining.waiting_for_translation)
@@ -305,11 +315,11 @@ async def process_check_user_translation(message: types.Message, state: FSMConte
         with Session() as session:
             wordpair_crud = WordpairCRUD(session)
             wordpair_crud.increment_wordpair_error_count(wordpair_id=wordpair_id)
-            logger.info(f'К-сть всіх помилок словникової пари в БД збільшено на 1. WORDPAIR_ID: {wordpair_id}')
+            logger.info('К-сть всіх помилок словникової пари в БД збільшено на 1')
 
         wrong_answer_count: int = data_fsm.get('wrong_answer_count', 0)
         await state.update_data(wrong_answer_count=wrong_answer_count + 1)
-        logger.info('Оновлення к-сть некоректних відповідей у FSM-Cache')
+        logger.info('К-сть некоректних відповідей збільшено на 1 у FSM-Cache')
 
     await send_next_word(message, state)
 
@@ -359,7 +369,7 @@ async def process_show_annotation(callback: types.CallbackQuery, state: FSMConte
 @router.callback_query(F.data == 'show_translation')
 async def process_show_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Показати переклад" під час тренування"""
-    logger.info('Обрано показ перекладу словникової пари')
+    logger.info('Обрано показ перекладу слова')
 
     await callback.message.delete()
 
@@ -376,8 +386,7 @@ async def process_show_translation(callback: types.CallbackQuery, state: FSMCont
 
     available_idxs.remove(wordpair_idx)
     await state.update_data(available_idxs=available_idxs)
-    logger.info('Видалення індексу показаного перекладу словникової пари та '
-                'оновлення списку невикористаних індексів у FSM-Cache')
+    logger.info('Видалення індексу перекладу слова та оновлення списку невикористаних індексів у FSM-Cache')
 
     await state.update_data(translation_shown_count=translation_shown_count + 1)
     logger.info('Оновлення к-сть показаних перекладів у FSM-Cache')
@@ -458,6 +467,10 @@ async def process_decline_cancel_training(callback: types.CallbackQuery, state: 
     logger.info('Продовження тренування')
 
     await callback.message.delete()
+
+    new_state: State = VocabTraining.waiting_for_translation
+    await state.set_state(new_state)
+    logger.info(f'FSM стан змінено на "{new_state}"')
 
     await send_next_word(callback.message, state)
 

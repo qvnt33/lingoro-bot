@@ -60,8 +60,10 @@ async def process_create_vocab(callback: types.CallbackQuery, state: FSMContext)
     kb: InlineKeyboardMarkup = get_kb_create_vocab_name()
     msg_enter_name: str = add_vocab_data_to_message(message_text=MSG_ENTER_VOCAB_NAME)
 
-    await fsm_utils.save_current_fsm_state(state=state,
-                                           new_state=states.VocabCreation.waiting_for_vocab_name)
+    new_state: State = states.VocabCreation.waiting_for_vocab_name
+    await fsm_utils.save_current_fsm_state(state, new_state)
+    logger.info(f'FSM стан змінено на "{new_state}"')
+
     await callback.message.edit_text(text=msg_enter_name, reply_markup=kb)
 
 
@@ -98,8 +100,9 @@ async def process_create_vocab_name(message: types.Message, state: FSMContext) -
         await state.update_data(vocab_name=vocab_name)
         logger.info('Назва користувацького словника збережена у FSM-Cache')
 
-        await fsm_utils.save_current_fsm_state(state=state,
-                                               new_state=states.VocabCreation.waiting_for_vocab_description)
+        new_state: State = states.VocabCreation.waiting_for_vocab_description
+        await fsm_utils.save_current_fsm_state(state, new_state)
+        logger.info(f'FSM стан змінено на "{new_state}"')
     else:
         formatted_vocab_name_errors: str = validator_vocab_name.format_errors()
 
@@ -127,8 +130,10 @@ async def process_change_vocab_name(callback: types.CallbackQuery, state: FSMCon
 
     kb: InlineKeyboardMarkup = get_kb_create_vocab_name(is_keep_old_vocab_name=True)
 
-    await fsm_utils.save_current_fsm_state(state=state,
-                                           new_state=states.VocabCreation.waiting_for_vocab_name)
+    new_state: State = states.VocabCreation.waiting_for_vocab_name
+    await fsm_utils.save_current_fsm_state(state, new_state)
+    logger.info(f'FSM стан змінено на "{new_state}"')
+
     await callback.message.edit_text(text=msg_new_name, reply_markup=kb)
 
 
@@ -146,8 +151,10 @@ async def process_skip_create_vocab_description(callback: types.CallbackQuery, s
     msg_enter_wordpairs: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                                          message_text=MSG_ENTER_WORDPAIRS)
 
-    await fsm_utils.save_current_fsm_state(state=state,
-                                           new_state=states.VocabCreation.waiting_for_wordpairs)
+    new_state: State = states.VocabCreation.waiting_for_wordpairs
+    await fsm_utils.save_current_fsm_state(state, new_state)
+    logger.info(f'FSM стан змінено на "{new_state}"')
+
     await callback.message.edit_text(text=msg_enter_wordpairs, reply_markup=kb)
 
 
@@ -166,8 +173,10 @@ async def process_keep_old_vocab_name(callback: types.CallbackQuery, state: FSMC
     msg_enter_name: str = add_vocab_data_to_message(vocab_name=vocab_name,
                                                     message_text=MSG_ENTER_VOCAB_NAME)
 
-    await fsm_utils.save_current_fsm_state(state=state,
-                                           new_state=states.VocabCreation.waiting_for_vocab_description)
+    new_state: State = states.VocabCreation.waiting_for_vocab_description
+    await fsm_utils.save_current_fsm_state(state, new_state)
+    logger.info(f'FSM стан змінено на "{new_state}"')
+
     await callback.message.edit_text(text=msg_enter_name, reply_markup=kb)
 
 
@@ -191,8 +200,9 @@ async def process_create_vocab_description(message: types.Message, state: FSMCon
         await state.update_data(vocab_description=vocab_description)
         logger.info('Опис користувацького словника збережений у FSM-Cache')
 
-        await fsm_utils.save_current_fsm_state(state=state,
-                                               new_state=states.VocabCreation.waiting_for_wordpairs)
+        new_state: State = states.VocabCreation.waiting_for_wordpairs
+        await fsm_utils.save_current_fsm_state(state, new_state)
+        logger.info(f'FSM стан змінено на "{new_state}"')
     else:
         formatted_vocab_description_errors: str = validator_vocab_description.format_errors()
 
