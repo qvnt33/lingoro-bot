@@ -1,4 +1,7 @@
 import random
+from typing import Any
+
+from tools.wordpair_utils import format_word_items
 
 
 def format_training_process_message(vocab_name: str,
@@ -63,3 +66,55 @@ def get_random_wordpair_idx(available_idxs: list, preview_idx: int) -> int:
         wordpair_idx: int = random.choice(available_idxs)
 
     return wordpair_idx
+
+
+def get_training_data(training_mode: str, word_items: list[dict], translation_items: list[dict]) -> dict[str, Any]:
+    """Повертає дані для тренування, виходячи із типу тренування.
+
+    Args:
+        training_mode (str): Тип тренування.
+        word_items (list[dict]): Список слів словникової пари з їх транскрипціями.
+        translation_items (list[dict]): Список перекладів словникової пари з їх транскрипціями.
+
+    Returns:
+        dict[str, Any]: Python-словник із даними:
+            training_mode_name (str): Назва тренування.
+            formatted_words (str): Відформатовані слова словникової пари у вигляді рядка.
+            formatted_translations (str): Відформатовані переклади словникової пари у вигляді рядка.
+            correct_translations (list[str]): Список коректних перекладів у нижньому регістрі.
+    """
+    if training_mode == 'direct_translation':
+        training_mode_name = 'Прямий переклад (W -> T)'
+        formatted_words: str = format_word_items(word_items)
+        formatted_translations: str = format_word_items(translation_items, is_translation_items=True)
+        correct_translations: list[str] = [translation.get('translation').lower() for translation in translation_items]
+    elif training_mode == 'reverse_translation':
+        training_mode_name = 'Зворотній переклад (T -> W)'
+        formatted_words: str = format_word_items(translation_items, is_translation_items=True)
+        formatted_translations: str = format_word_items(word_items)
+        correct_translations: list[str] = [translation.get('word').lower() for translation in word_items]
+
+    training_data: dict[str, Any] = {'training_mode_name': training_mode_name,
+                                     'formatted_words': formatted_words,
+                                     'formatted_translations': formatted_translations,
+                                     'correct_translations': correct_translations}
+    return training_data
+
+
+def get_wordpair_idx_for_training(available_idxs: list, preview_wordpair_idx: int, is_use_current_words: bool) -> int:
+    """Повертає індекс словникової пари для тренування.
+
+    Notes:
+        Якщо is_use_current_words=True, то повертається попередній індекс,
+        в іншому разі випадковий із списку невикористаних.
+
+    Args:
+        available_idxs (list): Список індексів, які ще не були використані.
+        preview_wordpair_idx (int): Минулий індекс.
+        is_use_current_words (bool): Прапор, використовувати поточне слово(а) чи обрати нове.
+    """
+    if is_use_current_words:
+        return preview_wordpair_idx
+
+    # Вибір випадкового індексу з тих, що ще не були використані
+    return get_random_wordpair_idx(available_idxs, preview_wordpair_idx)
