@@ -5,6 +5,7 @@ from typing import Any
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup
+from aiogram.filters import Command
 
 from db.crud import TrainingCRUD, VocabCRUD, WordpairCRUD
 from db.database import Session
@@ -49,8 +50,6 @@ async def process_vocab_trainer(callback: types.CallbackQuery, state: FSMContext
 
     logger.info(f'Користувач перейшов до розділу "Тренування". USER_ID: {user_id}')
 
-    check_empty_filter = CheckEmptyFilter()
-
     await state.clear()
     logger.info('FSM стан та FSM-Cache очищено перед запуском розділу "Тренування"')
 
@@ -58,9 +57,9 @@ async def process_vocab_trainer(callback: types.CallbackQuery, state: FSMContext
 
     with Session() as session:
         vocab_crud = VocabCRUD(session)
+        all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)  # Дані всіх користувацьких словників
 
-        # Дані всіх користувацьких словників користувача
-        all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
+    check_empty_filter = CheckEmptyFilter()
 
     # Якщо в БД користувача немає користувацьких словників
     if check_empty_filter.apply(all_vocabs_data):
@@ -70,6 +69,37 @@ async def process_vocab_trainer(callback: types.CallbackQuery, state: FSMContext
         kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data[::-1])
         msg_text: str = MSG_CHOOSE_VOCAB_FOR_TRAINING
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
+
+
+@router.message(Command(commands=['vocab_trainer']))
+async def cmd_vocab_trainer(message: types.Message, state: FSMContext) -> None:
+    """Відстежує введення команди "vocab_trainer".
+    Відправляє користувачу користувацькі словники у вигляді кнопок.
+    """
+    user_id: int = message.from_user.id
+
+    logger.info(f'Користувач ввів команду "vocab_trainer". USER_ID: {user_id}')
+    logger.info('Користувач перейшов до розділу "Тренування"')
+
+    await state.clear()
+    logger.info('FSM стан та FSM-Cache очищено перед запуском розділу "Тренування"')
+
+    await state.update_data(user_id=user_id)
+
+    with Session() as session:
+        vocab_crud = VocabCRUD(session)
+        all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)  # Дані всіх користувацьких словників
+
+    check_empty_filter = CheckEmptyFilter()
+
+    # Якщо в БД користувача немає користувацьких словників
+    if check_empty_filter.apply(all_vocabs_data):
+        kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data[::-1], is_with_btn_vocab_base=True)
+        msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING
+    else:
+        kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data[::-1])
+        msg_text: str = MSG_CHOOSE_VOCAB_FOR_TRAINING
+    await message.answer(text=msg_text, reply_markup=kb)
 
 
 @router.callback_query(F.data.startswith('select_vocab_training'))
