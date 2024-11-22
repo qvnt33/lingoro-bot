@@ -6,9 +6,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 def get_kb_training_modes() -> InlineKeyboardMarkup:
     """Повертає клавіатуру зі списком типів словникових тренувань"""
     buttons: list[list[InlineKeyboardButton]] = [
-        [InlineKeyboardButton(text='📖 Прямий переклад (W -> T)', callback_data='direct_translation')],
-        [InlineKeyboardButton(text='📖 Зворотній переклад (T -> W)', callback_data='reverse_translation')],
-        [InlineKeyboardButton(text='📚 Змінити словник', callback_data='vocab_trainer')],
+        [InlineKeyboardButton(text='🎯 Прямий переклад (W -> T)', callback_data='direct_translation')],
+        [InlineKeyboardButton(text='🎯 Зворотній переклад (T -> W)', callback_data='reverse_translation')],
+        [InlineKeyboardButton(text='📗 Змінити словник', callback_data='vocab_trainer')],
         [InlineKeyboardButton(text='🏠 Головне меню', callback_data='menu')]]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -18,7 +18,7 @@ def get_kb_finish_training() -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='🔄 Повторити тренування', callback_data='repeat_training')],
         [InlineKeyboardButton(text='🎯 Змінити тип тренування', callback_data='change_training_mode')],
-        [InlineKeyboardButton(text='📚 Змінити словник', callback_data='vocab_trainer')],
+        [InlineKeyboardButton(text='📗 Змінити словник', callback_data='vocab_trainer')],
         [InlineKeyboardButton(text='🏠 Головне меню', callback_data='menu')]]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -68,10 +68,10 @@ def get_kb_vocab_selection_training(all_vocabs_data: list[dict],
         kb.add(btn_vocab)
 
     if is_with_btn_vocab_base:
-        btn_vocab_base = InlineKeyboardButton(text='База словників', callback_data='vocab_base')
+        btn_vocab_base = InlineKeyboardButton(text='📊 База словників', callback_data='vocab_base')
         kb.add(btn_vocab_base)
 
-    btn_menu = InlineKeyboardButton(text='Головне меню', callback_data='menu')
+    btn_menu = InlineKeyboardButton(text='🏠 Головне меню', callback_data='menu')
     kb.add(btn_menu)
 
     kb.adjust(1)

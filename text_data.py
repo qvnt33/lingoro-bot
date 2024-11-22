@@ -5,7 +5,7 @@ MSG_ENTER_NEW_VOCAB_NAME = '📝 Введіть нову назву словни
 MSG_ENTER_VOCAB_DESCRIPTION = '📄 Введіть опис словника або натисніть "Пропустити", якщо опис не потрібен.'
 
 MSG_ENTER_WORDPAIRS = (
-    '📚 Введіть "словникові пари" у форматі:\n'
+    '📝 Введіть "словникові пари" у форматі:\n'
     'w1 | tr1 , w2 | tr2 : t1, t2 : a\n\n'
     '- w — слово\n'
     '- tr — транскрипція (опціонально).\n'
@@ -17,7 +17,7 @@ MSG_ENTER_WORDPAIRS = (
     '*Можна додати декілька слів чи перекладів, розділяючи їх символом "," (опціонально)\n\n'
     '(В одному повідомленні можна ввести декілька словникових пар розділених, кожну у новому рядку)')
 
-MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS = ('📚 Введіть словникові пари у форматі:\n'
+MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS = ('📝 Введіть словникові пари у форматі:\n'
                                           '`w1 | tr1 , w2 | tr2 : t1, t2 : a`\n')
 
 MSG_ERROR_VOCAB_NAME_DUPLICATE = ('⚠️ Нова назва словника не може збігатися з поточною.\n\n'
@@ -43,15 +43,15 @@ MSG_TITLE_MENU_FOR_NEW_USER = '👋 Привіт! Ласкаво просимо 
 
 
 # handlers/vocab_base.py
-MSG_CHOOSE_VOCAB = '📚 Оберіть словник із вашої бази або створіть новий.'
+MSG_CHOOSE_VOCAB = '📗 Оберіть словник із вашої бази або створіть новий.'
 
-MSG_ERROR_VOCAB_BASE_EMPTY = ('📭 У вашій базі поки що немає словників.\n'
+MSG_ERROR_VOCAB_BASE_EMPTY = ('📗 У вашій базі поки що немає словників.\n'
                               '➕ Створіть новий словник, щоб почати тренування.')
 
 TEMPLATE_WORDPAIR = ('{idx}. {words} ▪️ {translations} ▪️ {annotation}\n'
                      '🔺 Помилки: {number_errors}\n')
 
-MSG_INFO_VOCAB = ('📚 Назва словника: {name}\n'
+MSG_INFO_VOCAB = ('📗 Назва словника: {name}\n'
                   '📄 Опис: {description}\n'
                   '🔢 Кількість словникових пар: {wordpairs_count}\n'
                   '⚠️ Загальна кількість помилок: {number_errors}\n\n'
@@ -63,16 +63,16 @@ MSG_CONFIRM_DELETE_VOCAB = '❓ Ви дійсно хочете видалити 
 MSG_SUCCESS_VOCAB_DELETED = '✅ Словник "{name}" успішно видалено з бази словників.'
 
 # handlers/vocab_trainer.py
-MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING = ('📭 У вашій базі поки що немає словників.\n'
+MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING = ('📗 У вашій базі поки що немає словників.\n'
                                           '➕ Створіть новий словник у розділі "База словників" для початку тренувань.')
-MSG_CHOOSE_VOCAB_FOR_TRAINING = '📚 Оберіть словник із вашої бази для початку тренування.'
-MSG_CHOOSE_TRAINING_MODE = '📚 Словник: {name}\n\n🔄 Оберіть тип тренування, щоб продовжити.'
+MSG_CHOOSE_VOCAB_FOR_TRAINING = '📗 Оберіть словник із вашої бази для початку тренування.'
+MSG_CHOOSE_TRAINING_MODE = '📗 Словник: {name}\n\n🎯 Оберіть тип тренування, щоб продовжити.'
 MSG_CONFIRM_CANCEL_TRAINING = '❓ Ви дійсно хочете завершити тренування?\n🛑 Усі результати будуть збережені.'
-MSG_CORRECT_ANSWER = '✅ Вірно!\n{words} ➡️ {translations}'
+MSG_CORRECT_ANSWER = '✅ Вірно!\n{words} -> {translations}'
 MSG_WRONG_ANSWER = '❌ Неправильно!\n"{words}" не перекладається як "{user_translation}"'
 MSG_LEFT_ONE_WORD_TRAINING = '⚠️ Залишилось останнє слово. Пропускати більше не можна!'
-MSG_SHOW_WORDPAIR_ANNOTATION = '💡 Показ анотації:\n📝 Слово(а): {words}\n📝 Анотація: {annotation}'
-MSG_SHOW_WORDPAIR_TRANSLATION = '💬 Показ перекладу:\n📝 Слово(а): {words}\n📝 Переклад(и): {translations}\n📝 Анотація: {annotation}'
+MSG_SHOW_WORDPAIR_ANNOTATION = '💡 Показ анотації\n\n📝 Слово(а): {words}\n📝 Анотація: {annotation}'
+MSG_SHOW_WORDPAIR_TRANSLATION = '💬 Показ перекладу\n\n📝 Слово(а): {words}\n📝 Переклад(и): {translations}\n📝 Анотація: {annotation}'
 
 
 # handlers/help.py

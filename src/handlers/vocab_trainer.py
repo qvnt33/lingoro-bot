@@ -223,9 +223,9 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
     if is_use_current_words:
         await state.update_data(is_use_current_words=False)
 
-    wordpair_idx: int = await get_wordpair_idx_for_training(available_idxs,
-                                                            preview_wordpair_idx,
-                                                            is_use_current_words)
+    wordpair_idx: int = get_wordpair_idx_for_training(available_idxs,
+                                                      preview_wordpair_idx,
+                                                      is_use_current_words)
 
     await state.update_data(wordpair_idx=wordpair_idx)
     logger.info('Оновлення нового індексу словникової пари у FSM-Cache')
@@ -391,7 +391,7 @@ async def process_repeat_training(callback: types.CallbackQuery, state: FSMConte
 
     data_fsm: dict[str, Any] = await state.get_data()
 
-    training_streak_count: int = data_fsm.get('training_streak_count', 0)  # К-сть тренувань поспіль
+    training_streak_count: int = data_fsm.get('training_streak_count', 1)  # К-сть тренувань поспіль
     start_time_training: datetime = datetime.now()  # Час початку тренування
 
     await state.update_data(start_time_training=start_time_training,
@@ -499,7 +499,7 @@ async def send_training_finish_stats(message: types.Message, state: FSMContext) 
     kb: InlineKeyboardMarkup = get_kb_finish_training()
 
     vocab_name: str = data_fsm.get('vocab_name')
-    training_mode_name: str = data_fsm.get('training_mode')  # Назва режиму тренування
+    training_mode_name: str = data_fsm.get('training_mode_name')  # Назва режиму тренування
 
     start_time_training: datetime = data_fsm.get('start_time_training')
     end_time_training: datetime = datetime.now()
