@@ -20,8 +20,8 @@ def add_vocab_data_to_message(vocab_name: str | None = None,
     vocab_description = vocab_description or 'Відсутній'
 
     formatted_message: str = (
-        f'Назва: {vocab_name}\n'
-        f'Опис: {vocab_description}\n\n'
+        f'📗 Назва: {vocab_name}\n'
+        f'📄 Опис: {vocab_description}\n\n'
         f'{message_text}')
     return formatted_message
 

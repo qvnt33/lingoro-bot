@@ -18,7 +18,7 @@ from src.keyboards.vocab_base_kb import (
 from text_data import (
     MSG_CHOOSE_VOCAB,
     MSG_CONFIRM_DELETE_VOCAB,
-    MSG_ERROR_VOCAB_BASE_EMPTY,
+    MSG_INFO_VOCAB_BASE_EMPTY,
     MSG_INFO_VOCAB,
     MSG_SUCCESS_VOCAB_DELETED,
     TEMPLATE_WORDPAIR,
@@ -52,7 +52,7 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
     # Якщо в БД користувача немає користувацьких словників
     if check_empty_filter.apply(all_vocabs_data):
         logger.info('В БД користувача немає користувацьких словників')
-        msg_text: str = MSG_ERROR_VOCAB_BASE_EMPTY
+        msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY
     else:
         msg_text: str = MSG_CHOOSE_VOCAB
 

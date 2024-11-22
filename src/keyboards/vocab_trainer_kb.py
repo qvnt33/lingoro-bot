@@ -30,7 +30,7 @@ def get_kb_training_actions() -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(text='💡 Анотація', callback_data='show_annotation'),
             InlineKeyboardButton(text='💬 Переклад', callback_data='show_translation')],
-        [InlineKeyboardButton(text='❌ Завершити тренування', callback_data='cancel_training')]]
+        [InlineKeyboardButton(text='🛑 Завершити тренування', callback_data='cancel_training')]]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -68,7 +68,7 @@ def get_kb_vocab_selection_training(all_vocabs_data: list[dict],
         kb.add(btn_vocab)
 
     if is_with_btn_vocab_base:
-        btn_vocab_base = InlineKeyboardButton(text='📊 База словників', callback_data='vocab_base')
+        btn_vocab_base = InlineKeyboardButton(text='📂 База словників', callback_data='vocab_base')
         kb.add(btn_vocab_base)
 
     btn_menu = InlineKeyboardButton(text='🏠 Головне меню', callback_data='menu')

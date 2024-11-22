@@ -6,9 +6,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 def get_kb_vocab_options() -> InlineKeyboardMarkup:
     """Клавіатура з кнопками головного меню"""
     buttons: list[list[InlineKeyboardButton]] = [
-        [InlineKeyboardButton(text='Видалити словник', callback_data='delete_vocab')],
-        [InlineKeyboardButton(text='Назад', callback_data='vocab_base')],
-        [InlineKeyboardButton(text='Головне меню', callback_data='menu')]]
+        [InlineKeyboardButton(text='🗑️ Видалити словник', callback_data='delete_vocab')],
+        [InlineKeyboardButton(text='⬅️ Назад', callback_data='vocab_base')],
+        [InlineKeyboardButton(text='🏠 Головне меню', callback_data='menu')]]
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -23,8 +23,8 @@ def get_kb_confirm_delete() -> InlineKeyboardMarkup:
 
 def get_kb_accept_delete_vocab() -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = [
-        [InlineKeyboardButton(text='База словників', callback_data='vocab_base')],
-        [InlineKeyboardButton(text='Головне меню', callback_data='menu')]]
+        [InlineKeyboardButton(text='📂 База словників', callback_data='vocab_base')],
+        [InlineKeyboardButton(text='🏠 Головне меню', callback_data='menu')]]
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -52,8 +52,8 @@ def get_kb_vocab_selection_base(all_vocabs_data: list[dict]) -> InlineKeyboardMa
         btn_vocab = InlineKeyboardButton(text=btn_text, callback_data=callback_data_text)
         kb.add(btn_vocab)
 
-    btn_create_vocab = InlineKeyboardButton(text='Додати словник', callback_data='create_vocab')
-    btn_menu = InlineKeyboardButton(text='Головне меню', callback_data='menu')
+    btn_create_vocab = InlineKeyboardButton(text='➕ Додати словник', callback_data='create_vocab')
+    btn_menu = InlineKeyboardButton(text='🏠 Головне меню', callback_data='menu')
     kb.add(btn_create_vocab, btn_menu)
 
     kb.adjust(1)
