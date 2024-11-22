@@ -40,7 +40,7 @@ from text_data import (
     MSG_SUCCESS_VOCAB_SAVED_TO_DB,
 )
 from tools import fsm_utils, vocab_utils, wordpair_utils
-from tools.message_formatter import add_vocab_data_to_message
+from tools.vocab_utils import add_vocab_data_to_message
 
 router = Router(name='create_vocab')
 logger: logging.Logger = logging.getLogger(__name__)
