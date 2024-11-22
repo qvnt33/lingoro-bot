@@ -27,7 +27,6 @@ from text_data import (
     MSG_LEFT_ONE_WORD_TRAINING,
     MSG_SHOW_WORDPAIR_ANNOTATION,
     MSG_SHOW_WORDPAIR_TRANSLATION,
-    MSG_TRAINING_EARLY_COMPLETED,
     MSG_WRONG_ANSWER,
 )
 from tools.vocab_trainer_utils import (
@@ -53,7 +52,7 @@ async def process_vocab_trainer(callback: types.CallbackQuery, state: FSMContext
     check_empty_filter = CheckEmptyFilter()
 
     await state.clear()
-    logger.info('FSM стан та FSM-Cache очищено')
+    logger.info('FSM стан та FSM-Cache очищено перед запуском розділу "Тренування"')
 
     await state.update_data(user_id=user_id)
 
@@ -65,7 +64,6 @@ async def process_vocab_trainer(callback: types.CallbackQuery, state: FSMContext
 
     # Якщо в БД користувача немає користувацьких словників
     if check_empty_filter.apply(all_vocabs_data):
-        logger.info('В БД користувача немає користувацьких словників')
         kb: InlineKeyboardMarkup = get_kb_vocab_selection_training(all_vocabs_data[::-1], is_with_btn_vocab_base=True)
         msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING
     else:
@@ -133,21 +131,24 @@ async def process_direct_translation(callback: types.CallbackQuery, state: FSMCo
 
 
 @router.callback_query(F.data == 'reverse_translation')
-async def process_btn_reverse_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Ініціалізація тренування і збереження даних у FSM"""
-    data_fsm: Dict[str, Any] = await state.get_data()
-    vocab_id: int = data_fsm.get('vocab_id')
+async def process_reverse_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
+    """Відстежує натискання на кнопку "Зворотній переклад" під час вибору типу тренування.
+    Починає процес тренування та відправляє перше слово для перекладу.
+    """
+    logger.info('Початок тренування. Тип: "Зворотній переклад"')
+    await callback.message.delete()
 
-    with Session() as db:
-        vocab_details: List[Dict] = get_wordpairs_by_vocab_id(db, vocab_id)
+    data_fsm: dict[str, Any] = await state.get_data()
 
-    # Список індексів, які ще не були використані
-    available_idxs = list(range(len(vocab_details)))
+    total_wordpairs_count: int = data_fsm.get('total_wordpairs_count')
+    available_idxs: list = list(range(total_wordpairs_count))  # Список індексів словникових пар
+    start_time_training: datetime = datetime.now()  # Час початку тренування
 
-    # Збереження всіх деталей у стані FSM
-    await state.update_data(vocab_details=vocab_details, available_idxs=available_idxs, current_training_type='reverse_translation')
+    await state.update_data(training_mode='reverse_translation',
+                            start_time_training=start_time_training,
+                            available_idxs=available_idxs)
+    logger.info('Початкові дані тренування збережені у FSM-Cache')
 
-    # Надсилаємо першу пару на переклад
     await send_next_word(callback.message, state)
 
 
@@ -165,6 +166,25 @@ async def process_change_training_mode(callback: types.CallbackQuery, state: FSM
     msg_choose_training_mode: str = MSG_CHOOSE_TRAINING_MODE.format(name=vocab_name)
 
     await callback.message.edit_text(text=msg_choose_training_mode, reply_markup=kb)
+
+
+def get_wordpair_idx_for_training(available_idxs: list, preview_wordpair_idx: int, is_use_current_words: bool) -> int:
+    """Повертає індекс словникової пари для тренування.
+
+    Notes:
+        Якщо is_use_current_words=True, то повертається попередній індекс,
+        в іншому разі випадковий із списку невикористаних.
+
+    Args:
+        available_idxs (list): Список індексів, які ще не були використані.
+        preview_wordpair_idx (int): Минулий індекс.
+        is_use_current_words (bool): Прапор, використовувати поточне слово(а) чи обрати нове.
+    """
+    if is_use_current_words:
+        return preview_wordpair_idx
+
+    # Вибір випадкового індексу з тих, що ще не були використані
+    return get_random_wordpair_idx(available_idxs, preview_wordpair_idx)
 
 
 async def send_next_word(message: types.Message, state: FSMContext) -> None:
@@ -190,11 +210,11 @@ async def send_next_word(message: types.Message, state: FSMContext) -> None:
     # Прапор, використовувати поточне слово(а) чи обрати нове
     is_use_current_words: bool = data_fsm.get('is_use_current_words', False)
     if is_use_current_words:
-        wordpair_idx: int = preview_wordpair_idx
         await state.update_data(is_use_current_words=False)
-    else:
-        # Вибір випадкового індексу з тих, що ще не були використані
-        wordpair_idx: int = get_random_wordpair_idx(available_idxs, preview_wordpair_idx)
+
+    wordpair_idx: int = await get_wordpair_idx_for_training(available_idxs,
+                                                            preview_wordpair_idx,
+                                                            is_use_current_words)
 
     await state.update_data(wordpair_idx=wordpair_idx)
     logger.info('Оновлення нового індексу словникової пари у FSM-Cache')
