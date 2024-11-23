@@ -2,7 +2,7 @@ from .base_filter import BaseFilter
 
 
 class LengthFilter(BaseFilter):
-    """Фільтр для перевірки, що довжина значення перебуває в заданому діапазоні"""
+    """Фільтр для перевірки, що довжина значення перебуває в заданому діапазоні (включно)"""
 
     def __init__(self, min_length: int, max_length: int) -> None:
         self.min_length: int = min_length

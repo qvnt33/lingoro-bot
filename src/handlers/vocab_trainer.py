@@ -167,6 +167,7 @@ async def process_direct_translation(callback: types.CallbackQuery, state: FSMCo
 async def process_reverse_translation(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Зворотній переклад" під час вибору типу тренування.
     Починає процес тренування та відправляє перше слово для перекладу.
+    Переводить FSM стан в очікування введення перекладу.
     """
     logger.info('Початок тренування. Тип: "Зворотній переклад"')
     await callback.message.delete()
@@ -403,6 +404,7 @@ async def process_show_translation(callback: types.CallbackQuery, state: FSMCont
 async def process_repeat_training(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Повторити тренування" після проходження тренування.
     Оновлює дані тренування та відправляє слово для перекладу.
+    Переводить FSM стан в очікування введення перекладу.
     """
     logger.info('Обрано повторення тренування після його проходження')
 
@@ -467,6 +469,7 @@ async def process_decline_cancel_training(callback: types.CallbackQuery, state: 
     """Відстежує натискання на кнопку "Ні" при підтвердженні дострокового завершення тренування.
     Продовжує тренування.
     Відправляє нове слово для перекладу.
+    Переводить FSM стан в очікування введення перекладу.
     """
     logger.info('Продовження тренування')
 

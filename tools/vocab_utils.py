@@ -1,9 +1,13 @@
-from db.crud import VocabCRUD
-from db.models import Vocabulary
-
-
 def check_vocab_name_duplicate(vocab_name: str, vocab_name_old: str) -> bool:
-    """Перевіряє, чи збігається нова назва словника з поточною"""
+    """Перевіряє, чи збігається нова назва словника з поточною
+
+    Args:
+        vocab_name (str): Нова назва словника.
+        vocab_name_old (str): Поточна назва словника.
+
+    Returns:
+        bool: Прапор, чи є поточне слово та чи збігається воно з новим (незважаючи на регістр).
+    """
     return vocab_name_old is not None and vocab_name.lower() == vocab_name_old.lower()
 
 

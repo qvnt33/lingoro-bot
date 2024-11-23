@@ -22,24 +22,29 @@ MSG_ENTER_WORDPAIRS_SMALL_INSTRUCTIONS = ('📝 Введіть словнико�
 
 MSG_ERROR_VOCAB_NAME_DUPLICATE = ('⚠️ Нова назва словника не може збігатися з поточною.\n\n'
                                   'Введіть нову назву або натисніть "Залишити поточну назву".')
-MSG_ERROR_VOCAB_NAME_INVALID = '⚠️ У назві словника "{vocab_name}" знайдено помилки:\n{errors}'
-MSG_ERROR_VOCAB_DESCRIPTION_INVALID = '⚠️ У примітці "{description}" до словника "{vocab_name}" знайдено помилки:\n{errors}'
+MSG_ERROR_VOCAB_NAME_INVALID = ('⚠️ У назві словника "{name}" знайдено помилки:\n'
+                                '{errors}')
+MSG_ERROR_VOCAB_DESCRIPTION_INVALID = ('⚠️ У примітці "{description}" до словника "{name}" знайдено помилки:\n'
+                                       '{errors}')
 
 MSG_ERROR_WORDPAIRS_NO_VALID = '⚠️ Немає жодної валідної словникової пари.'
-MSG_ERROR_NO_VALID_WORDPAIRS_ADDED = '❌ Жодна словникова пара не була додана.'
+MSG_ERROR_NO_VALID_WORDPAIRS_ADDED = '❌ Не вдалося зберегти словник, оскільки немає валідних словникових пар.'
 
-MSG_SUCCESS_VOCAB_SAVED_TO_DB = '✅ Словник "{vocab_name}" успішно збережено до бази словників!\n\n{instruction}'
+MSG_SUCCESS_VOCAB_SAVED_TO_DB = '✅ Словник "{name}" успішно збережено до бази словників!'
 MSG_SUCCESS_ALL_WORDPAIRS_VALID = '🎉 Усі введені словникові пари валідні!'
 
-MSG_INFO_ADDED_WORDPAIRS = '✅ Додано словникові пари:\n{wordpairs}'
-MSG_INFO_NO_ADDED_WORDPAIRS = '❌ Не додано словникові пари:\n{wordpairs}'
+MSG_INFO_ADDED_WORDPAIRS = ('✅ Додано словникові пари:\n'
+                            '{wordpairs}')
+MSG_INFO_NO_ADDED_WORDPAIRS = ('❌ Не додано словникові пари:\n'
+                               '{wordpairs}')
 
 MSG_CONFIRM_CANCEL_CREATE_VOCAB = '❓ Ви дійсно хочете скасувати створення словника?'
 
 
 # handlers/menu.py
 MSG_TITLE_MENU = '🏠 Головне меню'
-MSG_TITLE_MENU_FOR_NEW_USER = '👋 Привіт! Ласкаво просимо до бота для вивчення слів!\n\n🏠 Головне меню'
+MSG_TITLE_MENU_FOR_NEW_USER = ('👋 Привіт! Ласкаво просимо до бота для вивчення слів!\n\n'
+                               '🏠 Головне меню')
 
 
 # handlers/vocab_base.py
@@ -66,13 +71,22 @@ MSG_SUCCESS_VOCAB_DELETED = '✅ Словник "{name}" успішно вида
 MSG_INFO_VOCAB_BASE_EMPTY_FOR_TRAINING = ('❗️ У вашій базі поки що немає словників.\n\n'
                                           'Створіть новий словник у розділі "База словників", щоб почати тренування.')
 MSG_CHOOSE_VOCAB_FOR_TRAINING = '📗 Оберіть словник із вашої бази для початку тренування.'
-MSG_CHOOSE_TRAINING_MODE = '📗 Словник: {name}\n\n🎯 Оберіть тип тренування, щоб продовжити.'
-MSG_CONFIRM_CANCEL_TRAINING = '❓ Ви дійсно хочете завершити тренування?\n🛑 Усі результати будуть збережені.'
-MSG_CORRECT_ANSWER = '✅ Вірно!\n{words} -> {translations}'
-MSG_WRONG_ANSWER = '❌ Неправильно!\n"{words}" не перекладається як "{user_translation}"'
+MSG_CHOOSE_TRAINING_MODE = ('📗 Словник: {name}\n\n'
+                            '🎯 Оберіть тип тренування, щоб продовжити.')
+MSG_CONFIRM_CANCEL_TRAINING = ('❓ Ви дійсно хочете завершити тренування?\n'
+                               'Усі результати будуть збережені.')
+MSG_CORRECT_ANSWER = ('✅ Вірно!\n'
+                      '{words} -> {translations}')
+MSG_WRONG_ANSWER = ('❌ Неправильно!\n'
+                    '"{words}" не перекладається як "{user_translation}"')
 MSG_LEFT_ONE_WORD_TRAINING = '⚠️ Залишилось останнє слово. Пропускати більше не можна!'
-MSG_SHOW_WORDPAIR_ANNOTATION = '💡 Показ анотації\n\n📝 Слово(а): {words}\n📝 Анотація: {annotation}'
-MSG_SHOW_WORDPAIR_TRANSLATION = '💬 Показ перекладу\n\n📝 Слово(а): {words}\n📝 Переклад(и): {translations}\n📝 Анотація: {annotation}'
+MSG_SHOW_WORDPAIR_ANNOTATION = ('💡 Показ анотації\n\n'
+                                '📝 Слово(а): {words}\n'
+                                '📝 Анотація: {annotation}')
+MSG_SHOW_WORDPAIR_TRANSLATION = ('💬 Показ перекладу\n\n'
+                                 '📝 Слово(а): {words}\n'
+                                 '📝 Переклад(и): {translations}\n'
+                                 '📝 Анотація: {annotation}')
 
 
 # handlers/help.py
