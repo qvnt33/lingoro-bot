@@ -24,7 +24,7 @@ from text_data import (
     TEMPLATE_WORDPAIR,
 )
 from tools.vocab_utils import format_vocab_info
-from tools.wordpair_utils import format_word_items
+from tools.wordpair_utils import format_word_items, format_wordpair_info, get_formatted_wordpairs_list
 
 router = Router(name='vocab_base')
 logger: logging.Logger = logging.getLogger(__name__)
@@ -125,23 +125,7 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
 
     kb: InlineKeyboardMarkup = get_kb_vocab_options()
 
-    formatted_wordpairs: list[str] = []
-
-    for idx, wordpair_item in enumerate(sorted_wordpair_items, start=1):
-        word_items: list[dict] = wordpair_item.get('words')
-        translation_items: list[dict] = wordpair_item.get('translations')
-        annotation: str = wordpair_item.get('annotation') or 'Немає анотації'
-        wordpair_number_errors: int = wordpair_item.get('number_errors')
-
-        formatted_word_items: list[str] = format_word_items(word_items)
-        formatted_translation_items: list[str] = format_word_items(translation_items, is_translation_items=True)
-
-        formatted_wordpair: str = TEMPLATE_WORDPAIR.format(idx=idx,
-                                                           words=formatted_word_items,
-                                                           translations=formatted_translation_items,
-                                                           annotation=annotation,
-                                                           number_errors=wordpair_number_errors)
-        formatted_wordpairs.append(formatted_wordpair)
+    formatted_wordpairs: list[str] = get_formatted_wordpairs_list(sorted_wordpair_items)
 
     msg_vocab_info: str = format_vocab_info(name=vocab_name,
                                             description=vocab_description,

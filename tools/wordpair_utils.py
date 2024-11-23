@@ -25,6 +25,18 @@ def format_invalid_wordpairs(wordpairs: list[dict] | None) -> str:
     return formatted_invalid_wordpairs
 
 
+def format_wordpair_info(idx: int,
+                         words: list[str],
+                         translations: list[str],
+                         annotation: str,
+                         number_errors: int) -> str:
+    """Повертає відформатовані не валідні словникові пари"""
+    formatted_wordpair_info: str = (f'{idx}. {words} ▪️ {translations} ▪️ {annotation}\n'
+                                    f'🔺 Помилки: {number_errors}\n')
+
+    return formatted_wordpair_info
+
+
 def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
     """Повертає розділену словникову пару на окремі компоненти:
     слова з транскрипціями, переклади з транскрипціями та анотацію.
@@ -150,3 +162,32 @@ def format_word_items(word_items: list[dict], is_translation_items: bool = False
 
     joined_words: str = ', '.join(formatted_words)
     return joined_words
+
+
+def get_formatted_wordpairs_list(wordpair_items: list[dict]) -> list[str]:
+    """Повертає список відформатованих словникових пар.
+
+    Args:
+        wordpair_items (list[dict]): Список словникових пар з інформацією про них.
+
+    Returns:
+        list[str]: Список з відформатованими словниковими парами.
+    """
+    formatted_wordpairs: list[str] = []
+
+    for idx, wordpair_item in enumerate(wordpair_items, start=1):
+        word_items: list[dict] = wordpair_item.get('words')
+        translation_items: list[dict] = wordpair_item.get('translations')
+        annotation: str = wordpair_item.get('annotation') or 'Немає анотації'
+        wordpair_number_errors: int = wordpair_item.get('number_errors')
+
+        formatted_word_items: list[str] = format_word_items(word_items)
+        formatted_translation_items: list[str] = format_word_items(translation_items, is_translation_items=True)
+
+        formatted_wordpair: str = format_wordpair_info(idx=idx,
+                                                       words=formatted_word_items,
+                                                       translations=formatted_translation_items,
+                                                       annotation=annotation,
+                                                       number_errors=wordpair_number_errors)
+        formatted_wordpairs.append(formatted_wordpair)
+    return formatted_wordpairs
