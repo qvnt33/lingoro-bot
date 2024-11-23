@@ -4,12 +4,11 @@ from .base_filter import BaseFilter
 
 
 class CheckEmptyFilter(BaseFilter):
-    """Фільтр для перевірки, що значення пусте"""
+    """Фільтр для перевірки, що значення є порожнім або None"""
 
     def apply(self, value: Iterable | None) -> bool:
         if value is None:
             is_valid = True
         else:
-            current_length: int = len(value)
-            is_valid: bool = current_length == 0
+            is_valid: bool = len(value) == 0
         return is_valid
