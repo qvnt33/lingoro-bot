@@ -3,7 +3,7 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 
 def get_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyboardMarkup:
-    """Повертає клавіатуру для процесу створення назви словника.
+    """Повертає клавіатуру для процесу створення назви користувацького словника.
 
     Args:
         is_keep_old_vocab_name (bool): Прапор, чи додавати кнопку "Залишити поточну назву" до клавіатури
@@ -23,11 +23,11 @@ def get_kb_create_vocab_name(is_keep_old_vocab_name: bool = False) -> InlineKeyb
 
 
 def get_kb_create_vocab_description() -> InlineKeyboardMarkup:
+    """Повертає клавіатуру для процесу створення опису користувацького словника"""
     buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text='➡️ Пропустити', callback_data='skip_create_vocab_description')],
         [InlineKeyboardButton(text='🔄 Змінити назву словника', callback_data='change_vocab_name')],
         [InlineKeyboardButton(text='🛑 Скасувати', callback_data='cancel_create_vocab')]]
-
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 

@@ -2,15 +2,15 @@ import logging
 from typing import Any
 
 from aiogram import F, Router, types
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
-from aiogram.filters import Command
+
 from db.crud import VocabCRUD, WordpairCRUD
 from db.database import Session
 from exceptions import InvalidVocabIndexError
 from src.filters.check_empty_filters import CheckEmptyFilter
 from src.keyboards.vocab_base_kb import (
-    get_kb_accept_delete_vocab,
     get_kb_confirm_delete,
     get_kb_vocab_options,
     get_kb_vocab_selection_base,
@@ -18,13 +18,11 @@ from src.keyboards.vocab_base_kb import (
 from text_data import (
     MSG_CHOOSE_VOCAB,
     MSG_CONFIRM_DELETE_VOCAB,
-    MSG_INFO_VOCAB,
     MSG_INFO_VOCAB_BASE_EMPTY,
     MSG_SUCCESS_VOCAB_DELETED,
-    TEMPLATE_WORDPAIR,
 )
 from tools.vocab_utils import format_vocab_info
-from tools.wordpair_utils import format_word_items, format_wordpair_info, get_formatted_wordpairs_list
+from tools.wordpair_utils import get_formatted_wordpairs_list
 
 router = Router(name='vocab_base')
 logger: logging.Logger = logging.getLogger(__name__)
@@ -47,6 +45,8 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
 
         # Дані всіх користувацьких словників користувача
         all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
+        await state.update_data(all_vocabs_data=all_vocabs_data)
+        logger.info('Дані всіх користувацьких словників збережені у FSM-Cache')
 
     # Якщо в БД користувача немає користувацьких словників
     check_empty_filter = CheckEmptyFilter()
@@ -78,6 +78,8 @@ async def cmd_vocab_base(message: types.Message, state: FSMContext) -> None:
 
         # Дані всіх користувацьких словників користувача
         all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
+        await state.update_data(all_vocabs_data=all_vocabs_data)
+        logger.info('Дані всіх користувацьких словників збережені у FSM-Cache')
 
     # Якщо в БД користувача немає користувацьких словників
     check_empty_filter = CheckEmptyFilter()
@@ -124,7 +126,6 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
     vocab_wordpairs_count: int = vocab_data.get('wordpairs_count')
 
     kb: InlineKeyboardMarkup = get_kb_vocab_options()
-
     formatted_wordpairs: list[str] = get_formatted_wordpairs_list(sorted_wordpair_items)
 
     msg_vocab_info: str = format_vocab_info(name=vocab_name,
@@ -132,7 +133,6 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
                                             wordpairs_count=vocab_wordpairs_count,
                                             number_errors=vocab_number_errors,
                                             wordpairs=formatted_wordpairs)
-
     await callback.message.edit_text(text=msg_vocab_info, reply_markup=kb)
 
 
@@ -142,7 +142,7 @@ async def process_delete_vocab(callback: types.CallbackQuery, state: FSMContext)
     у розділі "База словників".
     Відправляє клавіатуру для підтвердження видалення.
     """
-    logger.info('Натиснуто кнопку "Видалити словник"')
+    logger.info('Обрано видалення користувацького словника')
 
     data_fsm: dict[str, Any] = await state.get_data()
     vocab_id: int | None = data_fsm.get('vocab_id')
@@ -151,12 +151,13 @@ async def process_delete_vocab(callback: types.CallbackQuery, state: FSMContext)
         with Session() as session:
             vocab_crud = VocabCRUD(session)
             vocab_data: dict[str, Any] = vocab_crud.get_vocab_data(vocab_id)
-            vocab_name: str = vocab_data.get('name')
     except InvalidVocabIndexError as e:
         logger.error(e)
         return
 
     kb: InlineKeyboardMarkup = get_kb_confirm_delete()
+
+    vocab_name: str = vocab_data.get('name')
     msg_confirm_delete_vocab: str = MSG_CONFIRM_DELETE_VOCAB.format(name=vocab_name)
 
     await callback.message.edit_text(text=msg_confirm_delete_vocab, reply_markup=kb)
@@ -165,28 +166,29 @@ async def process_delete_vocab(callback: types.CallbackQuery, state: FSMContext)
 @router.callback_query(F.data == 'accept_delete_vocab')
 async def process_accept_delete_vocab(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку "Так" при підтвердженні видалення користувацького словника.
-    Мʼяко видаляє користувацький словник, залишаючи всі його звʼязки в БД.
+    Мʼяко видаляє користувацький словник, позначаючи його як 'видалений' (.is_deleted=True).
+    Відправляє користувачу користувацькі словники у вигляді кнопок.
     """
-    logger.info('Натиснуто кнопку "Так" під час підтвердження видалення словника')
+    logger.info('Підтверджено видалення користувацького словника')
 
     data_fsm: dict[str, Any] = await state.get_data()
-    vocab_id: int | None = data_fsm.get('vocab_id')
+    all_vocabs_data: list[dict] = data_fsm.get('all_vocabs_data')
+    vocab_id: int = data_fsm.get('vocab_id')
 
     try:
         with Session() as session:
             vocab_crud = VocabCRUD(session)
-
             vocab_data: dict[str, Any] = vocab_crud.get_vocab_data(vocab_id)
-            vocab_name: str | None = vocab_data.get('name')
 
             vocab_crud.soft_delete_vocab(vocab_id)
-
-            logger.info('Словник був видалений з БД')
+            logger.info('Користувацький словник був "мʼяко" видалений з БД')
     except InvalidVocabIndexError as e:
         logger.error(e)
         return
 
-    kb: InlineKeyboardMarkup = get_kb_accept_delete_vocab()
-    msg_vocab_deleted: str = MSG_SUCCESS_VOCAB_DELETED.format(name=vocab_name)
+    kb: InlineKeyboardMarkup = get_kb_vocab_selection_base(all_vocabs_data[::-1])
 
-    await callback.message.edit_text(text=msg_vocab_deleted, reply_markup=kb)
+    vocab_name: str = vocab_data.get('name')
+    msg_vocab_deleted_with_choose: str = '\n\n'.join((MSG_SUCCESS_VOCAB_DELETED.format(name=vocab_name),
+                                                      MSG_CHOOSE_VOCAB))
+    await callback.message.edit_text(text=msg_vocab_deleted_with_choose, reply_markup=kb)
