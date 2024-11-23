@@ -78,7 +78,7 @@ async def cmd_vocab_trainer(message: types.Message, state: FSMContext) -> None:
     """
     user_id: int = message.from_user.id
 
-    logger.info('Користувач ввів команду "vocab_trainer"')
+    logger.info(f'Користувач ввів команду "{message.text}"')
     logger.info(f'Користувач перейшов до розділу "Тренування". USER_ID: {user_id}')
 
     await state.clear()

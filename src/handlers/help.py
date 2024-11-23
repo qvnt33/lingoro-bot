@@ -18,8 +18,8 @@ async def cmd_menu(message: types.Message) -> None:
     """
     user_id: int = message.from_user.id
 
-    logger.info(f'Користувач ввів команду "{message.text}". USER_ID: {user_id}')
-    logger.info('Користувач перейшов до розділу "Довідка"')
+    logger.info(f'Користувач ввів команду "{message.text}"')
+    logger.info(f'Користувач перейшов до розділу "Довідка". USER_ID: {user_id}')
 
     kb: InlineKeyboardMarkup = get_kb_help()
     msg_help_info: str = MSG_TITLE_HELP
@@ -34,8 +34,7 @@ async def process_btn_help(callback: types.CallbackQuery) -> None:
     """
     user_id: int = callback.from_user.id
 
-    logger.info(f'Користувач натиснув на кнопку "Довідка". USER_ID: {user_id}')
-    logger.info('Користувач перейшов до розділу "Довідка"')
+    logger.info(f'Користувач перейшов до розділу "Довідка". USER_ID: {user_id}')
 
     kb: InlineKeyboardMarkup = get_kb_help()
     msg_help_info: str = MSG_TITLE_HELP

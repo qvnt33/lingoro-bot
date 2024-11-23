@@ -3,10 +3,10 @@ import logging
 from aiogram import F, Router, types
 from aiogram.filters import Command
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
+from aiogram.types.user import User
 
 from db.crud import UserCRUD
 from db.database import Session
-from db.models import User
 from src.keyboards.menu_kb import get_kb_menu
 from text_data import MSG_TITLE_MENU, MSG_TITLE_MENU_FOR_NEW_USER
 
@@ -21,10 +21,10 @@ async def cmd_menu(message: types.Message) -> None:
     """
     user_id: int = message.from_user.id
 
-    logger.info(f'Користувач ввів команду "{message.text}". USER_ID: {user_id}')
-    logger.info('Користувач перейшов до розділу "Головне меню"')
+    logger.info(f'Користувач ввів команду "{message.text}"')
+    logger.info(f'Користувач перейшов до розділу "Головне меню". USER_ID: {user_id}')
 
-    tg_user_data: User | None = message.from_user
+    tg_user_data: User = message.from_user
 
     kb: InlineKeyboardMarkup = get_kb_menu()
 
@@ -37,8 +37,7 @@ async def cmd_menu(message: types.Message) -> None:
         else:
             msg_title_menu: str = MSG_TITLE_MENU_FOR_NEW_USER
             user_crud.create_new_user(tg_user_data)
-            logger.info(f'До БД був доданий користувач: {user_id}')
-
+            logger.info(f'До БД був доданий користувач. USER_ID: {user_id}')
     await message.answer(text=msg_title_menu, reply_markup=kb)
 
 
@@ -49,8 +48,7 @@ async def process_btn_menu(callback: types.CallbackQuery) -> None:
     """
     user_id: int = callback.from_user.id
 
-    logger.info(f'Користувач натиснув на кнопку "Головне меню". USER_ID: {user_id}')
-    logger.info('Користувач перейшов до розділу "Головне меню"')
+    logger.info(f'Користувач перейшов до розділу "Головне меню". USER_ID: {user_id}')
 
     kb: InlineKeyboardMarkup = get_kb_menu()
     msg_title_menu: str = MSG_TITLE_MENU
