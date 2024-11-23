@@ -22,6 +22,23 @@ def format_valid_wordpairs(wordpairs: list[str] | None) -> str:
     return formatted_valid_wordpairs
 
 
+def format_vocab_info(name: str,
+                      description: str,
+                      wordpairs_count: int,
+                      number_errors: int,
+                      wordpairs: list[str]) -> str:
+    """Повертає відформатовану інформацію про користувацький словник та словникові пари"""
+    joined_wordpairs: str = '\n'.join(wordpairs)
+
+    formatted_vocab_info: str = (f'📗 Назва словника: {name}\n'
+                                 f'📄 Опис: {description}\n\n'
+                                 f'🔢 Кількість словникових пар: {wordpairs_count}\n'
+                                 f'⚠️ Загальна кількість помилок: {number_errors}\n\n'
+                                 f'Словникові пари:\n'
+                                 f'{joined_wordpairs}')
+    return formatted_vocab_info
+
+
 def add_vocab_data_to_message(vocab_name: str | None = None,
                               vocab_description: str | None = None,
                               message_text: str = '') -> str:

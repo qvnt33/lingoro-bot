@@ -4,7 +4,7 @@ from typing import Any
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
-
+from aiogram.filters import Command
 from db.crud import VocabCRUD, WordpairCRUD
 from db.database import Session
 from exceptions import InvalidVocabIndexError
@@ -18,11 +18,12 @@ from src.keyboards.vocab_base_kb import (
 from text_data import (
     MSG_CHOOSE_VOCAB,
     MSG_CONFIRM_DELETE_VOCAB,
-    MSG_INFO_VOCAB_BASE_EMPTY,
     MSG_INFO_VOCAB,
+    MSG_INFO_VOCAB_BASE_EMPTY,
     MSG_SUCCESS_VOCAB_DELETED,
     TEMPLATE_WORDPAIR,
 )
+from tools.vocab_utils import format_vocab_info
 from tools.wordpair_utils import format_word_items
 
 router = Router(name='vocab_base')
@@ -38,10 +39,8 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
 
     logger.info(f'Користувач перейшов до розділу "База словників". USER_ID: {user_id}')
 
-    check_empty_filter = CheckEmptyFilter()
-
     await state.clear()
-    logger.info('FSM стан та FSM-Cache очищено')
+    logger.info('FSM стан та FSM-Cache очищено перед запуском розділу "База словників"')
 
     with Session() as session:
         vocab_crud = VocabCRUD(session)
@@ -50,6 +49,7 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
         all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
 
     # Якщо в БД користувача немає користувацьких словників
+    check_empty_filter = CheckEmptyFilter()
     if check_empty_filter.apply(all_vocabs_data):
         logger.info('В БД користувача немає користувацьких словників')
         msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY
@@ -60,13 +60,44 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
     await callback.message.edit_text(text=msg_text, reply_markup=kb)
 
 
+@router.message(Command(commands=['vocab_base']))
+async def cmd_vocab_base(message: types.Message, state: FSMContext) -> None:
+    """Відстежує введення команди "vocab_base".
+    Відправляє користувачу користувацькі словники у вигляді кнопок.
+    """
+    user_id: int = message.from_user.id
+
+    logger.info(f'Користувач ввів команду "{message.text}"')
+    logger.info(f'Користувач перейшов до розділу "База словників". USER_ID: {user_id}')
+
+    await state.clear()
+    logger.info('FSM стан та FSM-Cache очищено перед запуском розділу "База словників"')
+
+    with Session() as session:
+        vocab_crud = VocabCRUD(session)
+
+        # Дані всіх користувацьких словників користувача
+        all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
+
+    # Якщо в БД користувача немає користувацьких словників
+    check_empty_filter = CheckEmptyFilter()
+    if check_empty_filter.apply(all_vocabs_data):
+        logger.info('В БД користувача немає користувацьких словників')
+        msg_text: str = MSG_INFO_VOCAB_BASE_EMPTY
+    else:
+        msg_text: str = MSG_CHOOSE_VOCAB
+
+    kb: InlineKeyboardMarkup = get_kb_vocab_selection_base(all_vocabs_data[::-1])
+    await message.answer(text=msg_text, reply_markup=kb)
+
+
 @router.callback_query(F.data.startswith('select_vocab_base'))
 async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Відстежує натискання на кнопку користувацького словника у розділі "База словників".
     Відправляє користувачу його статистику з словниковими парами та клавіатуру для взаємодії з ним.
     """
     vocab_id = int(callback.data.split('_')[-1])
-    logger.info(f'Був обраний користувацький словник у розділі "База словників". VOCAB_ID: {vocab_id}')
+    logger.info(f'Обрано користувацький словник у розділі "База словників". VOCAB_ID: {vocab_id}')
 
     await state.update_data(vocab_id=vocab_id)
     logger.info('ID користувацького словника збережений у FSM-Cache')
@@ -112,13 +143,11 @@ async def process_vocab_base_selection(callback: types.CallbackQuery, state: FSM
                                                            number_errors=wordpair_number_errors)
         formatted_wordpairs.append(formatted_wordpair)
 
-    joined_wordpairs: str = '\n'.join(formatted_wordpairs)
-
-    msg_vocab_info: str = MSG_INFO_VOCAB.format(name=vocab_name,
-                                                description=vocab_description,
-                                                wordpairs_count=vocab_wordpairs_count,
-                                                number_errors=vocab_number_errors,
-                                                wordpairs=joined_wordpairs)
+    msg_vocab_info: str = format_vocab_info(name=vocab_name,
+                                            description=vocab_description,
+                                            wordpairs_count=vocab_wordpairs_count,
+                                            number_errors=vocab_number_errors,
+                                            wordpairs=formatted_wordpairs)
 
     await callback.message.edit_text(text=msg_vocab_info, reply_markup=kb)
 
