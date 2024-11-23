@@ -45,8 +45,6 @@ async def process_vocab_base(callback: types.CallbackQuery, state: FSMContext) -
 
         # Дані всіх користувацьких словників користувача
         all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
-        await state.update_data(all_vocabs_data=all_vocabs_data)
-        logger.info('Дані всіх користувацьких словників збережені у FSM-Cache')
 
     # Якщо в БД користувача немає користувацьких словників
     check_empty_filter = CheckEmptyFilter()
@@ -78,8 +76,6 @@ async def cmd_vocab_base(message: types.Message, state: FSMContext) -> None:
 
         # Дані всіх користувацьких словників користувача
         all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
-        await state.update_data(all_vocabs_data=all_vocabs_data)
-        logger.info('Дані всіх користувацьких словників збережені у FSM-Cache')
 
     # Якщо в БД користувача немає користувацьких словників
     check_empty_filter = CheckEmptyFilter()
@@ -172,8 +168,9 @@ async def process_accept_delete_vocab(callback: types.CallbackQuery, state: FSMC
     logger.info('Підтверджено видалення користувацького словника')
 
     data_fsm: dict[str, Any] = await state.get_data()
-    all_vocabs_data: list[dict] = data_fsm.get('all_vocabs_data')
     vocab_id: int = data_fsm.get('vocab_id')
+
+    user_id: int = callback.from_user.id
 
     try:
         with Session() as session:
@@ -182,13 +179,25 @@ async def process_accept_delete_vocab(callback: types.CallbackQuery, state: FSMC
 
             vocab_crud.soft_delete_vocab(vocab_id)
             logger.info('Користувацький словник був "мʼяко" видалений з БД')
+
+            # Дані всіх користувацьких словників користувача
+            all_vocabs_data: list[dict] = vocab_crud.get_all_vocabs_data(user_id)
     except InvalidVocabIndexError as e:
         logger.error(e)
         return
 
+    vocab_name: str = vocab_data.get('name')
+
+    # Якщо в БД користувача немає користувацьких словників
+    check_empty_filter = CheckEmptyFilter()
+    if check_empty_filter.apply(all_vocabs_data):
+        logger.info('В БД користувача немає користувацьких словників')
+        msg_text: str = '\n\n'.join((MSG_SUCCESS_VOCAB_DELETED.format(name=vocab_name),
+                                     MSG_INFO_VOCAB_BASE_EMPTY))
+    else:
+        msg_text: str = '\n\n'.join((MSG_SUCCESS_VOCAB_DELETED.format(name=vocab_name),
+                                     MSG_CHOOSE_VOCAB))
+
     kb: InlineKeyboardMarkup = get_kb_vocab_selection_base(all_vocabs_data[::-1])
 
-    vocab_name: str = vocab_data.get('name')
-    msg_vocab_deleted_with_choose: str = '\n\n'.join((MSG_SUCCESS_VOCAB_DELETED.format(name=vocab_name),
-                                                      MSG_CHOOSE_VOCAB))
-    await callback.message.edit_text(text=msg_vocab_deleted_with_choose, reply_markup=kb)
+    await callback.message.edit_text(text=msg_text, reply_markup=kb)

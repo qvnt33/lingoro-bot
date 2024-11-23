@@ -171,14 +171,14 @@ async def process_keep_old_vocab_name(callback: types.CallbackQuery, state: FSMC
     kb: InlineKeyboardMarkup = get_kb_create_vocab_description()
 
     vocab_name: str = data_fsm.get('vocab_name')
-    msg_enter_name: str = add_vocab_data_to_message(vocab_name=vocab_name,
-                                                    message_text=MSG_ENTER_VOCAB_NAME)
+    msg_enter_description: str = add_vocab_data_to_message(vocab_name=vocab_name,
+                                                           message_text=MSG_ENTER_VOCAB_DESCRIPTION)
 
     new_state: State = states.VocabCreation.waiting_for_vocab_description
     await fsm_utils.save_current_fsm_state(state, new_state)
     logger.info(f'FSM стан змінено на "{new_state}"')
 
-    await callback.message.edit_text(text=msg_enter_name, reply_markup=kb)
+    await callback.message.edit_text(text=msg_enter_description, reply_markup=kb)
 
 
 @router.message(states.VocabCreation.waiting_for_vocab_description)
@@ -186,7 +186,7 @@ async def process_create_vocab_description(message: types.Message, state: FSMCon
     """Обробляє опис користувацького словника, введений користувачем"""
     data_fsm: dict[str, Any] = await state.get_data()
 
-    vocab_name: str | None = data_fsm.get('vocab_name')
+    vocab_name: str = data_fsm.get('vocab_name')
     vocab_description: str = message.text.strip()
 
     logger.info(f'Введено опис користувацького словника: {vocab_description}')
@@ -352,7 +352,7 @@ async def process_save_vocab(callback: types.CallbackQuery, state: FSMContext) -
         logger.error(e)
         return
 
-    kb: InlineKeyboardMarkup = get_kb_vocab_selection_base(all_vocabs_data)
+    kb: InlineKeyboardMarkup = get_kb_vocab_selection_base(all_vocabs_data[::-1])
     await callback.message.edit_text(text=msg_vocab_saved_with_choose, reply_markup=kb)
 
 
