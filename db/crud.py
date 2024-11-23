@@ -2,9 +2,9 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from config import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR
 from db.models import TrainingSession, Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
 from exceptions import InvalidVocabIndexError, UserNotFoundError
-from text_data import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR
 
 
 class UserCRUD:
@@ -277,6 +277,7 @@ class VocabCRUD:
 
     def delete_vocab(self, vocab_id: int) -> None:
         """Видаляє користувацький словник, словникові пари, та всі звʼязки"""
+        # !NOT USED
         vocab: Vocabulary | None = self.session.query(Vocabulary).filter(
             Vocabulary.id == vocab_id).first()
 
@@ -296,6 +297,7 @@ class VocabCRUD:
 
     def _delete_wordpairs_by_vocab_id(self, vocab_id: int) -> None:
         """Видаляє всі словникові пари, повʼязані зі словником"""
+        # !NOT USED
         wordpairs: list[Wordpair] = self.session.query(Wordpair).filter(
             Wordpair.vocabulary_id == vocab_id).all()
 
@@ -312,6 +314,7 @@ class VocabCRUD:
 
     def _delete_unused_words(self) -> None:
         """Видаляє всі слова, які більше не повʼязані зі словниковими парами"""
+        # !NOT USED
         unused_words: list[Word] = self.session.query(Word).outerjoin(WordpairWord).filter(
             WordpairWord.id.is_(None)).all()
         for word in unused_words:
@@ -320,6 +323,7 @@ class VocabCRUD:
 
     def _delete_unused_translations(self) -> None:
         """Видаляє всі переклади, які більше не повʼязані зі словниковими парами"""
+        # !NOT USED
         unused_translations: list[Translation] = self.session.query(Translation).outerjoin(WordpairTranslation).filter(
             WordpairTranslation.id.is_(None)).all()
         for translation in unused_translations:
