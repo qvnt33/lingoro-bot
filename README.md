@@ -90,4 +90,4 @@ python bot.py
 
 - [Правила та валідація даних](docs/rules_and_validations.md)
 - [Схема бази даних](docs/database_scheme.png)
-- [Блок-схема роботи боту](docs/bot_flowchart.png)
+- [Блок-схема роботи боту](docs/bot_flowchart.pdf)
