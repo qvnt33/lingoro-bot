@@ -8,7 +8,6 @@
 ## Основна концепція
 
 Бот побудований на ідеї **індивідуального навчання**, де користувач самостійно:
-
 - Створює словники.
 - Додає до них словникові пари (слова, переклади та анотації).
 
@@ -17,7 +16,7 @@
 ## Формат словникових пар
 
 > word1 | word_transcription1, word2 | word_transcription2 : translation1 | translation_transcription1 : annotation
->
+
 - **Частини** (*слова, переклади, анотація*):
     - **Слова:** word1 | word_transcription1, word2 | word_transcription2
     - **Переклади:** translation1 | translation_transcription1
@@ -58,28 +57,23 @@
 ## Як запустити бота
 
 1. Клонування репозиторію:
-
 ```bash
 git clone https://github.com/qvnt33/qx3learn-bot.git
 ```
 
-1. Встановлення залежностей:
-
+2. Встановлення залежностей:
 ```bash
 pip install -r requirements.txt
 ```
 
-1. Налаштування оточення:
-
+3. Налаштування оточення:
 Створіть файл `.env` у кореневій директорії проєкту та додайте до нього наступні змінні:
-
 ```
 TOKEN=<your_bot_token>
 ```
 
 - TOKEN: Токен вашого бота, який ви отримаєте у [BotFather](https://core.telegram.org/bots#botfather).
-1. Запуск бота:
-
+4. Запуск бота:
 ```bash
 python bot.py
 ```
