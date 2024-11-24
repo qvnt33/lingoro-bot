@@ -23,20 +23,20 @@
 **Приклад формату словникової пари:**
 
 > word1 | word_transcription1, word2 | word_transcription2 : translation1 | translation_transcription1 : annotation
->
+
 - **Частини** (*слова, переклади, анотація*):
-    - **Слова:** word1 | word_transcription1, word2 | word_transcription2
-    - **Переклади:** translation1 | translation_transcription1
-    - **Анотація:** annotation
+    - **Слова**: word1 | word_transcription1, word2 | word_transcription2
+    - **Переклади**: translation1 | translation_transcription1
+    - **Анотація**: annotation
 - **Елементи** (*слово або переклад із транскрипцією*):
-    - **Основне слова з транскрипцією:** word1 | word_transcription1
-    - **Основний переклад з транскрипцією:** translation1 | translation_transcription1
+    - **Основне слова з транскрипцією**: word1 | word_transcription1
+    - **Основний переклад з транскрипцією**: translation1 | translation_transcription1
 - **Компоненти** (*слово, переклад, транскрипція, анотація*):
-    - **Основне слово:** word1 (*обовʼязково*)
-    - **Транскрипція до word1:** word_transcription1 (*необовʼязково*)
-    - **Основний переклад:** translation1 (*обовʼязково*)
-    - **Транскрипція до translation1:** translation_transcription1 (*необовʼязково*)
-    - **Анотація до словникової пари:** annotation (*необовʼязково*)
+    - **Основне слово**: word1 (*обовʼязково*)
+    - **Транскрипція до «word1»**: word_transcription1 (*необовʼязково*)
+    - **Основний переклад**: translation1 (*обовʼязково*)
+    - **Транскрипція до «translation1»**: translation_transcription1 (*необовʼязково*)
+    - **Анотація до словникової пари*: annotation (*необовʼязково*)
 
 ---
 
@@ -66,21 +66,12 @@
 **Приклади словникової пари**
 
 1. **Проста пара**:
-
     `cat : кіт`
-
 2. **Пара із транскрипцією**:
-
     `cat | kæt : кіт`
-
 3. **Декілька перекладів**:
-
     `book : книга, підручник`
-
 4. **З анотацією**:
-
     `sun : сонце : небесне тіло`
-
 5. **Кілька слів та перекладів**:
-
     `hello, hi : привіт, вітаю`
