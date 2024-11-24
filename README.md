@@ -1,6 +1,6 @@
 # qx3learn-bot
 
-![qx3learn-bot logo](docs/images/logo.png)
+![qx3learn-bot logo](docs/images/logo.svg)
 
 ### Опис бота
 
