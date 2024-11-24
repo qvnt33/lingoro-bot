@@ -1,10 +1,9 @@
-from typing import Any
-
 from sqlalchemy.orm import Session
 
 from config import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR
 from db.models import TrainingSession, Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
 from exceptions import InvalidVocabIndexError, UserNotFoundError
+from src.types import VocabDataType, WordpairInfoType, WordpairTranslationType, WordpairType, WordpairWordType
 
 
 class UserCRUD:
@@ -13,11 +12,11 @@ class UserCRUD:
     def __init__(self, session: Session) -> None:
         self.session: Session = session
 
-    def create_new_user(self, tg_user_data: User | None) -> None:
+    def create_new_user(self, tg_user_data: User) -> None:
         """Створює нового користувача в БД.
 
         Args:
-            tg_user_data (User | None): Вся telegram-інформація про користувача
+            tg_user_data (User): Вся telegram-інформація про користувача
             (message.from_user / callback.from_user).
 
         Returns:
@@ -47,14 +46,14 @@ class VocabCRUD:
                          user_id: int,
                          vocab_name: str,
                          vocab_description: str | None,
-                         vocab_wordpairs: list[dict]) -> None:
+                         vocab_wordpairs: list[WordpairType]) -> None:
         """Додає новий користувацький словник та його словникові пари до БД.
 
         Args:
             user_id (int): ID користувача.
             vocab_name (str): Назва користувацького словника.
             vocab_description (str | None): Опис користувацького словника (може бути None).
-            vocab_wordpairs (list[dict]): Список словникових пар із розділеними компонентами у
+            vocab_wordpairs (list[WordpairType]): Список словникових пар із розділеними компонентами у
             форматі python-словника.
                 Приклад (vocab_wordpairs):
                 [
@@ -87,7 +86,7 @@ class VocabCRUD:
             User.user_id == user_id).first()
 
         if user is None:
-            raise UserNotFoundError(USER_NOT_FOUND_ERROR.format(id=self.user_id))
+            raise UserNotFoundError(USER_NOT_FOUND_ERROR.format(id=user_id))
 
         # Створення нового словника
         new_vocab = Vocabulary(name=vocab_name,
@@ -100,8 +99,14 @@ class VocabCRUD:
 
         # Додавання словникових пар та звʼязків між словами та перекладами
         for wordpair_item in vocab_wordpairs:
-            wordpair_words: list[dict] = wordpair_item.get('words')
-            wordpair_translations: list[dict] = wordpair_item.get('translations')
+            wordpair_words: list[WordpairWordType] | None = wordpair_item.get('words')
+            if wordpair_words is None:
+                raise ValueError('Ключ "words" відсутній або None')
+
+            wordpair_translations: list[WordpairTranslationType] | None = wordpair_item.get('translations')
+            if wordpair_translations is None:
+                raise ValueError('Ключ "translations" відсутній або None')
+
             annotation: str | None = wordpair_item.get('annotation')
 
             new_wordpair = Wordpair(annotation=annotation,
@@ -115,16 +120,16 @@ class VocabCRUD:
             self._add_wordpair_words(wordpair_words, wordpair_id)
             self._add_wordpair_translations(wordpair_translations, wordpair_id)
 
-    def _add_wordpair_words(self, wordpair_words: list[dict], wordpair_id: int) -> None:
+    def _add_wordpair_words(self, wordpair_words: list[WordpairWordType], wordpair_id: int) -> None:
         """Додає слова словникової пари до БД.
         Одразу звʼязує їх з словниковою парою по "wordpair_id".
 
         Args:
-            wordpair_words (list[dict]):
+            wordpair_words (list[WordpairWordType]):
                 Приклад (wordpair_words):
                 [
                     {'word': 'hello', 'transcription': 'хелоу'},
-                    {'word': 'hi', 'transcription': 'хай'},
+                    {'word': 'hi', 'transcription': None},
                 ]
             wordpair_id (int): ID словникової пари, якій належать слова.
 
@@ -132,7 +137,10 @@ class VocabCRUD:
             None
         """
         for word_item in wordpair_words:
-            word: str = word_item.get('word')
+            word: str | None = word_item.get('word')
+            if word is None:
+                raise ValueError('Ключ "word" відсутній або None')
+
             transcription: str | None = word_item.get('transcription')
 
             new_word = Word(word=word,
@@ -146,12 +154,14 @@ class VocabCRUD:
             self.session.add(new_wordpair_word)
         self.session.commit()
 
-    def _add_wordpair_translations(self, wordpair_translations: list[dict], wordpair_id: int) -> None:
+    def _add_wordpair_translations(self,
+                                   wordpair_translations: list[WordpairTranslationType],
+                                   wordpair_id: int) -> None:
         """Додає переклади словникової пари до БД.
         Одразу звʼязує їх з словниковою парою по ID.
 
         Args:
-            wordpair_translations (list[dict]):
+            wordpair_translations (list[WordpairTranslationType]):
                 Приклад:
                 [
                     {'translation': 'привіт', 'transcription': None},
@@ -163,7 +173,10 @@ class VocabCRUD:
             None
         """
         for translation_item in wordpair_translations:
-            translation: str = translation_item.get('translation')
+            translation: str | None = translation_item.get('translation')
+            if translation is None:
+                raise ValueError('Ключ "translation" відсутній або None')
+
             transcription: str | None = translation_item.get('transcription')
 
             new_translation = Translation(translation=translation,
@@ -177,7 +190,7 @@ class VocabCRUD:
             self.session.add(new_wordpair_translation)
         self.session.commit()
 
-    def get_all_vocabs_data(self, user_id: int) -> list[dict]:
+    def get_all_vocabs_data(self, user_id: int) -> list[VocabDataType]:
         """Повертає дані всіх користувацьких словників.
         За допомогою ID користувача.
 
@@ -185,46 +198,34 @@ class VocabCRUD:
             user_id (int): ID користувача.
 
         Returns:
-            list[dict]: Дані всіх користувацьких словників у вигляді списку з python-словниками.
+            list[VocabDataType]: Дані всіх користувацьких словників у вигляді списку з python-словниками.
 
         Examples:
             >>> get_all_vocabs_data(user_id=1)
                 [
                     {
-                        'words': [
-                            {'word': 'cat', 'transcription': None},
-                            ],
-                        'translations': [
-                            {'translation': 'кіт', 'transcription': None},
-                            ],
-                        'annotation': None
+                    'id': 1,
+                    'name': 'Тварини',
+                    'description': None,
+                    'number_errors': 0,
+                    'created_at': '2024-11-17 10:12:35.123',
+                    'wordpairs_count': 2
                     },
-                    {
-                        'words': [
-                            {'word': 'hello', 'transcription': 'хелоу'},
-                            {'word': 'hi', 'transcription': 'хай'},
-                            ],
-                        'translations': [
-                            {'translation': 'привіт', 'transcription': None},
-                            {'translation': 'вітаю', 'transcription': None},
-                            ],
-                        'annotation': 'загальна форма вітання'
-                    }
                 ]
         """
         all_vocabs: list[Vocabulary] = self.session.query(Vocabulary).filter(
             Vocabulary.user_id == user_id,
             ~Vocabulary.is_deleted).all()
 
-        all_vocabs_data: list[dict] = []
+        all_vocabs_data: list[VocabDataType] = []
 
         for vocab_item in all_vocabs:
             vocab_id: int = vocab_item.id
-            vocab_data: dict[str, Any] = self.get_vocab_data(vocab_id)
+            vocab_data: VocabDataType = self.get_vocab_data(vocab_id)
             all_vocabs_data.append(vocab_data)
         return all_vocabs_data
 
-    def get_vocab_data(self, vocab_id: int) -> dict[str, Any]:
+    def get_vocab_data(self, vocab_id: int) -> VocabDataType:
         """Повертає дані користувацького словника.
         За допомогою ID словника.
 
@@ -232,7 +233,7 @@ class VocabCRUD:
             vocab_id (int): ID користувацького словника.
 
         Returns:
-            dict[str, Any]: Дані користувацького словника у вигляді python-словника.
+            VocabDataType: Дані користувацького словника у вигляді python-словника.
 
         Examples:
             >>> get_vocab_data(vocab_id=1)
@@ -256,12 +257,12 @@ class VocabCRUD:
                 Wordpair.vocabulary_id == vocab_id).all()
         wordpairs_count: int = len(all_wordpairs)
 
-        vocab_data: dict[str, Any] = {'id': vocab.id,
-                                      'name': vocab.name,
-                                      'description': vocab.description,
-                                      'number_errors': vocab.number_errors,
-                                      'created_at': vocab.created_at,
-                                      'wordpairs_count': wordpairs_count}
+        vocab_data: VocabDataType = {'id': vocab.id,
+                                     'name': vocab.name,
+                                     'description': vocab.description,
+                                     'number_errors': vocab.number_errors,
+                                     'created_at': vocab.created_at,
+                                     'wordpairs_count': wordpairs_count}
         return vocab_data
 
     def soft_delete_vocab(self, vocab_id: int) -> None:
@@ -337,15 +338,16 @@ class WordpairCRUD:
     def __init__(self, session: Session) -> None:
         self.session: Session = session
 
-    def get_wordpairs(self, vocab_id: int) -> list[dict]:
+    def get_wordpairs(self, vocab_id: int) -> list[WordpairInfoType]:
         """Повертає список словникових пар за "vocab_id".
 
         Args:
             vocab_id (int): ID користувацького словника.
 
         Returns:
-            list[dict]: Список з всією інформацією (слова, переклади, анотація, к-сть помилок під час тренування)
-            про всі словникові пари, які належать користувацькому словнику по переданному ID у вигляді python-словників.
+            list[WordpairInfoType]: Список з всією інформацією
+            (слова, переклади, анотація, к-сть помилок під час тренування) про всі словникові пари,
+            які належать користувацькому словнику по переданному ID у вигляді python-словників.
 
         Examples:
             >>> get_wordpairs(vocab_id=1)
@@ -366,76 +368,89 @@ class WordpairCRUD:
         wordpair_query: list[Wordpair] = self.session.query(Wordpair).filter(
             Wordpair.vocabulary_id == vocab_id).all()
 
-        all_wordpairs: list[dict] = []
+        all_wordpairs: list[WordpairInfoType] = []
 
         for wordpair in wordpair_query:
             wordpair_id: int = wordpair.id
-            words: list[dict] = self._get_words_with_transcriptions(wordpair.id)
-            translations: list[dict] = self._get_translations_with_transcriptions(wordpair.id)
+            words: list[WordpairWordType] = self._get_words_with_transcriptions(wordpair.id)
+            translations: list[WordpairTranslationType] = self._get_translations_with_transcriptions(wordpair.id)
             annotation: str | None = wordpair.annotation
             number_errors: int = wordpair.number_errors
 
-            wordpair_components: dict[str, Any] = {'id': wordpair_id,
-                                                   'words': words,
-                                                   'translations': translations,
-                                                   'annotation': annotation,
-                                                   'number_errors': number_errors}
+            wordpair_components: WordpairInfoType = {'id': wordpair_id,
+                                                     'words': words,
+                                                     'translations': translations,
+                                                     'annotation': annotation,
+                                                     'number_errors': number_errors}
             all_wordpairs.append(wordpair_components)
-
         return all_wordpairs
 
-    def _get_words_with_transcriptions(self, wordpair_id: int) -> list[dict]:
+    def _get_words_with_transcriptions(self, wordpair_id: int) -> list[WordpairWordType]:
         """Повертає список слів та їх транскрипцій зі словникової пари за "wordpair_id".
 
         Args:
             wordpair_id (int): ID словникової пари.
 
         Returns:
-            list[dict]: Список з всіма словами та їх транскрипцією, які належать словниковій парі по переданному ID
-            у вигляді python-словників.
+            list[WordpairWordType]: Список з всіма словами та їх транскрипцією, які належать словниковій парі
+            по переданному ID у вигляді python-словників.
 
         Examples:
             >>> _get_words_with_transcriptions(wordpair_id=1)
                 [
-                    {'word': cat,
-                    'transcription': 'кет'},
+                    {
+                        'word': 'cat',
+                        'transcription': 'кет'
+                    },
                 ]
         """
         all_wordpair_words: list[WordpairWord] = self.session.query(WordpairWord).filter(
             WordpairWord.wordpair_id == wordpair_id).all()
-        words_with_transcriptions: list[dict] = []
+
+        words_with_transcriptions: list[WordpairWordType] = []
 
         for word in all_wordpair_words:
             word_query: Word | None = self.session.query(Word).filter(
                 Word.id == word.word_id).first()
+
+            if word_query is None:
+                raise ValueError(f'Слово з ID {word.word_id} не знайдено в базі даних.')
+
             words_with_transcriptions.append({'word': word_query.word,
                                               'transcription': word_query.transcription})
         return words_with_transcriptions
 
-    def _get_translations_with_transcriptions(self, wordpair_id: int) -> list[dict]:
+    def _get_translations_with_transcriptions(self, wordpair_id: int) -> list[WordpairTranslationType]:
         """Повертає список перекладів та їх транскрипцій зі словникової пари за "wordpair_id".
 
         Args:
             wordpair_id (int): ID словникової пари.
 
         Returns:
-            list[dict]: Список з всіма перекладами та їх транскрипцією, які належать словниковій парі по переданному ID
-            у вигляді python-словників.
+            list[WordpairTranslationType]: Список з всіма перекладами та їх транскрипцією, які належать словниковій парі
+            по переданному ID у вигляді python-словників.
 
         Examples:
             >>> _get_translations_with_transcriptions(wordpair_id=1)
                 [
-                    {'translation': кіт,
-                    'transcription': None},
+                    {
+                        'translation': кіт,
+                        'transcription': None
+                    },
                 ]
         """
         all_wordpair_translations: list[WordpairWord] = self.session.query(WordpairTranslation).filter(
             WordpairTranslation.wordpair_id == wordpair_id).all()
-        translations_with_transcriptions: list[dict] = []
+
+        translations_with_transcriptions: list[WordpairTranslationType] = []
 
         for translation in all_wordpair_translations:
             translation_query: Translation | None = self.session.query(Translation).filter(
                 Translation.id == translation.translation_id).first()
+
+            if translation_query is None:
+                raise ValueError(f'Переклад з ID {translation.translation_id} не знайдено в базі даних.')
+
             translations_with_transcriptions.append({'translation': translation_query.translation,
                                                      'transcription': translation_query.transcription})
         return translations_with_transcriptions
