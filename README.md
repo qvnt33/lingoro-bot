@@ -18,18 +18,18 @@
 > word1 | word_transcription1, word2 | word_transcription2 : translation1 | translation_transcription1 : annotation
 
 - **Частини** (*слова, переклади, анотація*):
-    - **Слова:** word1 | word_transcription1, word2 | word_transcription2
-    - **Переклади:** translation1 | translation_transcription1
-    - **Анотація:** annotation
+    - **Слова**: word1 | word_transcription1, word2 | word_transcription2
+    - **Переклади**: translation1 | translation_transcription1
+    - **Анотація**: annotation
 - **Елементи** (*слово або переклад із транскрипцією*):
-    - **Основне слова з транскрипцією:** word1 | word_transcription1
-    - **Основний переклад з транскрипцією:** translation1 | translation_transcription1
+    - **Основне слова з транскрипцією**: word1 | word_transcription1
+    - **Основний переклад з транскрипцією**: translation1 | translation_transcription1
 - **Компоненти** (*слово, переклад, транскрипція, анотація*):
-    - **Основне слово:** word1 (*обовʼязково*)
-    - **Транскрипція до word1:** word_transcription1 (*необовʼязково*)
-    - **Основний переклад:** translation1 (*обовʼязково*)
-    - **Транскрипція до translation1:** translation_transcription1 (*необовʼязково*)
-    - **Анотація до словникової пари:** annotation (*необовʼязково*)
+    - **Основне слово**: word1 (*обовʼязково*)
+    - **Транскрипція до «word1»**: word_transcription1 (*необовʼязково*)
+    - **Основний переклад**: translation1 (*обовʼязково*)
+    - **Транскрипція до «translation1»**: translation_transcription1 (*необовʼязково*)
+    - **Анотація до словникової пари*: annotation (*необовʼязково*)
 
 ## Команди
 
@@ -56,24 +56,21 @@
 
 ## Як запустити бота
 
-1. Клонування репозиторію:
+1. **Клонування репозиторію**:
 ```bash
 git clone https://github.com/qvnt33/qx3learn-bot.git
 ```
-
-2. Встановлення залежностей:
+2. **Встановлення залежностей**:
 ```bash
 pip install -r requirements.txt
 ```
-
-3. Налаштування оточення:
+3. **Налаштування оточення**:
 Створіть файл `.env` у кореневій директорії проєкту та додайте до нього наступні змінні:
 ```
 TOKEN=<your_bot_token>
 ```
-
-- TOKEN: Токен вашого бота, який ви отримаєте у [BotFather](https://core.telegram.org/bots#botfather).
-4. Запуск бота:
+- **TOKEN**: Токен вашого бота, який ви отримаєте у [BotFather](https://core.telegram.org/bots#botfather).
+4. **Запуск бота**:
 ```bash
 python bot.py
 ```
