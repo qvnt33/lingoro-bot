@@ -34,7 +34,7 @@ class ComponentValidator(ValidatorBase):
         return True
 
     def _check_valid_chars(self) -> bool:
-        """Перевіряє, чи не містить назва некоректні символи"""
+        """Перевіряє, чи не містить компонент некоректні символи"""
         allowed_chars_filter = AllowedCharsFilter(ALLOWED_CHARS)
 
         if not allowed_chars_filter.apply(self._component):
