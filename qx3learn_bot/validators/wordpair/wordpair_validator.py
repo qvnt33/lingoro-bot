@@ -1,10 +1,10 @@
 import logging
 
-from config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR
-from src.validators.base_validator import ValidatorBase
-from src.validators.wordpair.component_validator import ComponentValidator
-from src.validators.wordpair.item_validator import ItemValidator
-from text_data import MSG_ERROR_WORDPAIR_MAX_REQUIREMENT, MSG_ERROR_WORDPAIR_MIN_REQUIREMENT
+from qx3learn_bot.config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR
+from qx3learn_bot.text_data import MSG_ERROR_WORDPAIR_MAX_REQUIREMENT, MSG_ERROR_WORDPAIR_MIN_REQUIREMENT
+from qx3learn_bot.validators.base_validator import ValidatorBase
+from qx3learn_bot.validators.wordpair.component_validator import ComponentValidator
+from qx3learn_bot.validators.wordpair.item_validator import ItemValidator
 
 
 class WordpairValidator(ValidatorBase):

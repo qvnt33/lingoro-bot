@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from .database import Base
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+
+from qx3learn_bot.db.database import Base
 
 
 class User(Base):

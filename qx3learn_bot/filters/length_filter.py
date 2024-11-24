@@ -1,4 +1,4 @@
-from .base_filter import BaseFilter
+from qx3learn_bot.filters.base_filter import BaseFilter
 
 
 class LengthFilter(BaseFilter):

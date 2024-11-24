@@ -1,10 +1,10 @@
 import logging
 
-from config import ALLOWED_CHARS, MAX_LENGTH_WORDPAIR_COMPONENT, MIN_LENGTH_WORDPAIR_COMPONENT
-from src.filters.allowed_chars_filter import AllowedCharsFilter
-from src.filters.length_filter import LengthFilter
-from src.validators.base_validator import ValidatorBase
-from text_data import MSG_ERROR_COMPONENT_INVALID_CHARS, MSG_ERROR_COMPONENT_INVALID_LENGTH
+from qx3learn_bot.config import ALLOWED_CHARS, MAX_LENGTH_WORDPAIR_COMPONENT, MIN_LENGTH_WORDPAIR_COMPONENT
+from qx3learn_bot.filters.allowed_chars_filter import AllowedCharsFilter
+from qx3learn_bot.filters.length_filter import LengthFilter
+from qx3learn_bot.text_data import MSG_ERROR_COMPONENT_INVALID_CHARS, MSG_ERROR_COMPONENT_INVALID_LENGTH
+from qx3learn_bot.validators.base_validator import ValidatorBase
 
 
 class ComponentValidator(ValidatorBase):

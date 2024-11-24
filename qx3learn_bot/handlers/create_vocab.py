@@ -6,22 +6,19 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from db.crud import VocabCRUD
-from db.database import Session
-from exceptions import UserNotFoundError
-from src.filters.check_empty_filters import CheckEmptyFilter
-from src.fsm import states
-from src.keyboards.create_vocab_kb import (
+from qx3learn_bot.db.crud import VocabCRUD
+from qx3learn_bot.db.database import Session
+from qx3learn_bot.exceptions import UserNotFoundError
+from qx3learn_bot.filters.check_empty_filters import CheckEmptyFilter
+from qx3learn_bot.fsm import states
+from qx3learn_bot.keyboards.create_vocab_kb import (
     get_kb_confirm_cancel_create_vocab,
     get_kb_create_vocab_description,
     get_kb_create_vocab_name,
     get_kb_create_wordpairs,
 )
-from src.keyboards.vocab_base_kb import get_kb_vocab_selection_base
-from src.validators.vocab.vocab_description_validator import VocabDescriptionValidator
-from src.validators.vocab.vocab_name_validator import VocabNameValidator
-from src.validators.wordpair.wordpair_validator import WordpairValidator
-from text_data import (
+from qx3learn_bot.keyboards.vocab_base_kb import get_kb_vocab_selection_base
+from qx3learn_bot.text_data import (
     MSG_CHOOSE_VOCAB,
     MSG_CONFIRM_CANCEL_CREATE_VOCAB,
     MSG_ENTER_NEW_VOCAB_NAME,
@@ -39,8 +36,11 @@ from text_data import (
     MSG_SUCCESS_ALL_WORDPAIRS_VALID,
     MSG_SUCCESS_VOCAB_SAVED_TO_DB,
 )
-from tools import fsm_utils, vocab_utils, wordpair_utils
-from tools.vocab_utils import add_vocab_data_to_message
+from qx3learn_bot.tools import fsm_utils, vocab_utils, wordpair_utils
+from qx3learn_bot.tools.vocab_utils import add_vocab_data_to_message
+from qx3learn_bot.validators.vocab.vocab_description_validator import VocabDescriptionValidator
+from qx3learn_bot.validators.vocab.vocab_name_validator import VocabNameValidator
+from qx3learn_bot.validators.wordpair.wordpair_validator import WordpairValidator
 
 router = Router(name='create_vocab')
 logger: logging.Logger = logging.getLogger(__name__)

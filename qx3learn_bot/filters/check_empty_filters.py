@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from .base_filter import BaseFilter
+from qx3learn_bot.filters.base_filter import BaseFilter
 
 
 class CheckEmptyFilter(BaseFilter):

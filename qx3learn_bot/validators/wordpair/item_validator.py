@@ -1,7 +1,7 @@
 
-from config import WORDPAIR_TRANSCRIPTION_SEPARATOR
-from src.validators.base_validator import ValidatorBase
-from src.validators.wordpair.component_validator import ComponentValidator
+from qx3learn_bot.config import WORDPAIR_TRANSCRIPTION_SEPARATOR
+from qx3learn_bot.validators.base_validator import ValidatorBase
+from qx3learn_bot.validators.wordpair.component_validator import ComponentValidator
 
 
 class ItemValidator(ValidatorBase):

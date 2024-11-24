@@ -5,10 +5,10 @@ from aiogram.filters import Command
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.types.user import User
 
-from db.crud import UserCRUD
-from db.database import Session
-from src.keyboards.menu_kb import get_kb_menu
-from text_data import MSG_TITLE_MENU, MSG_TITLE_MENU_FOR_NEW_USER
+from qx3learn_bot.db.crud import UserCRUD
+from qx3learn_bot.db.database import Session
+from qx3learn_bot.keyboards.menu_kb import get_kb_menu
+from qx3learn_bot.text_data import MSG_TITLE_MENU, MSG_TITLE_MENU_FOR_NEW_USER
 
 router = Router(name='menu')
 logger: logging.Logger = logging.getLogger(__name__)

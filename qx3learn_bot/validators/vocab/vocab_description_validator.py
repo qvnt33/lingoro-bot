@@ -1,9 +1,9 @@
 import logging
 
-from config import MAX_LENGTH_VOCAB_DESCRIPTION, MIN_LENGTH_VOCAB_DESCRIPTION
-from src.filters.length_filter import LengthFilter
-from src.validators.base_validator import ValidatorBase
-from text_data import MSG_ERROR_VOCAB_DESCRIPTION_INVALID_LENGTH
+from qx3learn_bot.config import MAX_LENGTH_VOCAB_DESCRIPTION, MIN_LENGTH_VOCAB_DESCRIPTION
+from qx3learn_bot.filters.length_filter import LengthFilter
+from qx3learn_bot.text_data import MSG_ERROR_VOCAB_DESCRIPTION_INVALID_LENGTH
+from qx3learn_bot.validators.base_validator import ValidatorBase
 
 
 class VocabDescriptionValidator(ValidatorBase):

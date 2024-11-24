@@ -6,23 +6,23 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from db.crud import VocabCRUD, WordpairCRUD
-from db.database import Session
-from exceptions import InvalidVocabIndexError
-from src.filters.check_empty_filters import CheckEmptyFilter
-from src.keyboards.vocab_base_kb import (
+from qx3learn_bot.db.crud import VocabCRUD, WordpairCRUD
+from qx3learn_bot.db.database import Session
+from qx3learn_bot.exceptions import InvalidVocabIndexError
+from qx3learn_bot.filters.check_empty_filters import CheckEmptyFilter
+from qx3learn_bot.keyboards.vocab_base_kb import (
     get_kb_confirm_delete,
     get_kb_vocab_options,
     get_kb_vocab_selection_base,
 )
-from text_data import (
+from qx3learn_bot.text_data import (
     MSG_CHOOSE_VOCAB,
     MSG_CONFIRM_DELETE_VOCAB,
     MSG_INFO_VOCAB_BASE_EMPTY,
     MSG_SUCCESS_VOCAB_DELETED,
 )
-from tools.vocab_utils import format_vocab_info
-from tools.wordpair_utils import get_formatted_wordpairs_list
+from qx3learn_bot.tools.vocab_utils import format_vocab_info
+from qx3learn_bot.tools.wordpair_utils import get_formatted_wordpairs_list
 
 router = Router(name='vocab_base')
 logger: logging.Logger = logging.getLogger(__name__)

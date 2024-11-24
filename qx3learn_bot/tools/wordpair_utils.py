@@ -1,6 +1,6 @@
 from typing import Any
 
-from config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR, WORDPAIR_TRANSCRIPTION_SEPARATOR
+from qx3learn_bot.config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR, WORDPAIR_TRANSCRIPTION_SEPARATOR
 
 
 def format_valid_wordpairs(wordpairs: list[str] | None) -> str:

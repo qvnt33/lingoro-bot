@@ -8,19 +8,19 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import InlineKeyboardMarkup
 
-from db.crud import TrainingCRUD, VocabCRUD, WordpairCRUD
-from db.database import Session
-from exceptions import InvalidVocabIndexError
-from src.filters.check_empty_filters import CheckEmptyFilter
-from src.fsm.states import VocabTraining
-from src.keyboards.vocab_trainer_kb import (
+from qx3learn_bot.db.crud import TrainingCRUD, VocabCRUD, WordpairCRUD
+from qx3learn_bot.db.database import Session
+from qx3learn_bot.exceptions import InvalidVocabIndexError
+from qx3learn_bot.filters.check_empty_filters import CheckEmptyFilter
+from qx3learn_bot.fsm.states import VocabTraining
+from qx3learn_bot.keyboards.vocab_trainer_kb import (
     get_kb_confirm_cancel_training,
     get_kb_finish_training,
     get_kb_training_actions,
     get_kb_training_modes,
     get_kb_vocab_selection_training,
 )
-from text_data import (
+from qx3learn_bot.text_data import (
     MSG_CHOOSE_TRAINING_MODE,
     MSG_CHOOSE_VOCAB_FOR_TRAINING,
     MSG_CONFIRM_CANCEL_TRAINING,
@@ -31,7 +31,7 @@ from text_data import (
     MSG_SHOW_WORDPAIR_TRANSLATION,
     MSG_WRONG_ANSWER,
 )
-from tools.vocab_trainer_utils import (
+from qx3learn_bot.tools.vocab_trainer_utils import (
     format_training_process_message,
     format_training_summary_message,
     get_training_data,

@@ -1,7 +1,7 @@
 import random
 from typing import Any
 
-from tools.wordpair_utils import format_word_items
+from qx3learn_bot.tools.wordpair_utils import format_word_items
 
 
 def format_training_process_message(vocab_name: str,

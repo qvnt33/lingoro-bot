@@ -1,9 +1,18 @@
 from sqlalchemy.orm import Session
 
-from config import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR
-from db.models import TrainingSession, Translation, User, Vocabulary, Word, Wordpair, WordpairTranslation, WordpairWord
-from exceptions import InvalidVocabIndexError, UserNotFoundError
-from src.types import VocabDataType, WordpairInfoType, WordpairTranslationType, WordpairType, WordpairWordType
+from qx3learn_bot.config import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR
+from qx3learn_bot.db.models import (
+    TrainingSession,
+    Translation,
+    User,
+    Vocabulary,
+    Word,
+    Wordpair,
+    WordpairTranslation,
+    WordpairWord,
+)
+from qx3learn_bot.exceptions import InvalidVocabIndexError, UserNotFoundError
+from qx3learn_bot.types import VocabDataType, WordpairInfoType, WordpairTranslationType, WordpairType, WordpairWordType
 
 
 class UserCRUD:
