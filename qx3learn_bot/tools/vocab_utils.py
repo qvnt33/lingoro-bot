@@ -14,11 +14,10 @@ def check_vocab_name_duplicate(vocab_name: str, vocab_name_old: str) -> bool:
 def format_valid_wordpairs(wordpairs: list[str] | None) -> str:
     """Повертає відформатовані валідні словникові пари"""
     if wordpairs is None:
-        formatted_valid_wordpairs = '-'
-    else:
-        formatted_valid_wordpairs: str = '\n'.join((f'{num}. {wordpair}'
-                                                    for num, wordpair in enumerate(iterable=wordpairs,
-                                                                                   start=1)))
+        return '-'
+
+    formatted_valid_wordpairs: str = '\n'.join((f'{num}. {wordpair}' for num, wordpair in
+                                                enumerate(wordpairs, start=1)))
     return formatted_valid_wordpairs
 
 

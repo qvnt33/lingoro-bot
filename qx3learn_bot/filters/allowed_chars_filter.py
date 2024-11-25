@@ -6,8 +6,8 @@ class AllowedCharsFilter(BaseFilter):
     або входять до дозволених символів)
     """
 
-    def __init__(self, allowed_chars: list[str]) -> None:
-        self.allowed_chars: list[str] = allowed_chars
+    def __init__(self, allowed_chars: tuple[str, ...]) -> None:
+        self.allowed_chars: tuple[str, ...] = allowed_chars
 
     def apply(self, value: str) -> bool:
         is_valid: bool = all(char.isalnum() or char in self.allowed_chars for char in value)

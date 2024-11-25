@@ -15,7 +15,7 @@ class ItemValidator(ValidatorBase):
             ['cat', 'кет']
     """
 
-    def __init__(self, item: str, errors: list = None) -> None:
+    def __init__(self, item: str, errors: list[str] | None = None) -> None:
         super().__init__(errors)
 
         self._item: str = item

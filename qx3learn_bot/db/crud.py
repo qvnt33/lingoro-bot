@@ -1,5 +1,6 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import Column
+from sqlalchemy.orm import Session
+
 from qx3learn_bot.config import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR, WORDPAIR_NOT_FOUND_ERROR
 from qx3learn_bot.custom_types.vocab_types import VocabDataType
 from qx3learn_bot.custom_types.wordpair_types import (
@@ -146,7 +147,7 @@ class VocabCRUD:
                     {'word': 'hello', 'transcription': 'хелоу'},
                     {'word': 'hi', 'transcription': None},
                 ]
-            wordpair_id (int): ID словникової пари, якій належать слова.
+            wordpair_id (Column[int]): ID словникової пари, якій належать слова.
 
         Returns:
             None
@@ -182,7 +183,7 @@ class VocabCRUD:
                     {'translation': 'привіт', 'transcription': None},
                     {'translation': 'доброго дня', 'transcription': None},
                 ]
-            wordpair_id (int): ID словникової пари, якій належать переклади.
+            wordpair_id (Column[int]): ID словникової пари, якій належать переклади.
 
         Returns:
             None
@@ -210,7 +211,7 @@ class VocabCRUD:
         За допомогою ID користувача.
 
         Args:
-            user_id (int): ID користувача.
+            user_id (Column[int]): ID користувача.
 
         Returns:
             list[VocabDataType]: Дані всіх користувацьких словників у вигляді списку з python-словниками.
@@ -245,7 +246,7 @@ class VocabCRUD:
         За допомогою ID словника.
 
         Args:
-            vocab_id (int): ID користувацького словника.
+            vocab_id (Column[int]): ID користувацького словника.
 
         Returns:
             VocabDataType: Дані користувацького словника у вигляді python-словника.
@@ -404,7 +405,7 @@ class WordpairCRUD:
         """Повертає список слів та їх транскрипцій зі словникової пари за "wordpair_id".
 
         Args:
-            wordpair_id (int): ID словникової пари.
+            wordpair_id (Column[int]): ID словникової пари.
 
         Returns:
             list[WordpairWordType]: Список з всіма словами та їх транскрипцією, які належать словниковій парі
@@ -439,7 +440,7 @@ class WordpairCRUD:
         """Повертає список перекладів та їх транскрипцій зі словникової пари за "wordpair_id".
 
         Args:
-            wordpair_id (int): ID словникової пари.
+            wordpair_id (Column[int]): ID словникової пари.
 
         Returns:
             list[WordpairTranslationType]: Список з всіма перекладами та їх транскрипцією, які належать словниковій парі

@@ -3,6 +3,22 @@ from typing import TypedDict
 from sqlalchemy import Column
 
 
+class BaseWordpairWordType(TypedDict):
+    word: str
+    transcription: str | None
+
+
+class BaseWordpairTranslationType(TypedDict):
+    translation: str
+    transcription: str | None
+
+
+class WordpairComponentsType(TypedDict):
+    words: list[BaseWordpairWordType]
+    translations: list[BaseWordpairTranslationType]
+    annotation: str | None
+
+
 class WordpairWordType(TypedDict):
     word: Column[str]
     transcription: Column[str] | None

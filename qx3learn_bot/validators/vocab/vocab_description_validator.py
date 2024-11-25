@@ -9,7 +9,7 @@ from qx3learn_bot.validators.base_validator import ValidatorBase
 class VocabDescriptionValidator(ValidatorBase):
     """Валідатор для опису користувацького словника"""
 
-    def __init__(self, description: str, errors: list = None) -> None:
+    def __init__(self, description: str, errors: list[str] | None = None) -> None:
         super().__init__(errors)
         self.logger: logging.Logger = logging.getLogger(f'{__name__}.{self.__class__.__name__}')
 

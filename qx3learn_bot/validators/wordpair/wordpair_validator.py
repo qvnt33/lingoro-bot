@@ -18,7 +18,7 @@ class WordpairValidator(ValidatorBase):
             ["w1 | w_tr, w2 | w_tr2", "t | t_tr", "annotation"]
     """
 
-    def __init__(self, wordpair: str, errors: list | None = None) -> None:
+    def __init__(self, wordpair: str, errors: list[str] | None = None) -> None:
         super().__init__(errors)
         self.logger: logging.Logger = logging.getLogger(f'{__name__}.{self.__class__.__name__}')
 

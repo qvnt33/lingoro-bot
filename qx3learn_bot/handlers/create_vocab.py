@@ -228,7 +228,7 @@ async def process_create_wordpairs(message: types.Message, state: FSMContext) ->
     logger.info(f'Введено словникові пари (одним повідомленням): {wordpairs}')
 
     valid_wordpairs: list[str] = []
-    invalid_wordpairs: list[dict] = []
+    invalid_wordpairs: list[dict[str, str]] = []
 
     check_empty_filter = CheckEmptyFilter()
 

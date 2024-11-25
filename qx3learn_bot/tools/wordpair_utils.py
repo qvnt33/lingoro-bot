@@ -1,27 +1,26 @@
 from typing import Any
 
 from qx3learn_bot.config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR, WORDPAIR_TRANSCRIPTION_SEPARATOR
+from qx3learn_bot.custom_types.wordpair_types import BaseWordpairTranslationType, BaseWordpairWordType, WordpairComponentsType
 
 
 def format_valid_wordpairs(wordpairs: list[str] | None) -> str:
     """Повертає відформатовані валідні словникові пари"""
     if wordpairs is None:
-        formatted_valid_wordpairs = '-'
-    else:
-        formatted_valid_wordpairs: str = '\n'.join((f'{num}. {wordpair}'
-                                                    for num, wordpair in enumerate(iterable=wordpairs,
-                                                                                   start=1)))
+        return '-'
+
+    formatted_valid_wordpairs: str = '\n'.join((f'{num}. {wordpair}' for num, wordpair in
+                                                enumerate(wordpairs, start=1)))
     return formatted_valid_wordpairs
 
 
-def format_invalid_wordpairs(wordpairs: list[dict] | None) -> str:
+def format_invalid_wordpairs(wordpairs: list[dict[str, str]] | None) -> str:
     """Повертає відформатовані не валідні словникові пари"""
     if wordpairs is None:
-        formatted_invalid_wordpairs = '-'
-    else:
-        formatted_invalid_wordpairs: str = '\n\n'.join((f'{num}. {wordpair['wordpair']}\n{wordpair['errors']}'
-                                                        for num, wordpair in enumerate(iterable=wordpairs,
-                                                                                       start=1)))
+        return '-'
+
+    formatted_invalid_wordpairs: str = '\n\n'.join((f'{num}. {wordpair['wordpair']}\n{wordpair['errors']}'
+                                                    for num, wordpair in enumerate(wordpairs, start=1)))
     return formatted_invalid_wordpairs
 
 
@@ -37,7 +36,7 @@ def format_wordpair_info(idx: int,
     return formatted_wordpair_info
 
 
-def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
+def parse_wordpair_components(wordpair: str) -> WordpairComponentsType:
     """Повертає розділену словникову пару на окремі компоненти:
     слова з транскрипціями, переклади з транскрипціями та анотацію.
 
@@ -54,9 +53,11 @@ def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
         *Слів та перекладів може бути декілька або лише по одному.
 
     Returns:
-        dict: Словник із ключами:
-            - "words": list[dict] — список словників із словами та їх транскрипції (якщо немає, то None),
-            - "translations": list[dict] — список словників із перекладами та їх транскрипції (якщо немає, то None),
+        WordpairComponentsType: Словник із ключами:
+            - "words": list[BaseWordpairWordType] — список словників із словами та
+            їх транскрипції (якщо немає, то None),
+            - "translations": list[BaseWordpairTranslationType] — список словників із перекладами та
+            їх транскрипції (якщо немає, то None),
             - "annotation": str | None — анотація (якщо немає, то None).
 
     Example:
@@ -73,9 +74,9 @@ def parse_wordpair_components(wordpair: str) -> dict[str, Any]:
             'annotation': 'загальна форма вітання'
         }
     """
-    wordpair_components: dict = {}
-    wordpair_words: list[dict] = []
-    wordpair_translations: list[dict] = []
+    wordpair_components: WordpairComponentsType = {'words': [], 'translations': [], 'annotation': None}
+    wordpair_words: list[BaseWordpairWordType] = []
+    wordpair_translations: list[BaseWordpairTranslationType] = []
 
     # Розділення словникової пари по частинам
     wordpair_parts: list[str] = wordpair.split(WORDPAIR_SEPARATOR)
