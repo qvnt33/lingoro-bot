@@ -17,15 +17,6 @@ class WordpairType(TypedDict):
     annotation: str | None
 
 
-class VocabDataType(TypedDict):
-    id: int
-    name: str
-    description: str | None
-    number_errors: int
-    created_at: str
-    wordpairs_count: int
-
-
 class WordpairInfoType(TypedDict):
     id: int
     words: list[WordpairWordType]
