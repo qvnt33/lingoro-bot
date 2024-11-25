@@ -1,7 +1,9 @@
-from typing import Any
-
 from qx3learn_bot.config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR, WORDPAIR_TRANSCRIPTION_SEPARATOR
-from qx3learn_bot.custom_types.wordpair_types import BaseWordpairTranslationType, BaseWordpairWordType, WordpairComponentsType
+from qx3learn_bot.custom_types.wordpair_types import (
+    BaseWordpairTranslationType,
+    BaseWordpairWordType,
+    WordpairComponentsType,
+)
 
 
 def format_valid_wordpairs(wordpairs: list[str] | None) -> str:
