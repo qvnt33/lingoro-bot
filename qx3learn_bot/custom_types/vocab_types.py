@@ -1,10 +1,13 @@
+from datetime import datetime
 from typing import TypedDict
+
+from sqlalchemy import Column
 
 
 class VocabDataType(TypedDict):
-    id: int
-    name: str
-    description: str | None
-    number_errors: int
-    created_at: str
+    id: Column[int]
+    name: Column[str]
+    description: Column[str] | None
+    number_errors: Column[int]
+    created_at: Column[datetime]
     wordpairs_count: int

@@ -1,25 +1,27 @@
 from typing import TypedDict
 
+from sqlalchemy import Column
+
 
 class WordpairWordType(TypedDict):
-    word: str
-    transcription: str | None
+    word: Column[str]
+    transcription: Column[str] | None
 
 
 class WordpairTranslationType(TypedDict):
-    translation: str
-    transcription: str | None
+    translation: Column[str]
+    transcription: Column[str] | None
 
 
 class WordpairType(TypedDict):
     words: list[WordpairWordType]
     translations: list[WordpairTranslationType]
-    annotation: str | None
+    annotation: Column[str] | None
 
 
 class WordpairInfoType(TypedDict):
-    id: int
+    id: Column[int]
     words: list[WordpairWordType]
     translations: list[WordpairTranslationType]
-    annotation: str | None
-    number_errors: int
+    annotation: Column[str] | None
+    number_errors: Column[int]

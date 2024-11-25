@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-
-from qx3learn_bot.config import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR
+from sqlalchemy import Column
+from qx3learn_bot.config import INVALID_VOCAB_INDEX_ERROR, USER_NOT_FOUND_ERROR, WORDPAIR_NOT_FOUND_ERROR
 from qx3learn_bot.custom_types.vocab_types import VocabDataType
 from qx3learn_bot.custom_types.wordpair_types import (
     WordpairInfoType,
@@ -110,7 +110,7 @@ class VocabCRUD:
         self.session.add(new_vocab)
         self.session.commit()
 
-        vocab_id: int = new_vocab.id
+        vocab_id: Column[int] = new_vocab.id
 
         # Додавання словникових пар та звʼязків між словами та перекладами
         for wordpair_item in vocab_wordpairs:
@@ -122,20 +122,20 @@ class VocabCRUD:
             if wordpair_translations is None:
                 raise ValueError('Ключ "translations" відсутній або None')
 
-            annotation: str | None = wordpair_item.get('annotation')
+            annotation: Column[str] | None = wordpair_item.get('annotation')
 
             new_wordpair = Wordpair(annotation=annotation,
                                     vocabulary_id=vocab_id)
             self.session.add(new_wordpair)
             self.session.commit()
 
-            wordpair_id: int = new_wordpair.id
+            wordpair_id: Column[int] = new_wordpair.id
 
             # Додавання слів та перекладів до БД
             self._add_wordpair_words(wordpair_words, wordpair_id)
             self._add_wordpair_translations(wordpair_translations, wordpair_id)
 
-    def _add_wordpair_words(self, wordpair_words: list[WordpairWordType], wordpair_id: int) -> None:
+    def _add_wordpair_words(self, wordpair_words: list[WordpairWordType], wordpair_id: Column[int]) -> None:
         """Додає слова словникової пари до БД.
         Одразу звʼязує їх з словниковою парою по "wordpair_id".
 
@@ -152,11 +152,11 @@ class VocabCRUD:
             None
         """
         for word_item in wordpair_words:
-            word: str | None = word_item.get('word')
+            word: Column[str] | None = word_item.get('word')
             if word is None:
                 raise ValueError('Ключ "word" відсутній або None')
 
-            transcription: str | None = word_item.get('transcription')
+            transcription: Column[str] | None = word_item.get('transcription')
 
             new_word = Word(word=word,
                             transcription=transcription)
@@ -171,7 +171,7 @@ class VocabCRUD:
 
     def _add_wordpair_translations(self,
                                    wordpair_translations: list[WordpairTranslationType],
-                                   wordpair_id: int) -> None:
+                                   wordpair_id: Column[int]) -> None:
         """Додає переклади словникової пари до БД.
         Одразу звʼязує їх з словниковою парою по ID.
 
@@ -188,11 +188,11 @@ class VocabCRUD:
             None
         """
         for translation_item in wordpair_translations:
-            translation: str | None = translation_item.get('translation')
+            translation: Column[str] | None = translation_item.get('translation')
             if translation is None:
                 raise ValueError('Ключ "translation" відсутній або None')
 
-            transcription: str | None = translation_item.get('transcription')
+            transcription: Column[str] | None = translation_item.get('transcription')
 
             new_translation = Translation(translation=translation,
                                           transcription=transcription)
@@ -235,12 +235,12 @@ class VocabCRUD:
         all_vocabs_data: list[VocabDataType] = []
 
         for vocab_item in all_vocabs:
-            vocab_id: int = vocab_item.id
+            vocab_id: Column[int] = vocab_item.id
             vocab_data: VocabDataType = self.get_vocab_data(vocab_id)
             all_vocabs_data.append(vocab_data)
         return all_vocabs_data
 
-    def get_vocab_data(self, vocab_id: int) -> VocabDataType:
+    def get_vocab_data(self, vocab_id: Column[int]) -> VocabDataType:
         """Повертає дані користувацького словника.
         За допомогою ID словника.
 
@@ -288,7 +288,7 @@ class VocabCRUD:
         if vocab is None:
             raise InvalidVocabIndexError(INVALID_VOCAB_INDEX_ERROR.format(id=vocab_id))
 
-        vocab.is_deleted = True
+        vocab.is_deleted = True  # type: ignore
         self.session.commit()
 
     def delete_vocab(self, vocab_id: int) -> None:
@@ -386,11 +386,11 @@ class WordpairCRUD:
         all_wordpairs: list[WordpairInfoType] = []
 
         for wordpair in wordpair_query:
-            wordpair_id: int = wordpair.id
+            wordpair_id: Column[int] = wordpair.id
             words: list[WordpairWordType] = self._get_words_with_transcriptions(wordpair.id)
             translations: list[WordpairTranslationType] = self._get_translations_with_transcriptions(wordpair.id)
-            annotation: str | None = wordpair.annotation
-            number_errors: int = wordpair.number_errors
+            annotation: Column[str] | None = wordpair.annotation
+            number_errors: Column[int] = wordpair.number_errors
 
             wordpair_components: WordpairInfoType = {'id': wordpair_id,
                                                      'words': words,
@@ -400,7 +400,7 @@ class WordpairCRUD:
             all_wordpairs.append(wordpair_components)
         return all_wordpairs
 
-    def _get_words_with_transcriptions(self, wordpair_id: int) -> list[WordpairWordType]:
+    def _get_words_with_transcriptions(self, wordpair_id: Column[int]) -> list[WordpairWordType]:
         """Повертає список слів та їх транскрипцій зі словникової пари за "wordpair_id".
 
         Args:
@@ -435,7 +435,7 @@ class WordpairCRUD:
                                               'transcription': word_query.transcription})
         return words_with_transcriptions
 
-    def _get_translations_with_transcriptions(self, wordpair_id: int) -> list[WordpairTranslationType]:
+    def _get_translations_with_transcriptions(self, wordpair_id: Column[int]) -> list[WordpairTranslationType]:
         """Повертає список перекладів та їх транскрипцій зі словникової пари за "wordpair_id".
 
         Args:
@@ -476,10 +476,15 @@ class WordpairCRUD:
         Args:
             wordpair_id (int): ID словникової пари.
         """
-        wordpair: Wordpair = self.session.query(Wordpair).filter(
+        wordpair: Wordpair | None = self.session.query(Wordpair).filter(
             Wordpair.id == wordpair_id).first()
 
-        wordpair.number_errors += 1
+        if wordpair is None:
+            raise UserNotFoundError(WORDPAIR_NOT_FOUND_ERROR.format(id=wordpair_id))
+
+        # Оновлення значення через SQLAlchemy
+        self.session.query(Wordpair).filter(Wordpair.id == wordpair_id).update(
+            {'number_errors': Wordpair.number_errors + 1})
         self.session.commit()
 
 
