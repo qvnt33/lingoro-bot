@@ -21,7 +21,7 @@ def format_invalid_wordpairs(wordpairs: list[dict[str, str]] | None) -> str:
     if wordpairs is None:
         return '-'
 
-    formatted_invalid_wordpairs: str = '\n\n'.join((f'{num}. {wordpair['wordpair']}\n{wordpair['errors']}' \
+    formatted_invalid_wordpairs: str = '\n\n'.join((f'{num}. {wordpair["wordpair"]}\n{wordpair["errors"]}'
                                                     for num, wordpair in enumerate(wordpairs, start=1)))
     return formatted_invalid_wordpairs
 
