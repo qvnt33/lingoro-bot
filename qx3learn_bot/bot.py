@@ -1,3 +1,6 @@
+import sys
+print(f'Python version: {sys.version}')
+
 import asyncio
 import json
 import logging
