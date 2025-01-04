@@ -1,5 +1,5 @@
-from qx3learn_bot.config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR, WORDPAIR_TRANSCRIPTION_SEPARATOR
-from qx3learn_bot.custom_types.wordpair_types import (
+from lingoro_bot.config import WORDPAIR_ITEM_SEPARATOR, WORDPAIR_SEPARATOR, WORDPAIR_TRANSCRIPTION_SEPARATOR
+from lingoro_bot.custom_types.wordpair_types import (
     BaseWordpairTranslationType,
     BaseWordpairWordType,
     WordpairComponentsType,

@@ -1,10 +1,10 @@
 import logging
 
-from qx3learn_bot.config import ALLOWED_CHARS, MAX_LENGTH_WORDPAIR_COMPONENT, MIN_LENGTH_WORDPAIR_COMPONENT
-from qx3learn_bot.filters.allowed_chars_filter import AllowedCharsFilter
-from qx3learn_bot.filters.length_filter import LengthFilter
-from qx3learn_bot.text_data import MSG_ERROR_COMPONENT_INVALID_CHARS, MSG_ERROR_COMPONENT_INVALID_LENGTH
-from qx3learn_bot.validators.base_validator import ValidatorBase
+from lingoro_bot.config import ALLOWED_CHARS, MAX_LENGTH_WORDPAIR_COMPONENT, MIN_LENGTH_WORDPAIR_COMPONENT
+from lingoro_bot.filters.allowed_chars_filter import AllowedCharsFilter
+from lingoro_bot.filters.length_filter import LengthFilter
+from lingoro_bot.text_data import MSG_ERROR_COMPONENT_INVALID_CHARS, MSG_ERROR_COMPONENT_INVALID_LENGTH
+from lingoro_bot.validators.base_validator import ValidatorBase
 
 
 class ComponentValidator(ValidatorBase):

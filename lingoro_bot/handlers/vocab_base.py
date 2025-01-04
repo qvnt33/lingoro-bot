@@ -6,23 +6,23 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from qx3learn_bot.db.crud import VocabCRUD, WordpairCRUD
-from qx3learn_bot.db.database import Session
-from qx3learn_bot.exceptions import InvalidVocabIndexError
-from qx3learn_bot.filters.check_empty_filters import CheckEmptyFilter
-from qx3learn_bot.keyboards.vocab_base_kb import (
+from lingoro_bot.db.crud import VocabCRUD, WordpairCRUD
+from lingoro_bot.db.database import Session
+from lingoro_bot.exceptions import InvalidVocabIndexError
+from lingoro_bot.filters.check_empty_filters import CheckEmptyFilter
+from lingoro_bot.keyboards.vocab_base_kb import (
     get_kb_confirm_delete,
     get_kb_vocab_options,
     get_kb_vocab_selection_base,
 )
-from qx3learn_bot.text_data import (
+from lingoro_bot.text_data import (
     MSG_CHOOSE_VOCAB,
     MSG_CONFIRM_DELETE_VOCAB,
     MSG_INFO_VOCAB_BASE_EMPTY,
     MSG_SUCCESS_VOCAB_DELETED,
 )
-from qx3learn_bot.tools.vocab_utils import format_vocab_info
-from qx3learn_bot.tools.wordpair_utils import get_formatted_wordpairs_list
+from lingoro_bot.tools.vocab_utils import format_vocab_info
+from lingoro_bot.tools.wordpair_utils import get_formatted_wordpairs_list
 
 router = Router(name='vocab_base')
 logger: logging.Logger = logging.getLogger(__name__)

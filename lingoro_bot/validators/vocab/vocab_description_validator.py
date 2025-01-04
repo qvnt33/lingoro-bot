@@ -1,9 +1,9 @@
 import logging
 
-from qx3learn_bot.config import MAX_LENGTH_VOCAB_DESCRIPTION, MIN_LENGTH_VOCAB_DESCRIPTION
-from qx3learn_bot.filters.length_filter import LengthFilter
-from qx3learn_bot.text_data import MSG_ERROR_VOCAB_DESCRIPTION_INVALID_LENGTH
-from qx3learn_bot.validators.base_validator import ValidatorBase
+from lingoro_bot.config import MAX_LENGTH_VOCAB_DESCRIPTION, MIN_LENGTH_VOCAB_DESCRIPTION
+from lingoro_bot.filters.length_filter import LengthFilter
+from lingoro_bot.text_data import MSG_ERROR_VOCAB_DESCRIPTION_INVALID_LENGTH
+from lingoro_bot.validators.base_validator import ValidatorBase
 
 
 class VocabDescriptionValidator(ValidatorBase):

@@ -2,16 +2,16 @@ import logging
 
 from sqlalchemy.orm import Session
 
-from qx3learn_bot.config import ALLOWED_CHARS, MAX_LENGTH_VOCAB_NAME, MIN_LENGTH_VOCAB_NAME
-from qx3learn_bot.db.models import Vocabulary
-from qx3learn_bot.filters.allowed_chars_filter import AllowedCharsFilter
-from qx3learn_bot.filters.length_filter import LengthFilter
-from qx3learn_bot.text_data import (
+from lingoro_bot.config import ALLOWED_CHARS, MAX_LENGTH_VOCAB_NAME, MIN_LENGTH_VOCAB_NAME
+from lingoro_bot.db.models import Vocabulary
+from lingoro_bot.filters.allowed_chars_filter import AllowedCharsFilter
+from lingoro_bot.filters.length_filter import LengthFilter
+from lingoro_bot.text_data import (
     MSG_ERROR_COMPONENT_INVALID_CHARS,
     MSG_ERROR_VOCAB_NAME_INVALID_LENGTH,
     MSG_ERROR_VOCAB_NAME_UNIQUELY,
 )
-from qx3learn_bot.validators.base_validator import ValidatorBase
+from lingoro_bot.validators.base_validator import ValidatorBase
 
 
 class VocabNameValidator(ValidatorBase):

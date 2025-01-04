@@ -5,9 +5,9 @@ import logging.config
 
 from aiogram import Bot, Dispatcher
 
-from qx3learn_bot.config import TOKEN
-from qx3learn_bot.db.database import create_database_tables
-from qx3learn_bot.handlers import register_handlers
+from lingoro_bot.config import TOKEN
+from lingoro_bot.db.database import create_database_tables
+from lingoro_bot.handlers import register_handlers
 
 
 async def main() -> None:

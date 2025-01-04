@@ -4,8 +4,8 @@ from aiogram import F, Router, types
 from aiogram.filters import Command
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from qx3learn_bot.keyboards.help_kb import get_kb_help
-from qx3learn_bot.text_data import MSG_TITLE_HELP
+from lingoro_bot.keyboards.help_kb import get_kb_help
+from lingoro_bot.text_data import MSG_TITLE_HELP
 
 router = Router(name='help')
 logger: logging.Logger = logging.getLogger(__name__)

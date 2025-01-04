@@ -1,6 +1,6 @@
 from collections.abc import Sized
 
-from qx3learn_bot.filters.base_filter import BaseFilter
+from lingoro_bot.filters.base_filter import BaseFilter
 
 
 class CheckEmptyFilter(BaseFilter):

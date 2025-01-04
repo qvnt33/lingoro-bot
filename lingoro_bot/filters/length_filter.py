@@ -1,4 +1,4 @@
-from qx3learn_bot.filters.base_filter import BaseFilter
+from lingoro_bot.filters.base_filter import BaseFilter
 
 
 class LengthFilter(BaseFilter):
