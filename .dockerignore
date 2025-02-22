@@ -1,0 +1,75 @@
+# macOS system files
+.DS_Store
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+wheels/
+
+# PyInstaller
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+
+# Translations
+*.mo
+
+# Django and Flask stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+instance/
+.webassets-cache
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments (віртуальні середовища)
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# VSCode settings
+.vscode/
+
+# Ruff, MyPy, Pyre, Pytype caches
+.ruff_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Logs
+*.log
+logs/
+
+# Other
+tasks.txt
+database.db
+test.py
